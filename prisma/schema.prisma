@@ -1,0 +1,126 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Academic Structure ──────────────────────────────────────────────────────
+
+model TahunAjaran {
+  id        String   @id @default(cuid())
+  nama      String   @unique // "2025/2026"
+  isAktif   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  semesters Semester[]
+  kelas     Kelas[]
+}
+
+model Semester {
+  id            String      @id @default(cuid())
+  nama          String      // "Ganjil" | "Genap"
+  tahunAjaranId String
+  tahunAjaran   TahunAjaran @relation(fields: [tahunAjaranId], references: [id], onDelete: Cascade)
+  isAktif       Boolean     @default(false)
+  tanggalMulai  DateTime?
+  tanggalAkhir  DateTime?
+  createdAt     DateTime    @default(now())
+
+  setorans Setoran[]
+
+  @@unique([tahunAjaranId, nama])
+}
+
+model Kelas {
+  id            String      @id @default(cuid())
+  nama          String      // "7A", "7B", etc.
+  tingkat       Int         // 7, 8, 9
+  tahunAjaranId String
+  tahunAjaran   TahunAjaran @relation(fields: [tahunAjaranId], references: [id], onDelete: Cascade)
+  waliKelasId   String?
+  waliKelas     Guru?       @relation(fields: [waliKelasId], references: [id])
+  jumlahSiswa   Int         @default(0)
+  createdAt     DateTime    @default(now())
+
+  @@unique([nama, tahunAjaranId])
+}
+
+// ─── Users & Roles ──────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   // "ADMIN" | "GURU" | "ORTU"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guru Guru?
+  ortu Ortu?
+}
+
+model Guru {
+  id     String  @id @default(cuid())
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kelas  String  // JSON string: ["7A","7B","8A"]
+  nip    String?
+
+  setorans  Setoran[]
+  waliKelas Kelas[]
+}
+
+model Ortu {
+  id     String  @id @default(cuid())
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noHp   String?
+
+  siswa Siswa[]
+}
+
+model Siswa {
+  id      String  @id @default(cuid())
+  nis     String  @unique
+  nama    String
+  kelas   String
+  foto    String?
+  ortuId  String?
+  ortu    Ortu?   @relation(fields: [ortuId], references: [id])
+
+  setorans  Setoran[]
+  createdAt DateTime  @default(now())
+}
+
+model Setoran {
+  id          String    @id @default(cuid())
+  siswaId     String
+  guruId      String
+  semesterId  String?   // link ke Semester aktif saat setoran
+  jenis       String    // "TAHFIDZ" | "TAHSIN"
+  tanggal     DateTime  @default(now())
+
+  surah     String?
+  ayatMulai Int?
+  ayatAkhir Int?
+  halMulai  Int?
+  halAkhir  Int?
+  isTasmi   Boolean @default(false)
+
+  nilaiKomponen String
+  nilaiAkhir    Float
+  predikat      String  // "MUMTAZ" | "JAYYID_JIDDAN" | "JAYYID" | "GHAIR_MAQBUL"
+  catatan       String?
+
+  siswa    Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru     Guru     @relation(fields: [guruId], references: [id])
+  semester Semester? @relation(fields: [semesterId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
