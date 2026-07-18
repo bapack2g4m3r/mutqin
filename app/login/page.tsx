@@ -86,23 +86,11 @@ export default function LoginPage() {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            width: '72px', height: '72px',
-            background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
-            borderRadius: '20px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '16px',
-            boxShadow: '0 8px 24px rgba(30,58,138,0.3)',
-          }}>
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M6 8C6 6.9 6.9 6 8 6h20c1.1 0 2 .9 2 2v20c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V8z" fill="rgba(255,255,255,0.15)"/>
-              <path d="M11 13h14M11 18h10M11 23h8" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-              <circle cx="27" cy="11" r="5" fill="#f59e0b"/>
-              <path d="M25 11l1.5 1.5L29 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="Logo SMP Global Insani" 
+            style={{ width: '120px', height: 'auto', marginBottom: '16px' }} 
+          />
           <h1 style={{
             fontSize: '28px',
             fontWeight: 800,
@@ -279,7 +267,7 @@ export default function LoginPage() {
           color: '#cbd5e1',
           marginTop: '28px',
         }}>
-          © 2025 SMP Global Insani School · Powered by MUTQIN
+          © 2026 SMP Global Insani School · Powered by MUTQIN
         </p>
       </div>
     </div>
