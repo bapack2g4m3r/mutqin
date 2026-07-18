@@ -52,6 +52,10 @@ export default function InputSetoranPage() {
   const [tajwid, setTajwid] = useState(85)
   const [makhorijTahfidz, setMakhorijTahfidz] = useState(85)
 
+  // Custom surah dropdown state
+  const [showSurahModal, setShowSurahModal] = useState(false)
+  const [searchSurah, setSearchSurah] = useState('')
+
   // Tahsin fields
   const [makhorijTahsin, setMakhorijTahsin] = useState(85)
   const [sifatulHuruf, setSifatulHuruf] = useState(85)
@@ -104,6 +108,11 @@ export default function InputSetoranPage() {
   }
 
   const selectedSurah = JUZ_30_SURAHS.find(s => s.nama === surah)
+  
+  const filteredSurahs = JUZ_30_SURAHS.filter(s => 
+    s.nama.toLowerCase().includes(searchSurah.toLowerCase()) || 
+    s.namaArab.includes(searchSurah)
+  )
 
   const badgeCls = predikat.kode === 'MUMTAZ' ? 'badge-mumtaz' : predikat.kode === 'JAYYID_JIDDAN' ? 'badge-jayyidj' : predikat.kode === 'JAYYID' ? 'badge-jayyid' : 'badge-ghair'
 
@@ -183,16 +192,22 @@ export default function InputSetoranPage() {
               <div className="form-section-title">Bacaan</div>
               <div className="input-group">
                 <label className="input-label">Surah (Juz 30)</label>
-                <select id="select-surah" className="input" value={surah} onChange={e => {
-                  setSurah(e.target.value)
-                  const s = JUZ_30_SURAHS.find(x => x.nama === e.target.value)
-                  if (s) { setAyatMulai(1); setAyatAkhir(s.jumlahAyat) }
-                }}>
-                  <option value="">— Pilih Surah —</option>
-                  {JUZ_30_SURAHS.map(s => (
-                    <option key={s.id} value={s.nama}>{s.nama} ({s.jumlahAyat} ayat)</option>
-                  ))}
-                </select>
+                <div 
+                  className="input" 
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '12px 16px', background: 'white' }}
+                  onClick={() => setShowSurahModal(true)}
+                >
+                  {selectedSurah ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ background: '#f0f9ff', padding: '2px 8px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#0ea5e9' }}>{selectedSurah.id}</span>
+                      <span style={{ fontWeight: 600, fontSize: '15px' }}>{selectedSurah.nama}</span>
+                      <span style={{ fontSize: '16px', color: '#1e293b', marginLeft: 'auto', fontWeight: 500 }}>{selectedSurah.namaArab}</span>
+                    </div>
+                  ) : (
+                    <span style={{ color: '#94a3b8' }}>— Pilih Surah —</span>
+                  )}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ flexShrink: 0, marginLeft: '8px' }}><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
               </div>
               {surah && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -262,6 +277,86 @@ export default function InputSetoranPage() {
           ) : '✓ Terima Setoran'}
         </button>
       </div>
+
+      {/* Surah Selection Modal */}
+      {showSurahModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', zIndex: 200,
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', backdropFilter: 'blur(4px)'
+        }}>
+          <div className="animate-slideUp" style={{
+            background: 'white', borderRadius: '24px 24px 0 0', padding: '20px 20px 32px',
+            maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+            boxShadow: '0 -8px 24px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ width: '40px', height: '4px', background: '#e2e8f0', borderRadius: '4px', margin: '0 auto 16px' }} />
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b' }}>Pilih Surah</h3>
+              <button onClick={() => setShowSurahModal(false)} style={{ background: '#f1f5f9', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '10px', color: '#64748b' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            
+            <div className="input-group" style={{ marginBottom: '16px' }}>
+              <div style={{ position: 'relative' }}>
+                <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input 
+                  type="text" 
+                  className="input" 
+                  placeholder="Cari surah..." 
+                  value={searchSurah}
+                  onChange={e => setSearchSurah(e.target.value)}
+                  style={{ paddingLeft: '42px', borderRadius: '12px' }}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px', display: 'flex', flexDirection: 'column' }}>
+              {filteredSurahs.map(s => (
+                <div 
+                  key={s.id} 
+                  onClick={() => {
+                    setSurah(s.nama);
+                    setAyatMulai(1);
+                    setAyatAkhir(s.jumlahAyat);
+                    setShowSurahModal(false);
+                    setSearchSurah('');
+                  }}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                    padding: '14px 8px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ 
+                      width: '40px', height: '40px', borderRadius: '50%', background: '#f0f9ff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '14px', fontWeight: 700, color: '#0ea5e9'
+                    }}>
+                      {s.id}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '16px', color: '#1e293b' }}>{s.nama}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b' }}>Juz {s.juz} · {s.jumlahAyat} ayat</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '20px', fontWeight: 500, color: '#1e293b' }}>
+                    {s.namaArab}
+                  </div>
+                </div>
+              ))}
+              
+              {filteredSurahs.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#94a3b8' }}>
+                  Surah tidak ditemukan
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

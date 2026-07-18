@@ -1,9 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient({
-  datasources: { db: { url: 'file:./dev.db' } }
-})
+const prisma = new PrismaClient()
 
 const JUZ30_SURAHS = [
   "An-Naba'", "An-Nazi'at", "'Abasa", "At-Takwir", "Al-Infithar",
