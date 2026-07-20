@@ -7,10 +7,9 @@ interface Summary {
   tahsin:  { count: number; totalNilai: number; lastNilai: number | null }
 }
 
-const KELAS_LIST = ['7A','7B','7C','8A','8B','8C','9A','9B','9C']
-
 export default function AdminLaporanPage() {
   const [data, setData] = useState<Summary[]>([])
+  const [kelasList, setKelasList] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [kelas, setKelas] = useState('')
   const [jenis, setJenis] = useState('')
@@ -22,6 +21,17 @@ export default function AdminLaporanPage() {
     if (jenis) p.set('jenis', jenis)
     fetch(`/api/laporan?${p}`).then(r => r.json()).then(d => setData(d.summary || [])).finally(() => setLoading(false))
   }
+
+  useEffect(() => {
+    fetch('/api/akademik').then(r => r.json()).then(d => {
+      if (d.tahunAjaranList) {
+        let classes: any[] = []
+        d.tahunAjaranList.forEach((ta: any) => { if (ta.isAktif) classes = classes.concat(ta.kelas) })
+        if (classes.length === 0 && d.tahunAjaranList.length > 0) classes = d.tahunAjaranList[0].kelas
+        setKelasList(classes.sort((a: any, b: any) => a.nama.localeCompare(b.nama)).map((k: any) => k.nama))
+      }
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => { load() }, [kelas, jenis])
 
@@ -67,7 +77,7 @@ export default function AdminLaporanPage() {
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <select id="filter-laporan-kelas" className="input" value={kelas} onChange={e => setKelas(e.target.value)} style={{ width: '160px' }}>
           <option value="">Semua Kelas</option>
-          {KELAS_LIST.map(k => <option key={k} value={k}>{k}</option>)}
+          {kelasList.map(k => <option key={k} value={k}>{k}</option>)}
         </select>
         <select id="filter-laporan-jenis" className="input" value={jenis} onChange={e => setJenis(e.target.value)} style={{ width: '160px' }}>
           <option value="">Semua Jenis</option>
