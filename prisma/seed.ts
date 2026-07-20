@@ -1,18 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { QURAN_SURAHS } from '../lib/surah-data'
 
 const prisma = new PrismaClient()
-
-const JUZ30_SURAHS = [
-  "An-Naba'", "An-Nazi'at", "'Abasa", "At-Takwir", "Al-Infithar",
-  "Al-Muthaffifin", "Al-Insyiqaq", "Al-Buruj", "At-Thariq", "Al-A'la",
-  "Al-Ghasyiyah", "Al-Fajr", "Al-Balad", "Asy-Syams", "Al-Lail",
-  "Adh-Dhuha", "Al-Insyirah", "At-Tin", "Al-'Alaq", "Al-Qadr",
-  "Al-Bayyinah", "Az-Zalzalah", "Al-'Adiyat", "Al-Qari'ah", "At-Takatsur",
-  "Al-'Ashr", "Al-Humazah", "Al-Fil", "Quraisy", "Al-Ma'un",
-  "Al-Kautsar", "Al-Kafirun", "An-Nashr", "Al-Masad", "Al-Ikhlas",
-  "Al-Falaq", "An-Naas"
-]
 
 function rnd(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -31,9 +21,22 @@ async function main() {
   // Clean
   await prisma.setoran.deleteMany()
   await prisma.siswa.deleteMany()
+  await prisma.halaqah.deleteMany()
+  await prisma.kelas.deleteMany()
+  await prisma.semester.deleteMany()
+  await prisma.tahunAjaran.deleteMany()
+  
   await prisma.guru.deleteMany()
   await prisma.ortu.deleteMany()
   await prisma.user.deleteMany()
+
+  // ====== TAHUN AJARAN & KELAS ======
+  const ta = await prisma.tahunAjaran.create({
+    data: { nama: '2025/2026', isAktif: true }
+  })
+  const semester = await prisma.semester.create({
+    data: { nama: 'Ganjil', tahunAjaranId: ta.id, isAktif: true }
+  })
 
   // ====== ADMIN ======
   await prisma.user.create({
@@ -55,7 +58,7 @@ async function main() {
     },
   })
   const guru1 = await prisma.guru.create({
-    data: { userId: guru1User.id, kelas: JSON.stringify(['7A', '7B', '8A']), nip: '198501012010012001' },
+    data: { userId: guru1User.id, kelas: '[]', nip: '198501012010012001' },
   })
 
   const guru2User = await prisma.user.create({
@@ -67,47 +70,41 @@ async function main() {
     },
   })
   const guru2 = await prisma.guru.create({
-    data: { userId: guru2User.id, kelas: JSON.stringify(['8B', '9A', '9B']), nip: '198701012012011002' },
+    data: { userId: guru2User.id, kelas: '[]', nip: '198701012012011002' },
   })
+
+  // ====== KELAS & HALAQAH ======
+  const kelas7A = await prisma.kelas.create({ data: { nama: '7A', tingkat: 7, tahunAjaranId: ta.id, waliKelasId: guru1.id } })
+  const kelas7B = await prisma.kelas.create({ data: { nama: '7B', tingkat: 7, tahunAjaranId: ta.id, waliKelasId: guru2.id } })
+
+  const halaqahAisyah7A = await prisma.halaqah.create({ data: { nama: 'Halaqah Aisyah', kelasId: kelas7A.id, guruId: guru1.id } })
+  const halaqahFauzi7A = await prisma.halaqah.create({ data: { nama: 'Halaqah Fauzi', kelasId: kelas7A.id, guruId: guru2.id } })
+  const halaqahAisyah7B = await prisma.halaqah.create({ data: { nama: 'Halaqah Aisyah', kelasId: kelas7B.id, guruId: guru1.id } })
 
   // ====== SISWA (20 orang) ======
   const siswaList = [
-    { nama: 'Ahmad Fauzan',     nis: '25071', kelas: '7A' },
-    { nama: 'Fatih Arkan',      nis: '25072', kelas: '7A' },
-    { nama: 'Bilal Ramadhan',   nis: '25073', kelas: '7A' },
-    { nama: 'Darisah Ali',      nis: '25074', kelas: '7A' },
-    { nama: 'Hafidh Nur',       nis: '25075', kelas: '7B' },
-    { nama: 'Aisyah Mumairoh',  nis: '25076', kelas: '7B' },
-    { nama: 'Zainab Kartika',   nis: '25077', kelas: '7B' },
-    { nama: 'Umar Syahid',      nis: '25078', kelas: '8A' },
-    { nama: 'Maryam Salsabila', nis: '25079', kelas: '8A' },
-    { nama: 'Ibrahim Hakim',    nis: '25080', kelas: '8A' },
-    { nama: 'Khadijah Putri',   nis: '25081', kelas: '8B' },
-    { nama: 'Yusuf Baharuddin', nis: '25082', kelas: '8B' },
-    { nama: 'Nur Hikmah',       nis: '25083', kelas: '9A' },
-    { nama: 'Abdullah Azzam',   nis: '25084', kelas: '9A' },
-    { nama: 'Fatimah Zahra',    nis: '25085', kelas: '9A' },
-    { nama: 'Hasan Bashri',     nis: '25086', kelas: '9B' },
-    { nama: 'Ruqayyah Nisa',    nis: '25087', kelas: '9B' },
-    { nama: 'Khalid Wahab',     nis: '25088', kelas: '9B' },
-    { nama: 'Sumayyah Dewi',    nis: '25089', kelas: '9A' },
-    { nama: 'Ammar Zubair',     nis: '25090', kelas: '7A' },
+    { nama: 'Ahmad Fauzan',     nis: '2500000001', halaqahId: halaqahFauzi7A.id, kelasId: kelas7A.id },
+    { nama: 'Fatih Arkan',      nis: '2500000002', halaqahId: halaqahFauzi7A.id, kelasId: kelas7A.id },
+    { nama: 'Bilal Ramadhan',   nis: '2500000003', halaqahId: halaqahFauzi7A.id, kelasId: kelas7A.id },
+    { nama: 'Darisah Ali',      nis: '2500000004', halaqahId: halaqahAisyah7A.id, kelasId: kelas7A.id },
+    { nama: 'Hafidh Nur',       nis: '2500000005', halaqahId: halaqahAisyah7A.id, kelasId: kelas7A.id },
+    { nama: 'Aisyah Mumairoh',  nis: '2500000006', halaqahId: halaqahAisyah7B.id, kelasId: kelas7B.id },
+    { nama: 'Zainab Kartika',   nis: '2500000007', halaqahId: halaqahAisyah7B.id, kelasId: kelas7B.id },
   ]
 
   const ortuNames = [
     'Bapak Fauzan', 'Bapak Arkan', 'Bapak Ramadhan', 'Bapak Ali', 'Bapak Nur',
-    'Bapak Mumair', 'Bapak Kartika', 'Bapak Syahid', 'Bapak Salsa', 'Bapak Hakim',
-    'Bapak Putri', 'Bapak Bahar', 'Bapak Hikmah', 'Bapak Azzam', 'Bapak Zahra',
-    'Bapak Bashri', 'Bapak Nisa', 'Bapak Wahab', 'Bapak Dewi', 'Bapak Zubair',
+    'Bapak Mumair', 'Bapak Kartika'
   ]
 
-  const createdSiswa: { id: string; kelas: string; nama: string; nis: string }[] = []
+  const createdSiswa = []
   
-  // Create special ortu for Ahmad Fauzan (demo account)
+  // Create special ortu for Ahmad Fauzan (demo account using NIS 1234567890)
   const demoOrtuUser = await prisma.user.create({
     data: {
-      email: 'ortu.ahmad@globalinsani.sch.id',
-      password: await bcrypt.hash('ortu123', 10),
+      username: '1234567890', // NIS login
+      email: 'ortu.ahmad@globalinsani.sch.id', // Keep email for reference
+      password: await bcrypt.hash('1234567890', 10), // NIS password
       name: 'Bapak Ahmad Fauzan',
       role: 'ORTU',
     },
@@ -121,13 +118,13 @@ async function main() {
     let ortuId = null
 
     if (i === 0) {
-      // Ahmad Fauzan uses demo ortu
       ortuId = demoOrtu.id
+      s.nis = '1234567890'
     } else {
       const ortuUser = await prisma.user.create({
         data: {
-          email: `ortu${i + 1}@globalinsani.sch.id`,
-          password: await bcrypt.hash('ortu123', 10),
+          username: s.nis, // NIS as username
+          password: await bcrypt.hash(s.nis, 10), // NIS as password
           name: ortuNames[i],
           role: 'ORTU',
         },
@@ -137,22 +134,23 @@ async function main() {
     }
 
     const siswa = await prisma.siswa.create({
-      data: { nis: s.nis, nama: s.nama, kelas: s.kelas, ortuId },
+      data: { nis: s.nis, nama: s.nama, kelasId: s.kelasId, halaqahId: s.halaqahId, ortuId },
     })
-    createdSiswa.push({ id: siswa.id, kelas: siswa.kelas, nama: siswa.nama, nis: siswa.nis })
+    createdSiswa.push(siswa)
   }
 
   // ====== SETORAN SAMPLE ======
-  const getGuru = (kelas: string) =>
-    ['7A', '7B', '8A'].includes(kelas) ? guru1 : guru2
-
   for (const siswa of createdSiswa) {
-    const guru = getGuru(siswa.kelas)
-    const numSetorans = rnd(2, 8)
+    // Get guruId from halaqah
+    let guruId = guru1.id
+    if (siswa.halaqahId === halaqahFauzi7A.id) guruId = guru2.id
+
+    const numSetorans = rnd(2, 5)
 
     for (let j = 0; j < numSetorans; j++) {
-      const surahIndex = j % JUZ30_SURAHS.length
-      const surah = JUZ30_SURAHS[surahIndex]
+      // Pick random surah from Juz 30 (index 77 to 113 in QURAN_SURAHS)
+      const surahIndex = rnd(77, 113)
+      const surah = QURAN_SURAHS[surahIndex]
       const daysAgo = rnd(0, 30)
       const tanggal = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
 
@@ -165,23 +163,24 @@ async function main() {
       await prisma.setoran.create({
         data: {
           siswaId: siswa.id,
-          guruId: guru.id,
+          guruId: guruId,
+          semesterId: semester.id,
           jenis: 'TAHFIDZ',
-          surah,
+          surah: surah.nama,
           ayatMulai: 1,
           ayatAkhir: rnd(5, 40),
-          halMulai: 582 + surahIndex,
-          halAkhir: 582 + surahIndex + 1,
+          halMulai: surah.halMulai,
+          halAkhir: surah.halMulai,
           isTasmi: false,
           nilaiKomponen: JSON.stringify({ kelancaran, tajwid, makhorijulHuruf: makhorij }),
           nilaiAkhir: nilaiTahfidz,
           predikat: getPredikat(nilaiTahfidz),
-          catatan: nilaiTahfidz >= 90 ? 'Lancar, tajwid bagus' : nilaiTahfidz >= 80 ? 'Sudah cukup baik' : 'Perlu latihan lagi',
+          catatan: nilaiTahfidz >= 90 ? 'Lancar, tajwid bagus' : 'Perlu latihan lagi',
           tanggal,
         },
       })
 
-      // Tahsin (setiap 2 setoran sekali)
+      // Tahsin
       if (j % 2 === 0) {
         const mkh = rnd(70, 100)
         const sfh = rnd(70, 100)
@@ -192,8 +191,11 @@ async function main() {
         await prisma.setoran.create({
           data: {
             siswaId: siswa.id,
-            guruId: guru.id,
+            guruId: guruId,
+            semesterId: semester.id,
             jenis: 'TAHSIN',
+            bukuTahsin: 'Metode Ummi Jilid 4',
+            halamanTahsin: '12-13',
             nilaiKomponen: JSON.stringify({
               makhorijulHuruf: mkh,
               sifatulHuruf: sfh,
@@ -213,9 +215,9 @@ async function main() {
   console.log('✅ Seed selesai!')
   console.log('\n📝 Login Credentials:')
   console.log('👤 Admin:  admin@globalinsani.sch.id / admin123')
-  console.log('👨‍🏫 Guru 1: ustadzah.aisyah@globalinsani.sch.id / guru123  (Kelas 7A, 7B, 8A)')
-  console.log('👨‍🏫 Guru 2: ustad.fauzi@globalinsani.sch.id / guru123       (Kelas 8B, 9A, 9B)')
-  console.log('👪 Ortu:   ortu.ahmad@globalinsani.sch.id / ortu123  (Ortu Ahmad Fauzan, 7A)')
+  console.log('👨‍🏫 Guru 1: ustadzah.aisyah@globalinsani.sch.id / guru123')
+  console.log('👨‍🏫 Guru 2: ustad.fauzi@globalinsani.sch.id / guru123')
+  console.log('👪 Ortu:   1234567890 / 1234567890 ATAU 2500000002 / 2500000002')
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect())

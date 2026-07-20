@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { calcProgress } from '@/lib/surah-data'
+import { hash } from 'bcryptjs'
 
 // GET /api/siswa/[id]
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const siswa = await prisma.siswa.findUnique({
     where: { id },
     include: {
-      ortu: { include: { user: { select: { name: true, email: true } } } },
+      ortu: { include: { user: { select: { name: true, email: true, username: true } } } },
       setorans: {
         orderBy: { tanggal: 'desc' },
         include: {
@@ -26,7 +27,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!siswa) return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
 
-  // Calculate progress
   const surahSelesai = siswa.setorans
     .filter(s => s.jenis === 'TAHFIDZ' && s.surah)
     .map(s => s.surah as string)
@@ -43,11 +43,48 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params
   const body = await req.json()
-  const siswa = await prisma.siswa.update({
-    where: { id },
-    data: body,
-  })
-  return NextResponse.json(siswa)
+  const { nis, nisn, nama, kelas, kelasId, namaOrtu, password } = body
+
+  const existingSiswa = await prisma.siswa.findUnique({ where: { id }, include: { ortu: { include: { user: true } } } })
+  if (!existingSiswa) return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
+
+  let ortuId = existingSiswa.ortuId
+
+  // Update or create Ortu
+  if (namaOrtu || password) {
+    if (ortuId && existingSiswa.ortu) {
+       const updateData: any = {}
+       if (namaOrtu) updateData.name = namaOrtu
+       if (password) updateData.password = await hash(password, 10)
+       if (nisn || nis) updateData.username = nisn || nis
+       await prisma.user.update({
+         where: { id: existingSiswa.ortu.userId },
+         data: updateData
+       })
+    } else {
+       if (namaOrtu && password) {
+         const username = nisn || nis
+         const hashedPassword = await hash(password, 10)
+         const user = await prisma.user.create({
+           data: { name: namaOrtu, username, password: hashedPassword, role: 'ORTU', ortu: { create: {} } },
+           include: { ortu: true }
+         })
+         if (user.ortu) ortuId = user.ortu.id
+       }
+    }
+  }
+
+  const dataSiswa: any = { nis, nisn, nama, kelas }
+  if (kelasId !== undefined) dataSiswa.kelasId = kelasId
+  if (ortuId) dataSiswa.ortuId = ortuId
+
+  try {
+    const siswa = await prisma.siswa.update({ where: { id }, data: dataSiswa })
+    return NextResponse.json(siswa)
+  } catch (e: any) {
+    if (e.code === 'P2002') return NextResponse.json({ error: 'NIS atau NISN sudah digunakan' }, { status: 409 })
+    throw e
+  }
 }
 
 // DELETE /api/siswa/[id]

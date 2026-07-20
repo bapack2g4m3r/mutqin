@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import { JUZ_30_SURAHS, calcNilaiTahfidz, calcNilaiTahsin, getPredikat } from '@/lib/surah-data'
+import { QURAN_SURAHS, calcNilaiTahfidz, calcNilaiTahsin, getPredikat } from '@/lib/surah-data'
 
 type Jenis = 'TAHFIDZ' | 'TAHSIN'
 
@@ -61,6 +61,8 @@ export default function InputSetoranPage() {
   const [sifatulHuruf, setSifatulHuruf] = useState(85)
   const [ahkamulMad, setAhkamulMad] = useState(85)
   const [ahkamulWaqaf, setAhkamulWaqaf] = useState(85)
+  const [bukuTahsin, setBukuTahsin] = useState('Metode Ummi Jilid 1')
+  const [halamanTahsin, setHalamanTahsin] = useState('')
 
   const [catatan, setCatatan] = useState('')
 
@@ -91,6 +93,8 @@ export default function InputSetoranPage() {
         body.isTasmi = isTasmi
         body.nilaiKomponen = { kelancaran, tajwid, makhorijulHuruf: makhorijTahfidz }
       } else {
+        body.bukuTahsin = bukuTahsin
+        body.halamanTahsin = halamanTahsin
         body.nilaiKomponen = { makhorijulHuruf: makhorijTahsin, sifatulHuruf, ahkamulMad, ahkamulWaqaf }
       }
       const res = await fetch('/api/setoran', {
@@ -107,9 +111,9 @@ export default function InputSetoranPage() {
     }
   }
 
-  const selectedSurah = JUZ_30_SURAHS.find(s => s.nama === surah)
+  const selectedSurah = QURAN_SURAHS.find(s => s.nama === surah)
   
-  const filteredSurahs = JUZ_30_SURAHS.filter(s => 
+  const filteredSurahs = QURAN_SURAHS.filter(s => 
     s.nama.toLowerCase().includes(searchSurah.toLowerCase()) || 
     s.namaArab.includes(searchSurah)
   )
@@ -191,7 +195,7 @@ export default function InputSetoranPage() {
             <div className="form-section" style={{ marginBottom: '12px' }}>
               <div className="form-section-title">Bacaan</div>
               <div className="input-group">
-                <label className="input-label">Surah (Juz 30)</label>
+                <label className="input-label">Surah</label>
                 <div 
                   className="input" 
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '12px 16px', background: 'white' }}
@@ -243,13 +247,35 @@ export default function InputSetoranPage() {
         )}
 
         {jenis === 'TAHSIN' && (
-          <div className="form-section" style={{ marginBottom: '12px' }}>
-            <div className="form-section-title">Penilaian Tahsin</div>
-            <NilaiSlider label="Makhorijul Huruf" value={makhorijTahsin} onChange={setMakhorijTahsin} weight="25%" />
+          <>
+            <div className="form-section" style={{ marginBottom: '12px' }}>
+              <div className="form-section-title">Materi</div>
+              <div className="input-group">
+                <label className="input-label">Metode / Buku</label>
+                <select className="input" value={bukuTahsin} onChange={e => setBukuTahsin(e.target.value)}>
+                  <option value="Metode Ummi Jilid 1">Metode Ummi Jilid 1</option>
+                  <option value="Metode Ummi Jilid 2">Metode Ummi Jilid 2</option>
+                  <option value="Metode Ummi Jilid 3">Metode Ummi Jilid 3</option>
+                  <option value="Metode Ummi Jilid 4">Metode Ummi Jilid 4</option>
+                  <option value="Metode Ummi Jilid 5">Metode Ummi Jilid 5</option>
+                  <option value="Metode Ummi Jilid 6">Metode Ummi Jilid 6</option>
+                  <option value="Al-Quran">Al-Quran</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label className="input-label">Halaman / Ayat</label>
+                <input type="text" className="input" placeholder="Contoh: Hal 12-14" value={halamanTahsin} onChange={e => setHalamanTahsin(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="form-section" style={{ marginBottom: '12px' }}>
+              <div className="form-section-title">Penilaian Tahsin</div>
+              <NilaiSlider label="Makhorijul Huruf" value={makhorijTahsin} onChange={setMakhorijTahsin} weight="25%" />
             <NilaiSlider label="Sifatul Huruf" value={sifatulHuruf} onChange={setSifatulHuruf} weight="25%" />
             <NilaiSlider label="Ahkamul Mad" value={ahkamulMad} onChange={setAhkamulMad} weight="25%" />
             <NilaiSlider label="Ahkamul Waqaf" value={ahkamulWaqaf} onChange={setAhkamulWaqaf} weight="25%" />
           </div>
+          </>
         )}
 
         <div className="form-section" style={{ marginBottom: '24px' }}>

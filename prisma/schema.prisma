@@ -46,14 +46,30 @@ model Kelas {
   jumlahSiswa   Int         @default(0)
   createdAt     DateTime    @default(now())
 
+  siswa         Siswa[]
+  halaqahs      Halaqah[]
+
   @@unique([nama, tahunAjaranId])
+}
+
+model Halaqah {
+  id        String   @id @default(cuid())
+  nama      String   // "Halaqah Ustadz Fauzi"
+  kelasId   String
+  kelas     Kelas    @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  guruId    String
+  guru      Guru     @relation(fields: [guruId], references: [id])
+  
+  siswa     Siswa[]
+  createdAt DateTime @default(now())
 }
 
 // ─── Users & Roles ──────────────────────────────────────────────────────────
 
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
+  email     String?  @unique
+  username  String?  @unique // Untuk NIS Ortu
   password  String
   name      String
   role      String   // "ADMIN" | "GURU" | "ORTU"
@@ -73,6 +89,7 @@ model Guru {
 
   setorans  Setoran[]
   waliKelas Kelas[]
+  halaqahs  Halaqah[]
 }
 
 model Ortu {
@@ -85,13 +102,18 @@ model Ortu {
 }
 
 model Siswa {
-  id      String  @id @default(cuid())
-  nis     String  @unique
-  nama    String
-  kelas   String
-  foto    String?
-  ortuId  String?
-  ortu    Ortu?   @relation(fields: [ortuId], references: [id])
+  id        String   @id @default(cuid())
+  nis       String   @unique
+  nisn      String?  @unique
+  nama      String
+  kelas     String?  // Opsional, legacy string
+  kelasId   String?
+  kelasRef  Kelas?  @relation(fields: [kelasId], references: [id])
+  halaqahId String?
+  halaqah   Halaqah? @relation(fields: [halaqahId], references: [id])
+  foto      String?
+  ortuId    String?
+  ortu      Ortu?   @relation(fields: [ortuId], references: [id])
 
   setorans  Setoran[]
   createdAt DateTime  @default(now())
@@ -111,6 +133,9 @@ model Setoran {
   halMulai  Int?
   halAkhir  Int?
   isTasmi   Boolean @default(false)
+  
+  bukuTahsin    String?
+  halamanTahsin String?
 
   nilaiKomponen String
   nilaiAkhir    Float

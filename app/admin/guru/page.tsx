@@ -7,7 +7,6 @@ interface Guru {
   setorans: { id: string }[]
 }
 
-const KELAS_LIST = ['7A','7B','7C','7D','8A','8B','8C','8D','9A','9B','9C','9D']
 const EMPTY_FORM = { nama: '', email: '', password: '', nip: '', kelas: [] as string[] }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -72,12 +71,13 @@ function ConfirmDialog({ message, onConfirm, onCancel, loading }: {
   )
 }
 
-function GuruForm({ initial, isEdit, onSave, onClose, saving }: {
+function GuruForm({ initial, isEdit, onSave, onClose, saving, kelasList }: {
   initial: { nama: string; email: string; password: string; nip: string; kelas: string[] }
   isEdit: boolean
   onSave: (data: typeof initial) => void
   onClose: () => void
   saving: boolean
+  kelasList: string[]
 }) {
   const [form, setForm] = useState(initial)
   const [showPass, setShowPass] = useState(false)
@@ -133,7 +133,7 @@ function GuruForm({ initial, isEdit, onSave, onClose, saving }: {
       <div className="input-group">
         <label className="input-label">Kelas yang Diampu</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {KELAS_LIST.map(k => {
+          {kelasList.map(k => {
             const active = form.kelas.includes(k)
             return (
               <button key={k} type="button" onClick={() => toggleKelas(k)} style={{
@@ -167,6 +167,7 @@ function GuruForm({ initial, isEdit, onSave, onClose, saving }: {
 
 export default function AdminGuruPage() {
   const [gurus, setGurus]     = useState<Guru[]>([])
+  const [kelasList, setKelasList] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [showEdit, setShowEdit]   = useState<Guru | null>(null)
@@ -177,12 +178,29 @@ export default function AdminGuruPage() {
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
+  const fetchKelas = useCallback(async () => {
+    try {
+      const res = await fetch('/api/akademik')
+      const data = await res.json()
+      if (data.tahunAjaranList) {
+        let classes: any[] = []
+        data.tahunAjaranList.forEach((ta: any) => {
+          if (ta.isAktif) classes = classes.concat(ta.kelas)
+        })
+        if (classes.length === 0 && data.tahunAjaranList.length > 0) {
+          classes = data.tahunAjaranList[0].kelas
+        }
+        setKelasList(classes.sort((a: any, b: any) => a.nama.localeCompare(b.nama)).map((k: any) => k.nama))
+      }
+    } catch(e) {}
+  }, [])
+
   const load = useCallback(() => {
     setLoading(true)
     fetch('/api/guru').then(r => r.json()).then(d => setGurus(d.gurus || [])).finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { fetchKelas(); load() }, [load, fetchKelas])
 
   async function handleAdd(form: typeof EMPTY_FORM) {
     setSaving(true)
@@ -333,14 +351,14 @@ export default function AdminGuruPage() {
       {/* Add Modal */}
       {showAdd && (
         <Modal title="Tambah Guru Baru" onClose={() => setShowAdd(false)}>
-          <GuruForm initial={EMPTY_FORM} isEdit={false} onSave={handleAdd} onClose={() => setShowAdd(false)} saving={saving} />
+          <GuruForm initial={EMPTY_FORM} isEdit={false} onSave={handleAdd} onClose={() => setShowAdd(false)} saving={saving} kelasList={kelasList} />
         </Modal>
       )}
 
       {/* Edit Modal */}
       {showEdit && (
         <Modal title="Edit Data Guru" onClose={() => setShowEdit(null)}>
-          <GuruForm initial={getEditInitial(showEdit)} isEdit={true} onSave={handleEdit} onClose={() => setShowEdit(null)} saving={saving} />
+          <GuruForm initial={getEditInitial(showEdit)} isEdit={true} onSave={handleEdit} onClose={() => setShowEdit(null)} saving={saving} kelasList={kelasList} />
         </Modal>
       )}
 

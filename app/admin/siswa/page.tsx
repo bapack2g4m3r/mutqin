@@ -1,16 +1,20 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import * as XLSX from 'xlsx'
 
 interface Siswa {
-  id: string; nis: string; nama: string; kelas: string
-  ortu?: { user: { name: string; email: string } }
+  id: string; nis: string; nisn?: string; nama: string; kelas: string; kelasId?: string
+  ortu?: { user: { name: string; email: string, username?: string } }
   setorans: Array<{ jenis: string; nilaiAkhir: number }>
 }
 
-interface BulkRow { nis: string; nama: string; kelas: string; _valid?: boolean; _error?: string }
+interface Kelas {
+  id: string; nama: string; tingkat: number
+}
 
-const KELAS_LIST = ['7A','7B','7C','7D','8A','8B','8C','8D','9A','9B','9C','9D']
-const EMPTY_FORM = { nis: '', nama: '', kelas: '7A' }
+interface BulkRow { nis: string; nisn?: string; nama: string; kelas: string; namaOrtu?: string; password?: string; _valid?: boolean; _error?: string }
+
+const EMPTY_FORM = { nis: '', nisn: '', nama: '', kelasId: '', kelas: '', namaOrtu: '', password: '' }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -41,9 +45,11 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   )
 }
 
-function ConfirmDialog({ message, onConfirm, onCancel, loading }: {
+function ConfirmDialog({ message, onConfirm, onCancel, loading, title = 'Konfirmasi Hapus', confirmText = 'Ya, Hapus', type = 'danger' }: {
   message: string; onConfirm: () => void; onCancel: () => void; loading: boolean
+  title?: string; confirmText?: string; type?: 'danger' | 'primary'
 }) {
+  const isDanger = type === 'danger'
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)',
@@ -56,20 +62,26 @@ function ConfirmDialog({ message, onConfirm, onCancel, loading }: {
         boxShadow: '0 24px 60px rgba(0,0,0,0.2)',
       }}>
         <div style={{
-          width: '56px', height: '56px', borderRadius: '50%', background: '#fee2e2',
+          width: '56px', height: '56px', borderRadius: '50%', background: isDanger ? '#fee2e2' : '#dbeafe',
           display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
         }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
+          {isDanger ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
+            </svg>
+          )}
         </div>
-        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>Konfirmasi Hapus</h4>
+        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>{title}</h4>
         <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '24px', lineHeight: 1.5 }}>{message}</p>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancel} disabled={loading}>Batal</button>
-          <button className="btn btn-danger" style={{ flex: 1 }} onClick={onConfirm} disabled={loading}>
-            {loading ? 'Menghapus...' : 'Ya, Hapus'}
+          <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancel} disabled={loading}>Tidak</button>
+          <button className={isDanger ? "btn btn-danger" : "btn btn-primary"} style={{ flex: 1 }} onClick={onConfirm} disabled={loading}>
+            {loading ? 'Memproses...' : confirmText}
           </button>
         </div>
       </div>
@@ -77,19 +89,30 @@ function ConfirmDialog({ message, onConfirm, onCancel, loading }: {
   )
 }
 
-function SiswaForm({ initial, onSave, onClose, saving }: {
-  initial: { nis: string; nama: string; kelas: string }
-  onSave: (data: typeof initial) => void
+function SiswaForm({ initial, onSave, onClose, saving, kelasList }: {
+  initial: { nis: string; nisn?: string; nama: string; kelasId?: string; kelas: string; namaOrtu?: string; password?: string }
+  onSave: (data: any) => void
   onClose: () => void
   saving: boolean
+  kelasList: Kelas[]
 }) {
   const [form, setForm] = useState(initial)
+
+  const isEdit = !!initial.nis
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div className="input-group">
-        <label className="input-label">NIS <span style={{ color: '#dc2626' }}>*</span></label>
-        <input id="form-nis" type="text" className="input" placeholder="Contoh: 25091" value={form.nis}
-          onChange={e => setForm(p => ({ ...p, nis: e.target.value }))} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="input-group">
+          <label className="input-label">NIS <span style={{ color: '#dc2626' }}>*</span></label>
+          <input id="form-nis" type="text" className="input" placeholder="Contoh: 25091" value={form.nis}
+            onChange={e => setForm(p => ({ ...p, nis: e.target.value }))} />
+        </div>
+        <div className="input-group">
+          <label className="input-label">NISN</label>
+          <input id="form-nisn" type="text" className="input" placeholder="NISN (Opsional)" value={form.nisn || ''}
+            onChange={e => setForm(p => ({ ...p, nisn: e.target.value }))} />
+        </div>
       </div>
       <div className="input-group">
         <label className="input-label">Nama Lengkap <span style={{ color: '#dc2626' }}>*</span></label>
@@ -98,15 +121,39 @@ function SiswaForm({ initial, onSave, onClose, saving }: {
       </div>
       <div className="input-group">
         <label className="input-label">Kelas <span style={{ color: '#dc2626' }}>*</span></label>
-        <select id="form-kelas" className="input" value={form.kelas}
-          onChange={e => setForm(p => ({ ...p, kelas: e.target.value }))}>
-          {KELAS_LIST.map(k => <option key={k} value={k}>{k}</option>)}
+        <select id="form-kelas" className="input" value={form.kelasId || form.kelas || ''}
+          onChange={e => {
+            const val = e.target.value
+            const k = kelasList.find(x => x.id === val)
+            if (k) setForm(p => ({ ...p, kelasId: k.id, kelas: k.nama }))
+            else setForm(p => ({ ...p, kelasId: '', kelas: val })) // legacy support
+          }}>
+          <option value="" disabled>-- Pilih Kelas --</option>
+          {kelasList.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+          {!form.kelasId && form.kelas && <option value={form.kelas}>{form.kelas}</option>}
         </select>
       </div>
+
+      {/* Akun Orang Tua */}
+      <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '4px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '12px' }}>Akses Akun Orang Tua (Opsional)</div>
+        <div className="input-group" style={{ marginBottom: '12px' }}>
+          <label className="input-label">Nama Orang Tua / Wali</label>
+          <input type="text" className="input" placeholder="Nama Ortu" value={form.namaOrtu || ''}
+            onChange={e => setForm(p => ({ ...p, namaOrtu: e.target.value }))} />
+        </div>
+        <div className="input-group">
+          <label className="input-label">{isEdit ? 'Update Password (kosongkan jika tidak diubah)' : 'Password'}</label>
+          <input type="text" className="input" placeholder="Password login Ortu" value={form.password || ''}
+            onChange={e => setForm(p => ({ ...p, password: e.target.value }))} />
+        </div>
+        {isEdit && <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>Username login: {form.nisn || form.nis}</div>}
+      </div>
+
       <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
         <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose} disabled={saving}>Batal</button>
         <button id="btn-save-siswa" className="btn btn-primary" style={{ flex: 1 }}
-          onClick={() => onSave(form)} disabled={saving || !form.nis || !form.nama}>
+          onClick={() => onSave(form)} disabled={saving || !form.nis || !form.nama || (!form.kelasId && !form.kelas)}>
           {saving ? <><span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} /> Menyimpan...</> : 'Simpan'}
         </button>
       </div>
@@ -116,57 +163,91 @@ function SiswaForm({ initial, onSave, onClose, saving }: {
 
 // ─── Bulk Upload Component ────────────────────────────────────────────────────
 
-function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => void; onSuccess: () => void; kelasList: Kelas[] }) {
+  const [showConfirmImport, setShowConfirmImport] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const [rows, setRows] = useState<BulkRow[]>([])
   const [step, setStep] = useState<'upload' | 'preview' | 'result'>('upload')
   const [importing, setImporting] = useState(false)
-  const [result, setResult] = useState<{ created: number; skipped: number; skippedNis: string[] } | null>(null)
+  const [result, setResult] = useState<{ created: number; skipped: number; skippedNis: string[], errors: string[] } | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [parseError, setParseError] = useState('')
 
   function downloadTemplate() {
-    const csv = 'NIS,Nama,Kelas\n25091,Ahmad Fauzan,7A\n25092,Siti Aisyah,7B\n25093,Muhammad Ali,8A'
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = 'template-import-siswa.csv'; a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function parseCSV(text: string) {
-    setParseError('')
-    const lines = text.trim().split('\n').filter(l => l.trim())
-    if (lines.length < 2) { setParseError('File kosong atau hanya berisi header.'); return }
-    const header = lines[0].split(',').map(h => h.trim().toLowerCase())
-    const nisIdx  = header.findIndex(h => h === 'nis')
-    const namaIdx = header.findIndex(h => h === 'nama')
-    const kelasIdx= header.findIndex(h => h === 'kelas')
-    if (nisIdx < 0 || namaIdx < 0 || kelasIdx < 0) {
-      setParseError('Header CSV harus mengandung kolom: NIS, Nama, Kelas'); return
-    }
-    const parsed: BulkRow[] = []
-    lines.slice(1).forEach((line, i) => {
-      const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
-      const nis = cols[nisIdx] || ''; const nama = cols[namaIdx] || ''; const kelas = (cols[kelasIdx] || '').toUpperCase()
-      let _error = ''
-      if (!nis) _error = 'NIS kosong'
-      else if (!nama) _error = 'Nama kosong'
-      else if (!KELAS_LIST.includes(kelas)) _error = `Kelas "${kelas}" tidak valid`
-      parsed.push({ nis, nama, kelas, _valid: !_error, _error })
-    })
-    if (parsed.length === 0) { setParseError('Tidak ada data ditemukan.'); return }
-    setRows(parsed); setStep('preview')
+    const data = [
+      { 'NIS': '101', 'NISN': '0012345', 'Nama Siswa': 'Ahmad Fauzan', 'Kelas': '7A', 'Nama Ortu': 'Budi Santoso', 'Password': 'budi' },
+      { 'NIS': '102', 'NISN': '', 'Nama Siswa': 'Siti Aisyah', 'Kelas': '7B', 'Nama Ortu': '', 'Password': '' }
+    ]
+    const worksheet = XLSX.utils.json_to_sheet(data)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa")
+    XLSX.writeFile(workbook, "template-import-siswa.xlsx")
   }
 
   function handleFile(file: File) {
-    if (!file.name.endsWith('.csv')) { setParseError('Hanya file .csv yang diterima.'); return }
+    if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx')) {
+      setParseError('Hanya file .csv atau .xlsx yang diterima.')
+      return
+    }
+    
+    setParseError('')
     const reader = new FileReader()
-    reader.onload = e => parseCSV(e.target?.result as string)
-    reader.readAsText(file)
+    reader.onload = e => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer)
+        const workbook = XLSX.read(data, { type: 'array' })
+        const firstSheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[firstSheetName]
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+
+        if (json.length === 0) {
+          setParseError('File kosong atau tidak ada data.')
+          return
+        }
+
+        const validClassNames = kelasList.map(k => k.nama.toUpperCase())
+
+        const parsed: BulkRow[] = json.map(row => {
+          // Mendukung berbagai macam penamaan header
+          const nis = String(row['NIS'] || row['nis'] || '').trim()
+          const nisn = String(row['NISN'] || row['nisn'] || '').trim()
+          const nama = String(row['Nama Siswa'] || row['Nama'] || row['nama'] || '').trim()
+          const kelas = String(row['Kelas'] || row['kelas'] || '').trim().toUpperCase()
+          const namaOrtu = String(row['Nama Ortu'] || row['Ortu'] || '').trim()
+          let password = String(row['Password'] || row['password'] || '').trim()
+
+          // Set default password to NISN (or NIS) if Ortu name exists but password is empty
+          if (namaOrtu && !password) {
+            password = nisn || nis
+          }
+
+          let _error = ''
+          if (!nis) _error = 'NIS kosong'
+          else if (!nama) _error = 'Nama kosong'
+          else if (!kelas) _error = 'Kelas kosong'
+          else if (!validClassNames.includes(kelas)) _error = `Kelas "${kelas}" tidak ada di database`
+
+          return { nis, nisn, nama, kelas, namaOrtu, password, _valid: !_error, _error }
+        })
+
+        if (parsed.length === 0) {
+          setParseError('Gagal memproses data.')
+          return
+        }
+        setRows(parsed)
+        setStep('preview')
+      } catch (err: any) {
+        setParseError(`Gagal membaca file: ${err.message}`)
+      }
+    }
+    reader.readAsArrayBuffer(file)
   }
 
-  async function handleImport() {
+  function handleImport() {
+    setShowConfirmImport(true)
+  }
+
+  async function executeImport() {
     const validRows = rows.filter(r => r._valid)
     if (!validRows.length) return
     setImporting(true)
@@ -177,6 +258,7 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
       })
       const data = await res.json()
       if (!res.ok) { alert(data.error || 'Gagal import'); return }
+      setShowConfirmImport(false)
       setResult(data); setStep('result')
     } finally { setImporting(false) }
   }
@@ -202,8 +284,8 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
               </svg>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: '14px', color: '#1e293b' }}>Download Template CSV</div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Format: NIS, Nama, Kelas (contoh: 7A, 8B, 9C)</div>
+              <div style={{ fontWeight: 600, fontSize: '14px', color: '#1e293b' }}>Download Template Excel (.xlsx)</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Kolom: NIS, NISN, Nama, Kelas, Nama Ortu, Password</div>
             </div>
             <button id="btn-download-template" className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '13px' }}
               onClick={downloadTemplate}>
@@ -239,11 +321,11 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
               </svg>
             </div>
             <div style={{ fontWeight: 600, fontSize: '15px', color: dragOver ? '#2563eb' : '#1e293b', marginBottom: '4px' }}>
-              {dragOver ? 'Lepas file di sini' : 'Klik atau drag & drop file CSV'}
+              {dragOver ? 'Lepas file di sini' : 'Klik atau drag & drop file Excel/CSV'}
             </div>
-            <div style={{ fontSize: '13px', color: '#94a3b8' }}>Format: .csv · Maks. 500 baris</div>
+            <div style={{ fontSize: '13px', color: '#94a3b8' }}>Format: .xlsx / .csv · Maks. 500 baris</div>
           </div>
-          <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }}
+          <input ref={fileRef} type="file" accept=".csv, .xlsx" style={{ display: 'none' }}
             onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
 
           {parseError && (
@@ -281,16 +363,20 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
             <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white' }}>
               <thead style={{ position: 'sticky', top: 0 }}>
                 <tr style={{ background: '#f8fafc' }}>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>NIS</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Nama</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>NIS/NISN</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Nama Siswa</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Kelas</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Ortu</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={i} style={{ borderTop: '1px solid #f1f5f9', background: r._valid ? 'white' : '#fff8f8' }}>
-                    <td style={{ padding: '9px 12px', fontSize: '13px', fontFamily: 'monospace', color: '#64748b' }}>{r.nis || '—'}</td>
+                    <td style={{ padding: '9px 12px', fontSize: '12px', fontFamily: 'monospace', color: '#64748b' }}>
+                      {r.nis || '—'}<br/>
+                      <span style={{ fontSize: '10px', color: '#94a3b8' }}>{r.nisn}</span>
+                    </td>
                     <td style={{ padding: '9px 12px', fontSize: '13px', fontWeight: r._valid ? 600 : 400, color: r._valid ? '#1e293b' : '#dc2626' }}>{r.nama || '—'}</td>
                     <td style={{ padding: '9px 12px' }}>
                       {r._valid ? (
@@ -298,6 +384,9 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
                       ) : (
                         <span style={{ fontSize: '12px', color: '#dc2626' }}>{r.kelas || '—'}</span>
                       )}
+                    </td>
+                    <td style={{ padding: '9px 12px', fontSize: '12px', color: '#64748b' }}>
+                      {r.namaOrtu ? (r.password ? '✓ Set' : '⚠ No Pass') : '—'}
                     </td>
                     <td style={{ padding: '9px 12px' }}>
                       {r._valid
@@ -313,12 +402,23 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
           <div style={{ display: 'flex', gap: '12px' }}>
             <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Batal</button>
             <button id="btn-confirm-import" className="btn btn-primary" style={{ flex: 2 }}
-              onClick={handleImport} disabled={importing || validCount === 0}>
-              {importing
-                ? <><span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} /> Mengimport...</>
-                : `Import ${validCount} Siswa`}
+              onClick={handleImport} disabled={validCount === 0}>
+              Lanjutkan Import
             </button>
           </div>
+
+          {/* Confirm Dialog */}
+          {showConfirmImport && (
+            <ConfirmDialog
+              title="Konfirmasi Import"
+              type="primary"
+              confirmText="Ya, Import"
+              message={`Rekap Data: Terdapat ${validCount} siswa yang valid dan siap diimport. ${invalidCount > 0 ? `(${invalidCount} data error akan dilewati). ` : ''}Apakah Anda yakin ingin memproses data ini?`}
+              onConfirm={executeImport}
+              onCancel={() => setShowConfirmImport(false)}
+              loading={importing}
+            />
+          )}
         </div>
       )}
 
@@ -335,25 +435,29 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-          <h4 style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b', marginBottom: '8px' }}>Import Berhasil!</h4>
+          <h4 style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b', marginBottom: '8px' }}>Import Selesai!</h4>
+          
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px' }}>
             <div style={{ padding: '12px 20px', background: '#d1fae5', borderRadius: '12px' }}>
               <div style={{ fontSize: '28px', fontWeight: 800, color: '#059669' }}>{result.created}</div>
-              <div style={{ fontSize: '12px', color: '#065f46' }}>Siswa ditambahkan</div>
+              <div style={{ fontSize: '12px', color: '#065f46' }}>Berhasil</div>
             </div>
             <div style={{ padding: '12px 20px', background: '#fef3c7', borderRadius: '12px' }}>
               <div style={{ fontSize: '28px', fontWeight: 800, color: '#d97706' }}>{result.skipped}</div>
-              <div style={{ fontSize: '12px', color: '#92400e' }}>Duplikat dilewati</div>
+              <div style={{ fontSize: '12px', color: '#92400e' }}>Dilewati/Gagal</div>
             </div>
           </div>
-          {result.skippedNis.length > 0 && (
-            <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>
-              NIS yang sudah ada: {result.skippedNis.join(', ')}
-            </p>
+          
+          {result.errors && result.errors.length > 0 && (
+            <div style={{ textAlign: 'left', background: '#fee2e2', borderRadius: '8px', padding: '12px', marginBottom: '20px', maxHeight: '100px', overflowY: 'auto' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#dc2626', marginBottom: '4px' }}>Log Error:</div>
+              {result.errors.map((e, i) => <div key={i} style={{ fontSize: '11px', color: '#991b1b' }}>• {e}</div>)}
+            </div>
           )}
+          
           <button id="btn-selesai-import" className="btn btn-primary" style={{ width: '100%' }}
             onClick={() => { onSuccess(); onClose() }}>
-            Selesai
+            Tutup
           </button>
         </div>
       )}
@@ -365,32 +469,58 @@ function BulkUploadPanel({ onClose, onSuccess }: { onClose: () => void; onSucces
 
 export default function AdminSiswaPage() {
   const [siswa, setSiswa] = useState<Siswa[]>([])
+  const [kelasList, setKelasList] = useState<Kelas[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [kelas, setKelas] = useState('')
+  const [kelasFilter, setKelasFilter] = useState('')
 
   // Modals
   const [showAdd, setShowAdd]       = useState(false)
   const [showEdit, setShowEdit]     = useState<Siswa | null>(null)
   const [showDelete, setShowDelete] = useState<Siswa | null>(null)
   const [showBulk, setShowBulk]    = useState(false)
+  const [showBulkDelete, setShowBulkDelete] = useState(false)
+  
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   // Saving/deleting states
   const [saving, setSaving]   = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deletingBulk, setDeletingBulk] = useState(false)
   const [toast, setToast]     = useState('')
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  const fetchKelas = useCallback(async () => {
+    try {
+      const res = await fetch('/api/akademik')
+      const data = await res.json()
+      // Extract classes from active TahunAjaran, or just take everything
+      if (data.tahunAjaranList) {
+        let classes: Kelas[] = []
+        data.tahunAjaranList.forEach((ta: any) => {
+          if (ta.isAktif) classes = classes.concat(ta.kelas)
+        })
+        if (classes.length === 0 && data.tahunAjaranList.length > 0) {
+          classes = data.tahunAjaranList[0].kelas
+        }
+        setKelasList(classes.sort((a,b) => a.nama.localeCompare(b.nama)))
+      }
+    } catch(e) {}
+  }, [])
 
   const load = useCallback(() => {
     setLoading(true)
     const p = new URLSearchParams({ limit: '500' })
     if (search) p.set('search', search)
-    if (kelas)  p.set('kelas', kelas)
-    fetch(`/api/siswa?${p}`).then(r => r.json()).then(d => setSiswa(d.siswa || [])).finally(() => setLoading(false))
-  }, [search, kelas])
+    if (kelasFilter)  p.set('kelas', kelasFilter)
+    fetch(`/api/siswa?${p}`).then(r => r.json()).then(d => { setSiswa(d.siswa || []); setSelectedIds([]) }).finally(() => setLoading(false))
+  }, [search, kelasFilter])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { 
+    fetchKelas()
+    load() 
+  }, [load, fetchKelas])
 
   // Debounce search
   useEffect(() => {
@@ -398,7 +528,7 @@ export default function AdminSiswaPage() {
     return () => clearTimeout(t)
   }, [search])
 
-  async function handleAdd(form: { nis: string; nama: string; kelas: string }) {
+  async function handleAdd(form: any) {
     setSaving(true)
     try {
       const res = await fetch('/api/siswa', {
@@ -412,7 +542,7 @@ export default function AdminSiswaPage() {
     } finally { setSaving(false) }
   }
 
-  async function handleEdit(form: { nis: string; nama: string; kelas: string }) {
+  async function handleEdit(form: any) {
     if (!showEdit) return
     setSaving(true)
     try {
@@ -437,6 +567,21 @@ export default function AdminSiswaPage() {
     } finally { setDeleting(false) }
   }
 
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return
+    setDeletingBulk(true)
+    try {
+      const res = await fetch('/api/siswa/bulk-delete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds }),
+      })
+      if (!res.ok) { const d = await res.json(); alert(d.error || 'Gagal hapus'); return }
+      showToast(`✓ ${selectedIds.length} siswa berhasil dihapus`)
+      setShowBulkDelete(false)
+      load()
+    } finally { setDeletingBulk(false) }
+  }
+
   const avgNilai = (s: Siswa['setorans']) =>
     s.length ? Math.round(s.reduce((a, x) => a + x.nilaiAkhir, 0) / s.length) : null
 
@@ -457,7 +602,7 @@ export default function AdminSiswaPage() {
               <line x1="12" y1="12" x2="12" y2="21"/>
               <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
             </svg>
-            Import CSV
+            Import Excel/CSV
           </button>
           <button id="btn-tambah-siswa" className="btn btn-primary"
             onClick={() => setShowAdd(true)}
@@ -481,11 +626,18 @@ export default function AdminSiswaPage() {
           <input id="search-siswa" type="search" className="input" placeholder="Cari nama atau NIS..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select id="filter-kelas" className="input" value={kelas}
-          onChange={e => setKelas(e.target.value)} style={{ width: '150px' }}>
+        <select id="filter-kelas" className="input" value={kelasFilter}
+          onChange={e => setKelasFilter(e.target.value)} style={{ width: '150px' }}>
           <option value="">Semua Kelas</option>
-          {KELAS_LIST.map(k => <option key={k} value={k}>{k}</option>)}
+          {kelasList.map(k => <option key={k.id} value={k.nama}>{k.nama}</option>)}
         </select>
+
+        {selectedIds.length > 0 && (
+          <button className="btn btn-danger" onClick={() => setShowBulkDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Hapus {selectedIds.length} Terpilih
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -493,6 +645,13 @@ export default function AdminSiswaPage() {
         <table>
           <thead>
             <tr>
+              <th style={{ width: '40px', textAlign: 'center' }}>
+                <input type="checkbox"
+                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  checked={siswa.length > 0 && selectedIds.length === siswa.length}
+                  onChange={e => setSelectedIds(e.target.checked ? siswa.map(s => s.id) : [])}
+                />
+              </th>
               <th style={{ width: '40px' }}>#</th>
               <th>NIS</th>
               <th>Nama Siswa</th>
@@ -506,13 +665,13 @@ export default function AdminSiswaPage() {
           <tbody>
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i}>{Array.from({ length: 8 }).map((_, j) => (
+                <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (
                   <td key={j}><div className="skeleton" style={{ height: '14px', borderRadius: '4px' }} /></td>
                 ))}</tr>
               ))
             ) : siswa.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                <td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -526,16 +685,36 @@ export default function AdminSiswaPage() {
               siswa.map((s, idx) => {
                 const avg = avgNilai(s.setorans)
                 return (
-                  <tr key={s.id}>
+                  <tr key={s.id} style={{ background: selectedIds.includes(s.id) ? '#f0f9ff' : 'transparent', transition: 'background 0.2s' }}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input type="checkbox"
+                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                        checked={selectedIds.includes(s.id)}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedIds(p => [...p, s.id])
+                          else setSelectedIds(p => p.filter(id => id !== s.id))
+                        }}
+                      />
+                    </td>
                     <td style={{ color: '#94a3b8', fontSize: '12px' }}>{idx + 1}</td>
-                    <td style={{ fontFamily: 'monospace', fontSize: '13px', color: '#64748b' }}>{s.nis}</td>
+                    <td>
+                      <div style={{ fontFamily: 'monospace', fontSize: '13px', color: '#64748b' }}>{s.nis}</div>
+                      {s.nisn && <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace' }}>{s.nisn}</div>}
+                    </td>
                     <td style={{ fontWeight: 600, color: '#1e293b' }}>{s.nama}</td>
                     <td>
                       <span style={{ padding: '2px 10px', background: '#dbeafe', color: '#1d4ed8', borderRadius: '8px', fontSize: '12px', fontWeight: 700 }}>
                         {s.kelas}
                       </span>
                     </td>
-                    <td style={{ fontSize: '13px', color: '#64748b' }}>{s.ortu?.user.name || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                    <td style={{ fontSize: '13px', color: '#64748b' }}>
+                      {s.ortu?.user.name ? (
+                        <>
+                          <div style={{ color: '#1e293b', fontWeight: 500 }}>{s.ortu.user.name}</div>
+                          <div style={{ fontSize: '11px' }}>{s.ortu.user.username}</div>
+                        </>
+                      ) : <span style={{ color: '#cbd5e1' }}>—</span>}
+                    </td>
                     <td style={{ textAlign: 'center' }}>
                       <span style={{ padding: '3px 10px', background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569' }}>
                         {s.setorans.length}×
@@ -605,7 +784,7 @@ export default function AdminSiswaPage() {
       {/* Add Modal */}
       {showAdd && (
         <Modal title="Tambah Siswa Baru" onClose={() => setShowAdd(false)}>
-          <SiswaForm initial={EMPTY_FORM} onSave={handleAdd} onClose={() => setShowAdd(false)} saving={saving} />
+          <SiswaForm initial={EMPTY_FORM} onSave={handleAdd} onClose={() => setShowAdd(false)} saving={saving} kelasList={kelasList} />
         </Modal>
       )}
 
@@ -613,10 +792,15 @@ export default function AdminSiswaPage() {
       {showEdit && (
         <Modal title="Edit Data Siswa" onClose={() => setShowEdit(null)}>
           <SiswaForm
-            initial={{ nis: showEdit.nis, nama: showEdit.nama, kelas: showEdit.kelas }}
+            initial={{ 
+              nis: showEdit.nis, nisn: showEdit.nisn, nama: showEdit.nama, 
+              kelas: showEdit.kelas, kelasId: showEdit.kelasId,
+              namaOrtu: showEdit.ortu?.user.name, password: '' 
+            }}
             onSave={handleEdit}
             onClose={() => setShowEdit(null)}
             saving={saving}
+            kelasList={kelasList}
           />
         </Modal>
       )}
@@ -631,10 +815,20 @@ export default function AdminSiswaPage() {
         />
       )}
 
+      {/* Bulk Delete Confirm */}
+      {showBulkDelete && (
+        <ConfirmDialog
+          message={`Hapus ${selectedIds.length} siswa yang dipilih? Semua data terkait juga akan terhapus dan tidak bisa dibatalkan.`}
+          onConfirm={handleBulkDelete}
+          onCancel={() => setShowBulkDelete(false)}
+          loading={deletingBulk}
+        />
+      )}
+
       {/* Bulk Upload Modal */}
       {showBulk && (
-        <Modal title="Import Siswa dari CSV" onClose={() => setShowBulk(false)}>
-          <BulkUploadPanel onClose={() => setShowBulk(false)} onSuccess={load} />
+        <Modal title="Import Siswa dari Excel/CSV" onClose={() => setShowBulk(false)}>
+          <BulkUploadPanel onClose={() => setShowBulk(false)} onSuccess={load} kelasList={kelasList} />
         </Modal>
       )}
     </div>

@@ -107,7 +107,7 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="input-group">
-            <label className="input-label">Email</label>
+            <label className="input-label">Email / NIS</label>
             <div className="input-icon-wrap">
               <span className="input-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -117,9 +117,9 @@ export default function LoginPage() {
               </span>
               <input
                 id="email"
-                type="email"
+                type="text"
                 className="input"
-                placeholder="nama@globalinsani.sch.id"
+                placeholder="nama@email.com atau NIS"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
