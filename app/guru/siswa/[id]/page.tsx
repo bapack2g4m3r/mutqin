@@ -17,6 +17,10 @@ interface SiswaDetail {
     id: string
     jenis: string
     surah?: string
+    ayatMulai?: number
+    ayatAkhir?: number
+    bukuTahsin?: string
+    halamanTahsin?: string
     nilaiAkhir: number
     predikat: string
     catatan?: string
@@ -217,7 +221,16 @@ export default function DetailSiswaPage() {
                         <span style={{ fontSize: '11px', background: '#d1fae5', color: '#059669', borderRadius: '8px', padding: '2px 8px', fontWeight: 600 }}>Tasmi'</span>
                       )}
                     </div>
-                    {s.surah && <div style={{ fontSize: '13px', color: '#64748b' }}>{s.surah}</div>}
+                    {s.jenis === 'TAHFIDZ' && s.surah && (
+                      <div style={{ fontSize: '13px', color: '#64748b' }}>
+                        {s.surah} {s.ayatMulai && s.ayatAkhir ? `Ayat ${s.ayatMulai}-${s.ayatAkhir}` : ''}
+                      </div>
+                    )}
+                    {s.jenis === 'TAHSIN' && s.bukuTahsin && (
+                      <div style={{ fontSize: '13px', color: '#64748b' }}>
+                        {s.bukuTahsin} {s.halamanTahsin ? `(Hal. ${s.halamanTahsin})` : ''}
+                      </div>
+                    )}
                     <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{formatDate(s.tanggal)}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

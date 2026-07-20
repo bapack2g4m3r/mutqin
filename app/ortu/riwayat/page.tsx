@@ -5,6 +5,7 @@ import MobileNav from '@/components/layout/MobileNav'
 
 interface Setoran {
   id: string; jenis: string; surah?: string; nilaiAkhir: number
+  ayatMulai?: number; ayatAkhir?: number; bukuTahsin?: string; halamanTahsin?: string
   predikat: string; catatan?: string; isTasmi: boolean; tanggal: string
   guru: { user: { name: string } }
 }
@@ -72,7 +73,8 @@ export default function OrtuRiwayatPage() {
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '14px', color: '#1e293b', marginBottom: '2px' }}>
                       {s.jenis === 'TAHFIDZ' ? '📖 Tahfidz' : '🗣 Tahsin'}
-                      {s.surah ? ` · ${s.surah}` : ''}
+                      {s.jenis === 'TAHFIDZ' && s.surah ? ` · ${s.surah}${s.ayatMulai && s.ayatAkhir ? ` Ayat ${s.ayatMulai}-${s.ayatAkhir}` : ''}` : ''}
+                      {s.jenis === 'TAHSIN' && s.bukuTahsin ? ` · ${s.bukuTahsin}${s.halamanTahsin ? ` (Hal. ${s.halamanTahsin})` : ''}` : ''}
                       {s.isTasmi && (
                         <span style={{ marginLeft: '6px', fontSize: '11px', background: '#d1fae5', color: '#059669', borderRadius: '6px', padding: '1px 6px' }}>Tasmi'</span>
                       )}

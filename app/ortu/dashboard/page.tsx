@@ -9,6 +9,7 @@ interface SiswaDetail {
   progress: number; hasTasmi: boolean; surahSelesai: string[]
   setorans: Array<{
     id: string; jenis: string; surah?: string; nilaiAkhir: number
+    ayatMulai?: number; ayatAkhir?: number; bukuTahsin?: string; halamanTahsin?: string
     predikat: string; catatan?: string; isTasmi: boolean; tanggal: string
     guru: { user: { name: string } }
   }>
@@ -180,7 +181,8 @@ export default function OrtuDashboardPage() {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '15px', color: '#1e293b', marginBottom: '2px' }}>
                       {s.jenis === 'TAHFIDZ' ? '📖 Tahfidz' : '🗣 Tahsin'}
-                      {s.surah ? ` · ${s.surah}` : ''}
+                      {s.jenis === 'TAHFIDZ' && s.surah ? ` · ${s.surah}${s.ayatMulai && s.ayatAkhir ? ` Ayat ${s.ayatMulai}-${s.ayatAkhir}` : ''}` : ''}
+                      {s.jenis === 'TAHSIN' && s.bukuTahsin ? ` · ${s.bukuTahsin}${s.halamanTahsin ? ` (Hal. ${s.halamanTahsin})` : ''}` : ''}
                     </div>
                     <div style={{ fontSize: '12px', color: '#94a3b8' }}>{formatDate(s.tanggal)}</div>
                   </div>
