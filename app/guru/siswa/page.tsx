@@ -16,12 +16,11 @@ function getInitials(nama: string) {
   return nama.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase()
 }
 
-const KELAS_LIST = ['Semua', '7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B', '9C']
-
 export default function GuruSiswaPage() {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [kelas, setKelas] = useState('')
+  const [kelasList, setKelasList] = useState<string[]>(['Semua'])
   const [siswa, setSiswa] = useState<Siswa[]>([])
   const [loading, setLoading] = useState(true)
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -31,6 +30,23 @@ export default function GuruSiswaPage() {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
     return () => clearTimeout(t)
   }, [search])
+
+  const fetchKelas = useCallback(async () => {
+    try {
+      const res = await fetch('/api/akademik')
+      const data = await res.json()
+      if (data.tahunAjaranList) {
+        let classes: any[] = []
+        data.tahunAjaranList.forEach((ta: any) => {
+          if (ta.isAktif) classes = classes.concat(ta.kelas)
+        })
+        if (classes.length === 0 && data.tahunAjaranList.length > 0) {
+          classes = data.tahunAjaranList[0].kelas
+        }
+        setKelasList(['Semua', ...classes.sort((a: any, b: any) => a.nama.localeCompare(b.nama)).map((k: any) => k.nama)])
+      }
+    } catch(e) {}
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -43,6 +59,8 @@ export default function GuruSiswaPage() {
       .then(d => setSiswa(d.siswa || []))
       .finally(() => setLoading(false))
   }, [debouncedSearch, kelas])
+
+  useEffect(() => { fetchKelas() }, [fetchKelas])
 
   return (
     <div style={{ background: 'var(--surface-bg)', minHeight: '100vh' }}>
@@ -80,7 +98,7 @@ export default function GuruSiswaPage() {
 
           {/* Kelas filter */}
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', marginTop: '10px', scrollbarWidth: 'none' }}>
-            {KELAS_LIST.map(k => (
+            {kelasList.map(k => (
               <button
                 key={k}
                 id={`filter-kelas-${k.replace(' ', '')}`}
