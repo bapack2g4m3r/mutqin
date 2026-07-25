@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!session || !isAdmin(session)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
-  const { nama, tingkat, waliKelasId } = await req.json()
+  const { nama, tingkat, halaqahGuruIds } = await req.json()
 
   const kelasRecord = await prisma.kelas.findUnique({ where: { id } })
   if (!kelasRecord) return NextResponse.json({ error: 'Tidak ditemukan' }, { status: 404 })
@@ -26,14 +26,31 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     data: {
       nama: nama || undefined,
       tingkat: tingkat ? Number(tingkat) : undefined,
-      waliKelasId: waliKelasId !== undefined ? (waliKelasId || null) : undefined,
       jumlahSiswa,
     },
-    include: {
-      waliKelas: { include: { user: { select: { name: true } } } },
-    },
   })
-  return NextResponse.json(updated)
+
+  if (Array.isArray(halaqahGuruIds)) {
+    await prisma.halaqah.deleteMany({ where: { kelasId: id } })
+    if (halaqahGuruIds.length > 0) {
+      await prisma.halaqah.createMany({
+        data: halaqahGuruIds.map((guruId: string) => ({
+          kelasId: id,
+          nama: `Halaqah Kelas ${updated.nama}`,
+          guruId
+        }))
+      })
+    }
+  }
+
+  const finalKelas = await prisma.kelas.findUnique({
+    where: { id },
+    include: {
+      halaqahs: { include: { guru: { include: { user: { select: { name: true } } } } } },
+    }
+  })
+  
+  return NextResponse.json(finalKelas)
 }
 
 // DELETE /api/akademik/kelas/[id]
