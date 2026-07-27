@@ -512,7 +512,6 @@ export default function AdminSiswaPage() {
     try {
       const res = await fetch('/api/akademik')
       const data = await res.json()
-      // Extract classes from active TahunAjaran, or just take everything
       if (data.tahunAjaranList) {
         let classes: Kelas[] = []
         data.tahunAjaranList.forEach((ta: any) => {
@@ -528,22 +527,18 @@ export default function AdminSiswaPage() {
 
   const load = useCallback(() => {
     setLoading(true)
-    const p = new URLSearchParams({ limit: '500' })
-    if (search) p.set('search', search)
-    if (kelasFilter)  p.set('kelas', kelasFilter)
+    const p = new URLSearchParams({ limit: '2000' })
     fetch(`/api/siswa?${p}`).then(r => r.json()).then(d => { setSiswa(d.siswa || []); setSelectedIds([]) }).finally(() => setLoading(false))
-  }, [search, kelasFilter])
+  }, [])
 
   useEffect(() => { 
     fetchKelas()
     load() 
   }, [load, fetchKelas])
 
-  // Debounce search & reset page
+  // Reset page when search or filter changes
   useEffect(() => {
     setPage(1)
-    const t = setTimeout(load, 300)
-    return () => clearTimeout(t)
   }, [search, kelasFilter])
 
   async function handleAdd(form: any) {
@@ -603,8 +598,22 @@ export default function AdminSiswaPage() {
   const avgNilai = (s: Siswa['setorans']) =>
     s.length ? Math.round(s.reduce((a, x) => a + x.nilaiAkhir, 0) / s.length) : null
 
+  // Filter data
+  const filteredSiswa = siswa.filter(s => {
+    let match = true
+    if (kelasFilter && s.kelas !== kelasFilter) match = false
+    if (search) {
+      const q = search.toLowerCase()
+      const n = s.nama.toLowerCase()
+      const nis = s.nis.toLowerCase()
+      const nisn = s.nisn?.toLowerCase() || ''
+      if (!n.includes(q) && !nis.includes(q) && !nisn.includes(q)) match = false
+    }
+    return match
+  })
+
   // Sort data
-  const sortedSiswa = [...siswa].sort((a, b) => {
+  const sortedSiswa = [...filteredSiswa].sort((a, b) => {
     let valA: any = ''
     let valB: any = ''
     if (sortKey === 'nis') { valA = a.nis; valB = b.nis }
@@ -628,7 +637,9 @@ export default function AdminSiswaPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Data Siswa</h1>
-          <p style={{ color: '#64748b', fontSize: '14px' }}>{siswa.length} siswa terdaftar</p>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
+            {filteredSiswa.length === siswa.length ? `${siswa.length} siswa terdaftar` : `Menampilkan ${filteredSiswa.length} dari ${siswa.length} siswa`}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button id="btn-bulk-upload" className="btn btn-outline"
@@ -685,8 +696,8 @@ export default function AdminSiswaPage() {
               <th style={{ width: '40px', textAlign: 'center' }}>
                 <input type="checkbox"
                   style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                  checked={siswa.length > 0 && selectedIds.length === siswa.length}
-                  onChange={e => setSelectedIds(e.target.checked ? siswa.map(s => s.id) : [])}
+                  checked={filteredSiswa.length > 0 && selectedIds.length === filteredSiswa.length}
+                  onChange={e => setSelectedIds(e.target.checked ? filteredSiswa.map(s => s.id) : [])}
                 />
               </th>
               <th style={{ width: '40px' }}>#</th>
@@ -706,7 +717,7 @@ export default function AdminSiswaPage() {
                   <td key={j}><div className="skeleton" style={{ height: '14px', borderRadius: '4px' }} /></td>
                 ))}</tr>
               ))
-            ) : siswa.length === 0 ? (
+            ) : filteredSiswa.length === 0 ? (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
