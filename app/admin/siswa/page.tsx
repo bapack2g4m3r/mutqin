@@ -474,9 +474,22 @@ export default function AdminSiswaPage() {
   const [search, setSearch] = useState('')
   const [kelasFilter, setKelasFilter] = useState('')
   
-  // Pagination state
+  // Pagination & Sorting state
   const [page, setPage] = useState(1)
   const itemsPerPage = 20
+  type SortKey = 'nis' | 'nama' | 'kelas' | 'totalSetoran' | 'rataRata'
+  const [sortKey, setSortKey] = useState<SortKey>('nama')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortOrder('asc') }
+  }
+
+  const renderSortIcon = (key: SortKey) => {
+    if (sortKey !== key) return <span style={{ color: '#cbd5e1', marginLeft: '4px', fontSize: '12px' }}>↕</span>
+    return <span style={{ color: '#1d4ed8', marginLeft: '4px', fontSize: '12px' }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+  }
 
   // Modals
   const [showAdd, setShowAdd]       = useState(false)
@@ -590,9 +603,24 @@ export default function AdminSiswaPage() {
   const avgNilai = (s: Siswa['setorans']) =>
     s.length ? Math.round(s.reduce((a, x) => a + x.nilaiAkhir, 0) / s.length) : null
 
+  // Sort data
+  const sortedSiswa = [...siswa].sort((a, b) => {
+    let valA: any = ''
+    let valB: any = ''
+    if (sortKey === 'nis') { valA = a.nis; valB = b.nis }
+    else if (sortKey === 'nama') { valA = a.nama; valB = b.nama }
+    else if (sortKey === 'kelas') { valA = a.kelas; valB = b.kelas }
+    else if (sortKey === 'totalSetoran') { valA = a.setorans.length; valB = b.setorans.length }
+    else if (sortKey === 'rataRata') { valA = avgNilai(a.setorans) || 0; valB = avgNilai(b.setorans) || 0 }
+    
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1
+    return 0
+  })
+
   // Calculate pagination
-  const totalPages = Math.ceil(siswa.length / itemsPerPage)
-  const currentData = siswa.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+  const totalPages = Math.ceil(sortedSiswa.length / itemsPerPage)
+  const currentData = sortedSiswa.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
   return (
     <div style={{ padding: '32px', maxWidth: '1280px' }}>
@@ -662,12 +690,12 @@ export default function AdminSiswaPage() {
                 />
               </th>
               <th style={{ width: '40px' }}>#</th>
-              <th>NIS</th>
-              <th>Nama Siswa</th>
-              <th>Kelas</th>
+              <th onClick={() => handleSort('nis')} style={{ cursor: 'pointer', userSelect: 'none' }}>NIS {renderSortIcon('nis')}</th>
+              <th onClick={() => handleSort('nama')} style={{ cursor: 'pointer', userSelect: 'none' }}>Nama Siswa {renderSortIcon('nama')}</th>
+              <th onClick={() => handleSort('kelas')} style={{ cursor: 'pointer', userSelect: 'none' }}>Kelas {renderSortIcon('kelas')}</th>
               <th>Orang Tua</th>
-              <th style={{ textAlign: 'center' }}>Total Setoran</th>
-              <th style={{ textAlign: 'center' }}>Rata-rata Nilai</th>
+              <th onClick={() => handleSort('totalSetoran')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}>Total Setoran {renderSortIcon('totalSetoran')}</th>
+              <th onClick={() => handleSort('rataRata')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}>Rata-rata Nilai {renderSortIcon('rataRata')}</th>
               <th style={{ textAlign: 'center', width: '100px' }}>Aksi</th>
             </tr>
           </thead>

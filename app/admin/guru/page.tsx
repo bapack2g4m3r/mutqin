@@ -178,6 +178,19 @@ export default function AdminGuruPage() {
   const [search, setSearch]   = useState('')
   const [page, setPage]       = useState(1)
   const itemsPerPage = 15
+  type SortKey = 'nama' | 'email' | 'nip' | 'totalSetoran'
+  const [sortKey, setSortKey] = useState<SortKey>('nama')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortOrder('asc') }
+  }
+
+  const renderSortIcon = (key: SortKey) => {
+    if (sortKey !== key) return <span style={{ color: '#cbd5e1', marginLeft: '4px', fontSize: '12px' }}>↕</span>
+    return <span style={{ color: '#1d4ed8', marginLeft: '4px', fontSize: '12px' }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+  }
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -290,10 +303,10 @@ export default function AdminGuruPage() {
           <thead>
             <tr>
               <th style={{ width: '40px' }}>#</th>
-              <th>Nama Guru</th>
-              <th>Kontak & NIP</th>
+              <th onClick={() => handleSort('nama')} style={{ cursor: 'pointer', userSelect: 'none' }}>Nama Guru {renderSortIcon('nama')}</th>
+              <th onClick={() => handleSort('email')} style={{ cursor: 'pointer', userSelect: 'none' }}>Kontak & NIP {renderSortIcon('email')}</th>
               <th>Kelas Diampu</th>
-              <th style={{ textAlign: 'center' }}>Total Setoran</th>
+              <th onClick={() => handleSort('totalSetoran')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}>Total Setoran {renderSortIcon('totalSetoran')}</th>
               <th style={{ textAlign: 'center', width: '100px' }}>Aksi</th>
             </tr>
           </thead>
@@ -309,7 +322,18 @@ export default function AdminGuruPage() {
                 g.user.name.toLowerCase().includes(search.toLowerCase()) || 
                 g.user.email.toLowerCase().includes(search.toLowerCase()) ||
                 (g.nip && g.nip.toLowerCase().includes(search.toLowerCase()))
-              )
+              ).sort((a, b) => {
+                let valA: any = ''
+                let valB: any = ''
+                if (sortKey === 'nama') { valA = a.user.name; valB = b.user.name }
+                else if (sortKey === 'email') { valA = a.user.email; valB = b.user.email }
+                else if (sortKey === 'nip') { valA = a.nip || ''; valB = b.nip || '' }
+                else if (sortKey === 'totalSetoran') { valA = a.setorans?.length || 0; valB = b.setorans?.length || 0 }
+                
+                if (valA < valB) return sortOrder === 'asc' ? -1 : 1
+                if (valA > valB) return sortOrder === 'asc' ? 1 : -1
+                return 0
+              })
               const totalPages = Math.ceil(filteredGurus.length / itemsPerPage)
               const currentData = filteredGurus.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
