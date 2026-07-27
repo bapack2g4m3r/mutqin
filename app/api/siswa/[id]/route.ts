@@ -16,6 +16,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id },
     include: {
       ortu: { include: { user: { select: { name: true, email: true, username: true } } } },
+      kelasRef: {
+        include: {
+          waliKelas: { include: { user: { select: { name: true } } } },
+          halaqahs: { include: { guru: { include: { user: { select: { name: true } } } } } },
+        }
+      },
       setorans: {
         orderBy: { tanggal: 'desc' },
         include: {

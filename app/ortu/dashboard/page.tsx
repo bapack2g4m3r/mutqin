@@ -6,6 +6,10 @@ import MobileNav from '@/components/layout/MobileNav'
 
 interface SiswaDetail {
   id: string; nama: string; kelas: string; nis: string
+  kelasRef?: {
+    waliKelas?: { user: { name: string } }
+    halaqahs?: Array<{ guru: { user: { name: string } } }>
+  }
   progress: number; hasTasmi: boolean; surahSelesai: string[]
   setorans: Array<{
     id: string; jenis: string; surah?: string; nilaiAkhir: number
@@ -111,7 +115,21 @@ export default function OrtuDashboardPage() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ color: 'white', fontWeight: 700, fontSize: '15px' }}>{siswa.nama}</div>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>NIS {siswa.nis} · Kelas {siswa.kelas}</div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginBottom: '6px' }}>NIS {siswa.nis} · Kelas {siswa.kelas}</div>
+                {siswa.kelasRef && (siswa.kelasRef.waliKelas || (siswa.kelasRef.halaqahs && siswa.kelasRef.halaqahs.length > 0)) && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                    {siswa.kelasRef.waliKelas && (
+                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.6)' }}>Wali Kelas:</span> {siswa.kelasRef.waliKelas.user.name}
+                      </div>
+                    )}
+                    {siswa.kelasRef.halaqahs && siswa.kelasRef.halaqahs.length > 0 && (
+                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.6)' }}>Halaqah:</span> {siswa.kelasRef.halaqahs.map(h => h.guru.user.name).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               {siswa.hasTasmi && (
                 <div style={{ background: 'rgba(5,150,105,0.3)', color: '#6ee7b7', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: 700 }}>
