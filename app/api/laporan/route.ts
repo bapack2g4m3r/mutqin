@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       summary[key] = {
         siswa: s.siswa,
         tahfidz: { count: 0, totalNilai: 0, lastNilai: null },
-        tahsin:  { count: 0, totalNilai: 0, lastNilai: null },
+        tahsin:  { count: 0, totalNilai: 0, lastNilai: null, lastBukuTahsin: null },
       }
     }
     if (s.jenis === 'TAHFIDZ') {
@@ -50,7 +50,10 @@ export async function GET(req: NextRequest) {
     } else {
       summary[key].tahsin.count++
       summary[key].tahsin.totalNilai += s.nilaiAkhir
-      if (!summary[key].tahsin.lastNilai) summary[key].tahsin.lastNilai = s.nilaiAkhir
+      if (!summary[key].tahsin.lastNilai) {
+        summary[key].tahsin.lastNilai = s.nilaiAkhir
+        summary[key].tahsin.lastBukuTahsin = s.bukuTahsin
+      }
     }
   }
 

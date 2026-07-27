@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 interface Summary {
   siswa: { nama: string; kelas: string; nis: string }
   tahfidz: { count: number; totalNilai: number; lastNilai: number | null }
-  tahsin:  { count: number; totalNilai: number; lastNilai: number | null }
+  tahsin:  { count: number; totalNilai: number; lastNilai: number | null; lastBukuTahsin: string | null }
 }
 
 export default function AdminLaporanPage() {
@@ -36,11 +36,12 @@ export default function AdminLaporanPage() {
   useEffect(() => { load() }, [kelas, jenis])
 
   function exportCSV() {
-    const headers = ['Nama','Kelas','NIS','Setoran Tahfidz','Rata Tahfidz','Setoran Tahsin','Rata Tahsin']
+    const headers = ['Nama','Kelas','NIS','Setoran Tahfidz','Rata Tahfidz','Buku Tahsin Terakhir','Setoran Tahsin','Rata Tahsin']
     const rows = data.map(d => [
       d.siswa.nama, d.siswa.kelas, d.siswa.nis,
       d.tahfidz.count,
       d.tahfidz.count ? Math.round(d.tahfidz.totalNilai / d.tahfidz.count) : '',
+      d.tahsin.lastBukuTahsin || '',
       d.tahsin.count,
       d.tahsin.count ? Math.round(d.tahsin.totalNilai / d.tahsin.count) : '',
     ])
@@ -92,7 +93,7 @@ export default function AdminLaporanPage() {
             <tr>
               <th>#</th><th>Nama Siswa</th><th>Kelas</th><th>NIS</th>
               <th>Setoran Tahfidz</th><th>Rata-rata Tahfidz</th>
-              <th>Setoran Tahsin</th><th>Rata-rata Tahsin</th>
+              <th>Buku Tahsin</th><th>Setoran Tahsin</th><th>Rata-rata Tahsin</th>
             </tr>
           </thead>
           <tbody>
@@ -103,7 +104,7 @@ export default function AdminLaporanPage() {
                 ))}</tr>
               ))
             ) : data.length === 0 ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>Tidak ada data laporan</td></tr>
+              <tr><td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>Tidak ada data laporan</td></tr>
             ) : (
               data.map((d, idx) => {
                 const avgTahfidz = d.tahfidz.count ? Math.round(d.tahfidz.totalNilai / d.tahfidz.count) : null
@@ -120,6 +121,7 @@ export default function AdminLaporanPage() {
                     <td style={{ fontFamily: 'monospace', fontSize: '13px', color: '#64748b' }}>{d.siswa.nis}</td>
                     <td style={{ textAlign: 'center' }}>{d.tahfidz.count || '—'}</td>
                     <td style={{ textAlign: 'center', fontWeight: 700, color: color(avgTahfidz) }}>{avgTahfidz ?? '—'}</td>
+                    <td style={{ textAlign: 'center', fontSize: '12px' }}>{d.tahsin.lastBukuTahsin ? <span style={{ padding: '2px 8px', background: '#fef3c7', color: '#d97706', borderRadius: '6px', fontWeight: 600 }}>{d.tahsin.lastBukuTahsin}</span> : '—'}</td>
                     <td style={{ textAlign: 'center' }}>{d.tahsin.count || '—'}</td>
                     <td style={{ textAlign: 'center', fontWeight: 700, color: color(avgTahsin) }}>{avgTahsin ?? '—'}</td>
                   </tr>
