@@ -175,8 +175,13 @@ export default function AdminGuruPage() {
   const [saving, setSaving]   = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [toast, setToast]     = useState('')
+  const [search, setSearch]   = useState('')
+  const [page, setPage]       = useState(1)
+  const itemsPerPage = 15
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  useEffect(() => { setPage(1) }, [search])
 
   const fetchKelas = useCallback(async () => {
     try {
@@ -266,84 +271,153 @@ export default function AdminGuruPage() {
         </button>
       </div>
 
-      {/* Guru Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }} className="stagger-children">
-        {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card" style={{ height: '160px' }}>
-              <div className="skeleton" style={{ height: '16px', width: '40%', borderRadius: '6px', marginBottom: '12px' }} />
-              <div className="skeleton" style={{ height: '12px', width: '60%', borderRadius: '6px', marginBottom: '8px' }} />
-              <div className="skeleton" style={{ height: '12px', width: '30%', borderRadius: '6px' }} />
-            </div>
-          ))
-        ) : gurus.length === 0 ? (
-          <div style={{ gridColumn: '1/-1' }} className="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+      {/* Filter Search */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <div className="input-icon-wrap" style={{ flex: 1, maxWidth: '400px' }}>
+          <span className="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <p>Belum ada guru terdaftar</p>
-          </div>
-        ) : (
-          gurus.map(g => {
-            let kelasList: string[] = []
-            try { kelasList = JSON.parse(g.kelas || '[]') } catch {}
-            return (
-              <div key={g.id} className="card" style={{ position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-                  <div style={{
-                    width: '52px', height: '52px', borderRadius: '50%', flexShrink: 0,
-                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '17px', fontWeight: 700, color: '#1e3a8a',
-                  }}>
-                    {g.user.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {g.user.name}
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {g.user.email}
-                    </div>
-                    {g.nip && <div style={{ fontSize: '12px', color: '#94a3b8' }}>NIP: {g.nip}</div>}
-                  </div>
-                </div>
-
-                {/* Kelas badges */}
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '14px 0' }}>
-                  {kelasList.length > 0 ? kelasList.map(k => (
-                    <span key={k} style={{ padding: '2px 10px', background: '#dbeafe', color: '#1d4ed8', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{k}</span>
-                  )) : (
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Belum ada kelas</span>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>
-                    <span style={{ fontWeight: 700, color: '#1e293b' }}>{g.setorans?.length || 0}</span> setoran dicatat
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button id={`btn-edit-guru-${g.id}`} title="Edit" onClick={() => setShowEdit(g)}
-                      style={{ padding: '6px 14px', borderRadius: '10px', background: '#dbeafe', color: '#1d4ed8', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
-                      onMouseOver={e => (e.currentTarget.style.background = '#bfdbfe')}
-                      onMouseOut={e => (e.currentTarget.style.background = '#dbeafe')}>
-                      ✏️ Edit
-                    </button>
-                    <button id={`btn-delete-guru-${g.id}`} title="Hapus" onClick={() => setShowDelete(g)}
-                      style={{ padding: '6px 14px', borderRadius: '10px', background: '#fee2e2', color: '#dc2626', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
-                      onMouseOver={e => (e.currentTarget.style.background = '#fecaca')}
-                      onMouseOut={e => (e.currentTarget.style.background = '#fee2e2')}>
-                      🗑 Hapus
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        )}
+          </span>
+          <input type="search" className="input" placeholder="Cari nama, email, atau NIP..."
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
       </div>
+
+      {/* Tabel Guru */}
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style={{ width: '40px' }}>#</th>
+              <th>Nama Guru</th>
+              <th>Kontak & NIP</th>
+              <th>Kelas Diampu</th>
+              <th style={{ textAlign: 'center' }}>Total Setoran</th>
+              <th style={{ textAlign: 'center', width: '100px' }}>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
+                  <td key={j}><div className="skeleton" style={{ height: '14px', borderRadius: '4px' }} /></td>
+                ))}</tr>
+              ))
+            ) : (() => {
+              const filteredGurus = gurus.filter(g => 
+                g.user.name.toLowerCase().includes(search.toLowerCase()) || 
+                g.user.email.toLowerCase().includes(search.toLowerCase()) ||
+                (g.nip && g.nip.toLowerCase().includes(search.toLowerCase()))
+              )
+              const totalPages = Math.ceil(filteredGurus.length / itemsPerPage)
+              const currentData = filteredGurus.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+
+              if (filteredGurus.length === 0) return (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      <span>Tidak ada data guru ditemukan</span>
+                    </div>
+                  </td>
+                </tr>
+              )
+
+              return currentData.map((g, index) => {
+                const idx = (page - 1) * itemsPerPage + index
+                let kelasList: string[] = []
+                try { kelasList = JSON.parse(g.kelas || '[]') } catch {}
+                
+                return (
+                  <tr key={g.id}>
+                    <td style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center' }}>{idx + 1}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                          background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '13px', fontWeight: 700, color: '#1e3a8a',
+                        }}>
+                          {g.user.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()}
+                        </div>
+                        <div style={{ fontWeight: 600, color: '#1e293b' }}>{g.user.name}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '13px', color: '#475569', marginBottom: '2px' }}>{g.user.email}</div>
+                      {g.nip && <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>NIP: {g.nip}</div>}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {kelasList.length > 0 ? kelasList.map(k => (
+                          <span key={k} style={{ padding: '2px 8px', background: '#dbeafe', color: '#1d4ed8', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>{k}</span>
+                        )) : (
+                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>—</span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{ padding: '3px 10px', background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569' }}>
+                        {g.setorans?.length || 0}×
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        <button title="Edit" onClick={() => setShowEdit(g)} style={{ width: '34px', height: '34px', borderRadius: '10px', background: '#dbeafe', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1d4ed8', transition: 'all 0.15s' }} onMouseOver={e => (e.currentTarget.style.background = '#bfdbfe')} onMouseOut={e => (e.currentTarget.style.background = '#dbeafe')}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button title="Hapus" onClick={() => setShowDelete(g)} style={{ width: '34px', height: '34px', borderRadius: '10px', background: '#fee2e2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626', transition: 'all 0.15s' }} onMouseOver={e => (e.currentTarget.style.background = '#fecaca')} onMouseOut={e => (e.currentTarget.style.background = '#fee2e2')}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })
+            })()}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination Controls */}
+      {(() => {
+        const filteredGurus = gurus.filter(g => 
+          g.user.name.toLowerCase().includes(search.toLowerCase()) || 
+          g.user.email.toLowerCase().includes(search.toLowerCase()) ||
+          (g.nip && g.nip.toLowerCase().includes(search.toLowerCase()))
+        )
+        const totalPages = Math.ceil(filteredGurus.length / itemsPerPage)
+        if (filteredGurus.length === 0 || totalPages <= 1) return null
+
+        return (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 8px' }}>
+            <div style={{ fontSize: '13px', color: '#64748b' }}>
+              Menampilkan <span style={{ fontWeight: 600, color: '#1e293b' }}>{(page - 1) * itemsPerPage + 1}</span> - <span style={{ fontWeight: 600, color: '#1e293b' }}>{Math.min(page * itemsPerPage, filteredGurus.length)}</span> dari <span style={{ fontWeight: 600, color: '#1e293b' }}>{filteredGurus.length}</span> guru
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }} disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Sebelumnya</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const p = i + 1;
+                  if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                    return (
+                      <button key={p} onClick={() => setPage(p)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: page === p ? '#1d4ed8' : 'transparent', color: page === p ? 'white' : '#64748b', fontWeight: page === p ? 700 : 500, transition: 'all 0.15s' }} onMouseOver={e => { if (page !== p) e.currentTarget.style.background = '#f1f5f9' }} onMouseOut={e => { if (page !== p) e.currentTarget.style.background = 'transparent' }}>{p}</button>
+                    )
+                  } else if (p === page - 2 || p === page + 2) {
+                    return <span key={p} style={{ color: '#94a3b8', padding: '0 4px' }}>...</span>
+                  }
+                  return null;
+                })}
+              </div>
+              <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }} disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Selanjutnya</button>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Toast */}
       {toast && <div className="toast" style={{ background: '#1e3a8a' }}>{toast}</div>}
