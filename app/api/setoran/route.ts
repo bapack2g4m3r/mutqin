@@ -111,5 +111,14 @@ export async function POST(req: NextRequest) {
     },
   })
 
+  // Catat log aktivitas
+  await prisma.activityLog.create({
+    data: {
+      userId: (session.user as any).id,
+      action: 'INPUT_SETORAN',
+      description: `Menginput setoran ${jenis} untuk siswa ${setoran.siswa.nama}`
+    }
+  })
+
   return NextResponse.json(setoran, { status: 201 })
 }

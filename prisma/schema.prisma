@@ -73,11 +73,13 @@ model User {
   password  String
   name      String
   role      String   // "ADMIN" | "GURU" | "ORTU"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastActiveAt DateTime? // Untuk tracking online status
 
-  guru Guru?
-  ortu Ortu?
+  guru        Guru?
+  ortu        Ortu?
+  activityLogs ActivityLog[]
 }
 
 model Guru {
@@ -148,4 +150,13 @@ model Setoran {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String   // contoh: "INPUT_SETORAN", "DELETE_SISWA"
+  description String   // contoh: "Menginput setoran untuk Ahmad"
+  createdAt   DateTime @default(now())
 }

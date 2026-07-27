@@ -86,6 +86,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const siswa = await prisma.siswa.update({ where: { id }, data: dataSiswa })
+    
+    await prisma.activityLog.create({
+      data: {
+        userId: (session.user as any).id,
+        action: 'UPDATE_SISWA',
+        description: `Mengubah data siswa: ${siswa.nama}`
+      }
+    })
+
     return NextResponse.json(siswa)
   } catch (e: any) {
     if (e.code === 'P2002') return NextResponse.json({ error: 'NIS atau NISN sudah digunakan' }, { status: 409 })
@@ -101,6 +110,20 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
-  await prisma.siswa.delete({ where: { id } })
-  return NextResponse.json({ success: true })
+  
+  try {
+    const siswa = await prisma.siswa.delete({ where: { id } })
+    
+    await prisma.activityLog.create({
+      data: {
+        userId: (session.user as any).id,
+        action: 'DELETE_SISWA',
+        description: `Menghapus data siswa: ${siswa.nama}`
+      }
+    })
+    
+    return NextResponse.json({ success: true })
+  } catch (e: any) {
+    return NextResponse.json({ error: 'Gagal menghapus data' }, { status: 500 })
+  }
 }

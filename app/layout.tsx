@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import NextAuthProvider from '@/components/providers/NextAuthProvider'
+import { PingTracker } from '@/components/PingTracker'
 
 export const metadata: Metadata = {
   title: 'MUTQIN — Sistem Administrasi Tahfidz & Tahsin | SMP Global Insani',
@@ -14,7 +16,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body>
+        <NextAuthProvider>
+          <PingTracker />
+          {children}
+        </NextAuthProvider>
+      </body>
     </html>
   )
 }

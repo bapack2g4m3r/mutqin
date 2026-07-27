@@ -54,9 +54,27 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 // DELETE /api/setoran/[id]
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || !session.user || (session.user as any).role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const { id } = await params
-  await prisma.setoran.delete({ where: { id } })
-  return NextResponse.json({ success: true })
+  try {
+    const setoran = await prisma.setoran.delete({
+      where: { id },
+      include: { siswa: true }
+    })
+
+    await prisma.activityLog.create({
+      data: {
+        userId: (session.user as any).id,
+        action: 'DELETE_SETORAN',
+        description: `Menghapus setoran milik siswa ${setoran.siswa.nama}`
+      }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: 'Gagal menghapus data' }, { status: 500 })
+  }
 }
