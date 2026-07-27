@@ -591,12 +591,12 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
                         <div style={{ fontSize: '22px', fontWeight: 800, color: '#1e293b', lineHeight: 1 }}>{k.jumlahSiswa}</div>
                         <div style={{ fontSize: '11px', color: '#94a3b8' }}>siswa</div>
                       </div>
-                      <div style={{ textAlign: 'right', maxWidth: '140px' }}>
+                      <div style={{ textAlign: 'right', flex: 1, paddingLeft: '12px' }}>
                         {k.waliKelas 
-                          ? <div style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 600, marginBottom: '2px', lineHeight: 1.3 }}>Wali: {k.waliKelas.user.name.split(' ')[0]}</div>
-                          : <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>— Belum ada wali</div>}
+                          ? <div style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 600, marginBottom: '4px', lineHeight: 1.3 }}>Wali: {k.waliKelas.user.name}</div>
+                          : <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>— Belum ada wali</div>}
                         {k.halaqahs && k.halaqahs.length > 0
-                          ? <div style={{ fontSize: '12px', color: '#059669', fontWeight: 600, lineHeight: 1.3 }}>Halaqah: {k.halaqahs.map(h => h.guru.user.name.split(' ')[0]).join(', ')}</div>
+                          ? <div style={{ fontSize: '12px', color: '#059669', fontWeight: 600, lineHeight: 1.3 }}>Halaqah: {k.halaqahs.map(h => h.guru.user.name).join(', ')}</div>
                           : <div style={{ fontSize: '11px', color: '#94a3b8' }}>— Belum ada halaqah</div>}
                       </div>
                     </div>
