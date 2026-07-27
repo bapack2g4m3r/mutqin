@@ -8,8 +8,9 @@ interface Semester {
   _count?: { setorans: number }
 }
 interface Kelas {
-  id: string; nama: string; tingkat: number; jumlahSiswa: number
+  id: string; nama: string; tingkat: number; jumlahSiswa: number; waliKelasId?: string | null
   halaqahs?: Array<{ guru: { id: string; user: { name: string } } }>
+  waliKelas?: { user: { name: string } }
 }
 interface TahunAjaran {
   id: string; nama: string; isAktif: boolean
@@ -461,10 +462,10 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
   data: TahunAjaran[]; allGuru: Guru[]; onRefresh: () => void; showToast: (m: string) => void
 }) {
   const [showAdd, setShowAdd] = useState(false)
-  const [addForm, setAddForm] = useState({ nama: '', tingkat: '7', tahunAjaranId: '', halaqahGuruIds: [] as string[] })
+  const [addForm, setAddForm] = useState({ nama: '', tingkat: '7', tahunAjaranId: '', halaqahGuruIds: [] as string[], waliKelasId: '' })
   const [saving, setSaving] = useState(false)
   const [editKelas, setEditKelas] = useState<Kelas | null>(null)
-  const [editForm, setEditForm] = useState({ halaqahGuruIds: [] as string[] })
+  const [editForm, setEditForm] = useState({ halaqahGuruIds: [] as string[], waliKelasId: '' })
   const [deleting, setDeleting] = useState<string | null>(null)
   const [activeTaId, setActiveTaId] = useState(data.find(x => x.isAktif)?.id || data[0]?.id || '')
 
@@ -486,19 +487,19 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
       const d = await res.json()
       if (!res.ok) { alert(d.error); return }
       showToast(`✓ Kelas ${addForm.nama} berhasil ditambahkan`)
-      setShowAdd(false); setAddForm({ nama: '', tingkat: '7', tahunAjaranId: '', halaqahGuruIds: [] }); onRefresh()
+      setShowAdd(false); setAddForm({ nama: '', tingkat: '7', tahunAjaranId: '', halaqahGuruIds: [], waliKelasId: '' }); onRefresh()
     } finally { setSaving(false) }
   }
 
-  async function handleEditHalaqah() {
+  async function handleEditKelas() {
     if (!editKelas) return
     setSaving(true)
     try {
       const res = await fetch(`/api/akademik/kelas/${editKelas.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ halaqahGuruIds: editForm.halaqahGuruIds }),
+        body: JSON.stringify({ halaqahGuruIds: editForm.halaqahGuruIds, waliKelasId: editForm.waliKelasId || null }),
       })
-      if (res.ok) { showToast('✓ Pengajar Halaqah diperbarui'); setEditKelas(null); onRefresh() }
+      if (res.ok) { showToast('✓ Data Kelas diperbarui'); setEditKelas(null); onRefresh() }
       else { const d = await res.json(); alert(d.error) }
     } finally { setSaving(false) }
   }
@@ -570,7 +571,7 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
                         {k.nama}
                       </span>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button id={`btn-edit-kelas-${k.id}`} onClick={() => { setEditKelas(k); setEditForm({ halaqahGuruIds: k.halaqahs?.map(h => h.guru.id) || [] }) }}
+                        <button id={`btn-edit-kelas-${k.id}`} onClick={() => { setEditKelas(k); setEditForm({ halaqahGuruIds: k.halaqahs?.map(h => h.guru.id) || [], waliKelasId: k.waliKelasId || '' }) }}
                           style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -591,8 +592,11 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
                         <div style={{ fontSize: '11px', color: '#94a3b8' }}>siswa</div>
                       </div>
                       <div style={{ textAlign: 'right', maxWidth: '140px' }}>
+                        {k.waliKelas 
+                          ? <div style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 600, marginBottom: '2px', lineHeight: 1.3 }}>Wali: {k.waliKelas.user.name.split(' ')[0]}</div>
+                          : <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>— Belum ada wali</div>}
                         {k.halaqahs && k.halaqahs.length > 0
-                          ? <div style={{ fontSize: '12px', color: '#059669', fontWeight: 600, lineHeight: 1.3 }}>👤 {k.halaqahs.map(h => h.guru.user.name.split(' ')[0]).join(', ')}</div>
+                          ? <div style={{ fontSize: '12px', color: '#059669', fontWeight: 600, lineHeight: 1.3 }}>Halaqah: {k.halaqahs.map(h => h.guru.user.name.split(' ')[0]).join(', ')}</div>
                           : <div style={{ fontSize: '11px', color: '#94a3b8' }}>— Belum ada halaqah</div>}
                       </div>
                     </div>
@@ -633,6 +637,13 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
               </div>
             </div>
             <div className="input-group">
+              <label className="input-label">Wali Kelas (Opsional)</label>
+              <select className="input" value={addForm.waliKelasId} onChange={e => setAddForm(p => ({ ...p, waliKelasId: e.target.value }))}>
+                <option value="">-- Belum ada --</option>
+                {allGuru.map(g => <option key={g.id} value={g.id}>{g.user.name}</option>)}
+              </select>
+            </div>
+            <div className="input-group">
               <label className="input-label">Halaqah Tahfiz (Bisa pilih lebih dari 1)</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '160px', overflowY: 'auto', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 {allGuru.map(g => (
@@ -664,10 +675,17 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
         </Modal>
       )}
 
-      {/* Edit Halaqah Modal */}
+      {/* Edit Kelas Modal */}
       {editKelas && (
-        <Modal title={`Atur Halaqah Tahfiz — ${editKelas.nama}`} onClose={() => setEditKelas(null)}>
+        <Modal title={`Atur Kelas — ${editKelas.nama}`} onClose={() => setEditKelas(null)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div className="input-group">
+              <label className="input-label">Wali Kelas</label>
+              <select className="input" value={editForm.waliKelasId} onChange={e => setEditForm(p => ({ ...p, waliKelasId: e.target.value }))}>
+                <option value="">-- Belum ada --</option>
+                {allGuru.map(g => <option key={g.id} value={g.id}>{g.user.name}</option>)}
+              </select>
+            </div>
             <div className="input-group">
               <label className="input-label">Pengajar Halaqah</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
@@ -690,7 +708,7 @@ function KelasSection({ data, allGuru, onRefresh, showToast }: {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditKelas(null)}>Batal</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleEditHalaqah} disabled={saving}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleEditKelas} disabled={saving}>
                 {saving ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>

@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!session || !isAdmin(session)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
-  const { nama, tingkat, halaqahGuruIds } = await req.json()
+  const { nama, tingkat, halaqahGuruIds, waliKelasId } = await req.json()
 
   const kelasRecord = await prisma.kelas.findUnique({ where: { id } })
   if (!kelasRecord) return NextResponse.json({ error: 'Tidak ditemukan' }, { status: 404 })
@@ -26,6 +26,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     data: {
       nama: nama || undefined,
       tingkat: tingkat ? Number(tingkat) : undefined,
+      waliKelasId: waliKelasId !== undefined ? (waliKelasId || null) : undefined,
       jumlahSiswa,
     },
   })
@@ -47,6 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id },
     include: {
       halaqahs: { include: { guru: { include: { user: { select: { name: true } } } } } },
+      waliKelas: { include: { user: { select: { name: true } } } },
     }
   })
   
