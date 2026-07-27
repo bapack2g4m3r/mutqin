@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
     siswaId, jenis,
     surah, ayatMulai, ayatAkhir, halMulai, halAkhir, isTasmi,
     nilaiKomponen, catatan,
+    bukuTahsin, halamanTahsin
   } = body
 
   // Calculate nilai akhir
@@ -97,6 +98,8 @@ export async function POST(req: NextRequest) {
       halMulai: halMulai || null,
       halAkhir: halAkhir || null,
       isTasmi: isTasmi || false,
+      bukuTahsin: bukuTahsin || null,
+      halamanTahsin: halamanTahsin || null,
       nilaiKomponen: JSON.stringify(nilaiKomponen),
       nilaiAkhir,
       predikat: predikatData.kode,
