@@ -473,6 +473,10 @@ export default function AdminSiswaPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [kelasFilter, setKelasFilter] = useState('')
+  
+  // Pagination state
+  const [page, setPage] = useState(1)
+  const itemsPerPage = 20
 
   // Modals
   const [showAdd, setShowAdd]       = useState(false)
@@ -522,11 +526,12 @@ export default function AdminSiswaPage() {
     load() 
   }, [load, fetchKelas])
 
-  // Debounce search
+  // Debounce search & reset page
   useEffect(() => {
+    setPage(1)
     const t = setTimeout(load, 300)
     return () => clearTimeout(t)
-  }, [search])
+  }, [search, kelasFilter])
 
   async function handleAdd(form: any) {
     setSaving(true)
@@ -584,6 +589,10 @@ export default function AdminSiswaPage() {
 
   const avgNilai = (s: Siswa['setorans']) =>
     s.length ? Math.round(s.reduce((a, x) => a + x.nilaiAkhir, 0) / s.length) : null
+
+  // Calculate pagination
+  const totalPages = Math.ceil(siswa.length / itemsPerPage)
+  const currentData = siswa.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
   return (
     <div style={{ padding: '32px', maxWidth: '1280px' }}>
@@ -682,7 +691,8 @@ export default function AdminSiswaPage() {
                 </td>
               </tr>
             ) : (
-              siswa.map((s, idx) => {
+              currentData.map((s, index) => {
+                const idx = (page - 1) * itemsPerPage + index
                 const avg = avgNilai(s.setorans)
                 return (
                   <tr key={s.id} style={{ background: selectedIds.includes(s.id) ? '#f0f9ff' : 'transparent', transition: 'background 0.2s' }}>
@@ -773,6 +783,62 @@ export default function AdminSiswaPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {siswa.length > 0 && totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 8px' }}>
+          <div style={{ fontSize: '13px', color: '#64748b' }}>
+            Menampilkan <span style={{ fontWeight: 600, color: '#1e293b' }}>{(page - 1) * itemsPerPage + 1}</span> - <span style={{ fontWeight: 600, color: '#1e293b' }}>{Math.min(page * itemsPerPage, siswa.length)}</span> dari <span style={{ fontWeight: 600, color: '#1e293b' }}>{siswa.length}</span> siswa
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              className="btn btn-outline" 
+              style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }} 
+              disabled={page === 1} 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Sebelumnya
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const p = i + 1;
+                // Show first, last, and +/- 1 from current
+                if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                  return (
+                    <button 
+                      key={p} 
+                      onClick={() => setPage(p)}
+                      style={{ 
+                        width: '32px', height: '32px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                        background: page === p ? '#1d4ed8' : 'transparent',
+                        color: page === p ? 'white' : '#64748b',
+                        fontWeight: page === p ? 700 : 500,
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseOver={e => { if (page !== p) e.currentTarget.style.background = '#f1f5f9' }}
+                      onMouseOut={e => { if (page !== p) e.currentTarget.style.background = 'transparent' }}
+                    >
+                      {p}
+                    </button>
+                  )
+                } else if (p === page - 2 || p === page + 2) {
+                  return <span key={p} style={{ color: '#94a3b8', padding: '0 4px' }}>...</span>
+                }
+                return null;
+              })}
+            </div>
+            <button 
+              className="btn btn-outline" 
+              style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }} 
+              disabled={page === totalPages} 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            >
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* Toast */}
       {toast && (
