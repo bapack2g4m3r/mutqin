@@ -824,10 +824,10 @@ export default function AdminSiswaPage() {
       </div>
 
       {/* Pagination Controls */}
-      {siswa.length > 0 && totalPages > 1 && (
+      {sortedSiswa.length > 0 && totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 8px' }}>
           <div style={{ fontSize: '13px', color: '#64748b' }}>
-            Menampilkan <span style={{ fontWeight: 600, color: '#1e293b' }}>{(page - 1) * itemsPerPage + 1}</span> - <span style={{ fontWeight: 600, color: '#1e293b' }}>{Math.min(page * itemsPerPage, siswa.length)}</span> dari <span style={{ fontWeight: 600, color: '#1e293b' }}>{siswa.length}</span> siswa
+            Menampilkan <span style={{ fontWeight: 600, color: '#1e293b' }}>{(page - 1) * itemsPerPage + 1}</span> - <span style={{ fontWeight: 600, color: '#1e293b' }}>{Math.min(page * itemsPerPage, sortedSiswa.length)}</span> dari <span style={{ fontWeight: 600, color: '#1e293b' }}>{sortedSiswa.length}</span> siswa
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button 

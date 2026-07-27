@@ -9,7 +9,7 @@ interface DashData {
   siswaBelumSetor: number
   setoranTerbaru: Array<{
     id: string; jenis: string; nilaiAkhir: number; predikat: string
-    tanggal: string; surah?: string
+    tanggal: string; surah?: string; bukuTahsin?: string; halamanTahsin?: string
     siswa: { nama: string; kelas: string; nis: string }
     guru: { user: { name: string } }
   }>
@@ -44,9 +44,18 @@ function formatDate(d: string) {
 export default function AdminDashboard() {
   const [data, setData] = useState<DashData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [tahunAjaran, setTahunAjaran] = useState('')
+  const [semesterAktif, setSemesterAktif] = useState('')
 
   useEffect(() => {
     fetch('/api/dashboard').then(r => r.json()).then(setData).finally(() => setLoading(false))
+    fetch('/api/akademik').then(r => r.json()).then(d => {
+      if (d.tahunAjaranList) {
+        const aktif = d.tahunAjaranList.find((t: any) => t.isAktif)
+        if (aktif) setTahunAjaran(aktif.nama)
+      }
+      if (d.aktivSemester) setSemesterAktif(d.aktivSemester.nama)
+    }).catch(() => {})
   }, [])
 
   const totalSetoran = Math.max(data?.predikatStats.reduce((a, p) => a + p._count.id, 0) || 0, 1)
@@ -114,7 +123,8 @@ export default function AdminDashboard() {
             {[
               { label: 'Total Siswa', value: `${data?.totalSiswa ?? 0} siswa` },
               { label: 'Total Guru', value: `${data?.totalGuru ?? 0} guru` },
-              { label: 'Tahun Ajaran', value: '2025/2026' },
+              { label: 'Tahun Ajaran', value: tahunAjaran || '—' },
+              { label: 'Semester Aktif', value: semesterAktif || '—' },
               { label: 'Target Hafalan', value: 'Juz 30 (37 Surah)' },
               { label: 'Sistem', value: 'MUTQIN v1.0' },
             ].map(item => (
@@ -134,7 +144,7 @@ export default function AdminDashboard() {
           <table>
             <thead>
               <tr>
-                <th>Siswa</th><th>Kelas</th><th>Jenis</th><th>Surah</th>
+                <th>Siswa</th><th>Kelas</th><th>Jenis</th><th>Materi</th>
                 <th>Nilai</th><th>Predikat</th><th>Guru</th><th>Tanggal</th>
               </tr>
             </thead>
@@ -159,7 +169,9 @@ export default function AdminDashboard() {
                         {s.jenis === 'TAHFIDZ' ? '📖 Tahfidz' : '🗣 Tahsin'}
                       </span>
                     </td>
-                    <td style={{ color: '#64748b' }}>{s.surah || '—'}</td>
+                    <td style={{ color: '#64748b', fontSize: '13px' }}>
+                      {s.jenis === 'TAHFIDZ' ? (s.surah || '—') : (s.bukuTahsin || '—')}
+                    </td>
                     <td style={{ fontWeight: 700, color: s.nilaiAkhir >= 90 ? '#059669' : s.nilaiAkhir >= 80 ? '#2563eb' : s.nilaiAkhir >= 70 ? '#d97706' : '#dc2626' }}>
                       {Math.round(s.nilaiAkhir)}
                     </td>
