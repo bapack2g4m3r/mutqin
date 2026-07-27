@@ -1,5 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface Summary {
   siswa: { nama: string; kelas: string; nis: string }
@@ -56,24 +59,52 @@ export default function AdminLaporanPage() {
   useEffect(() => { load() }, [kelas, jenis, dateFrom, dateTo])
   useEffect(() => { setPage(1) }, [search, kelas, jenis, dateFrom, dateTo])
 
-  function exportCSV() {
-    const headers = ['Nama','Kelas','NIS','Setoran Tahfidz','Rata Tahfidz','Buku Tahsin Terakhir','Setoran Tahsin','Rata Tahsin']
+  function exportExcel() {
+    const headers = ['Nama', 'Kelas', 'NIS', 'Setoran Tahfidz', 'Rata Tahfidz', 'Buku Tahsin Terakhir', 'Setoran Tahsin', 'Rata Tahsin']
     const rows = filtered.map(d => [
-      `"${d.siswa.nama}"`, `"${d.siswa.kelas}"`, `"${d.siswa.nis}"`,
+      d.siswa.nama, d.siswa.kelas, d.siswa.nis,
       d.tahfidz.count,
       d.tahfidz.count ? Math.round(d.tahfidz.totalNilai / d.tahfidz.count) : '',
-      d.tahsin.lastBukuTahsin ? `"${d.tahsin.lastBukuTahsin}"` : '',
+      d.tahsin.lastBukuTahsin || '',
       d.tahsin.count,
       d.tahsin.count ? Math.round(d.tahsin.totalNilai / d.tahsin.count) : '',
     ])
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `laporan-mutqin-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan Rekap")
+    XLSX.writeFile(wb, `laporan-mutqin-${new Date().toISOString().split('T')[0]}.xlsx`)
+  }
+
+  function exportPDF() {
+    const doc = new jsPDF('landscape')
+    doc.setFontSize(16)
+    doc.text('Laporan Rekap Setoran Tahfidz & Tahsin', 14, 20)
+    doc.setFontSize(10)
+    doc.setTextColor(100)
+    doc.text(`Dicetak pada: ${new Date().toLocaleDateString('id-ID')}`, 14, 28)
+
+    const headers = [['No', 'Nama Siswa', 'Kelas', 'NIS', 'Jml Tahfidz', 'Rata Tahfidz', 'Buku Tahsin', 'Jml Tahsin', 'Rata Tahsin']]
+    const rows = filtered.map((d, i) => [
+      i + 1,
+      d.siswa.nama, d.siswa.kelas, d.siswa.nis,
+      d.tahfidz.count || '-',
+      d.tahfidz.count ? Math.round(d.tahfidz.totalNilai / d.tahfidz.count) : '-',
+      d.tahsin.lastBukuTahsin || '-',
+      d.tahsin.count || '-',
+      d.tahsin.count ? Math.round(d.tahsin.totalNilai / d.tahsin.count) : '-',
+    ])
+
+    autoTable(doc, {
+      startY: 35,
+      head: headers,
+      body: rows,
+      theme: 'grid',
+      headStyles: { fillColor: [30, 58, 138] },
+      styles: { fontSize: 9 }
+    })
+
+    doc.save(`laporan-mutqin-${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
   const color = (v: number | null) =>
@@ -114,14 +145,24 @@ export default function AdminLaporanPage() {
             {filtered.length === data.length ? `Rekap ${data.length} siswa` : `Menampilkan ${filtered.length} dari ${data.length} siswa`}
           </p>
         </div>
-        <button id="btn-export-csv" className="btn btn-accent" onClick={exportCSV}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Export CSV
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button id="btn-export-excel" className="btn btn-outline" onClick={exportExcel} style={{ color: '#059669', borderColor: '#059669' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+            </svg>
+            Excel
+          </button>
+          <button id="btn-export-pdf" className="btn btn-outline" onClick={exportPDF} style={{ color: '#dc2626', borderColor: '#dc2626' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <path d="M9 15v-4"/><path d="M12 15v-4"/><path d="M15 15v-4"/>
+            </svg>
+            PDF
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
 
 interface Siswa {
@@ -468,6 +469,7 @@ function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => voi
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminSiswaPage() {
+  const router = useRouter()
   const [siswa, setSiswa] = useState<Siswa[]>([])
   const [kelasList, setKelasList] = useState<Kelas[]>([])
   const [loading, setLoading] = useState(true)
@@ -774,8 +776,19 @@ export default function AdminSiswaPage() {
                         ? <span style={{ fontWeight: 700, fontSize: '15px', color: avg >= 90 ? '#059669' : avg >= 80 ? '#2563eb' : avg >= 70 ? '#d97706' : '#dc2626' }}>{avg}</span>
                         : <span style={{ color: '#cbd5e1' }}>—</span>}
                     </td>
-                    <td>
+                    <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        <button title="Cetak Rapor" onClick={() => router.push(`/admin/siswa/${s.id}/rapor`)} style={{
+                          width: '34px', height: '34px', borderRadius: '10px',
+                          background: '#e0f2fe', border: 'none', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7',
+                          transition: 'all 0.15s'
+                        }} onMouseOver={e => (e.currentTarget.style.background = '#bae6fd')} onMouseOut={e => (e.currentTarget.style.background = '#e0f2fe')}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                            <rect x="6" y="14" width="12" height="8"/>
+                          </svg>
+                        </button>
                         <button
                           id={`btn-edit-${s.id}`}
                           title="Edit siswa"
