@@ -16,7 +16,6 @@ export async function GET(req: NextRequest) {
         orderBy: { nama: 'asc' },
         include: {
           halaqahs: { include: { guru: { include: { user: { select: { name: true } } } } } },
-          waliKelas: { include: { user: { select: { name: true } } } },
         },
       },
     },

@@ -11,11 +11,12 @@ interface Siswa {
 
 interface Kelas {
   id: string; nama: string; tingkat: number
+  halaqahs?: Array<{ id: string; guru: { id: string; user: { name: string } } }>
 }
 
 interface BulkRow { nis: string; nisn?: string; nama: string; kelas: string; namaOrtu?: string; password?: string; _valid?: boolean; _error?: string }
 
-const EMPTY_FORM = { nis: '', nisn: '', nama: '', kelasId: '', kelas: '', namaOrtu: '', password: '' }
+const EMPTY_FORM = { nis: '', nisn: '', nama: '', kelasId: '', kelas: '', halaqahId: '', namaOrtu: '', password: '' }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ function ConfirmDialog({ message, onConfirm, onCancel, loading, title = 'Konfirm
 }
 
 function SiswaForm({ initial, onSave, onClose, saving, kelasList }: {
-  initial: { nis: string; nisn?: string; nama: string; kelasId?: string; kelas: string; namaOrtu?: string; password?: string }
+  initial: { nis: string; nisn?: string; nama: string; kelasId?: string; kelas: string; halaqahId?: string; namaOrtu?: string; password?: string }
   onSave: (data: any) => void
   onClose: () => void
   saving: boolean
@@ -100,6 +101,7 @@ function SiswaForm({ initial, onSave, onClose, saving, kelasList }: {
   const [form, setForm] = useState(initial)
 
   const isEdit = !!initial.nis
+  const selectedKelasInfo = form.kelasId ? kelasList.find(k => k.id === form.kelasId) : kelasList.find(k => k.nama === form.kelas)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -120,19 +122,30 @@ function SiswaForm({ initial, onSave, onClose, saving, kelasList }: {
         <input id="form-nama" type="text" className="input" placeholder="Nama siswa" value={form.nama}
           onChange={e => setForm(p => ({ ...p, nama: e.target.value }))} />
       </div>
-      <div className="input-group">
-        <label className="input-label">Kelas <span style={{ color: '#dc2626' }}>*</span></label>
-        <select id="form-kelas" className="input" value={form.kelasId || form.kelas || ''}
-          onChange={e => {
-            const val = e.target.value
-            const k = kelasList.find(x => x.id === val)
-            if (k) setForm(p => ({ ...p, kelasId: k.id, kelas: k.nama }))
-            else setForm(p => ({ ...p, kelasId: '', kelas: val })) // legacy support
-          }}>
-          <option value="" disabled>-- Pilih Kelas --</option>
-          {kelasList.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
-          {!form.kelasId && form.kelas && <option value={form.kelas}>{form.kelas}</option>}
-        </select>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="input-group">
+          <label className="input-label">Kelas <span style={{ color: '#dc2626' }}>*</span></label>
+          <select id="form-kelas" className="input" value={form.kelasId || form.kelas || ''}
+            onChange={e => {
+              const val = e.target.value
+              const k = kelasList.find(x => x.id === val)
+              if (k) setForm(p => ({ ...p, kelasId: k.id, kelas: k.nama, halaqahId: '' }))
+              else setForm(p => ({ ...p, kelasId: '', kelas: val, halaqahId: '' })) // legacy support
+            }}>
+            <option value="" disabled>-- Pilih Kelas --</option>
+            {kelasList.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+            {!form.kelasId && form.kelas && <option value={form.kelas}>{form.kelas}</option>}
+          </select>
+        </div>
+        <div className="input-group">
+          <label className="input-label">Guru Halaqah (Opsional)</label>
+          <select className="input" value={form.halaqahId || ''} onChange={e => setForm(p => ({ ...p, halaqahId: e.target.value }))}>
+            <option value="">-- Belum Ditentukan --</option>
+            {selectedKelasInfo?.halaqahs?.map(h => (
+              <option key={h.id} value={h.id}>{h.guru.user.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Akun Orang Tua */}
@@ -530,7 +543,22 @@ export default function AdminSiswaPage() {
   const load = useCallback(() => {
     setLoading(true)
     const p = new URLSearchParams({ limit: '2000' })
-    fetch(`/api/siswa?${p}`).then(r => r.json()).then(d => { setSiswa(d.siswa || []); setSelectedIds([]) }).finally(() => setLoading(false))
+    fetch(`/api/siswa?${p}&t=${Date.now()}`)
+      .then(r => r.json())
+      .then(d => { 
+        if (d.error) {
+          console.error("API error:", d.error)
+          setSiswa([])
+        } else {
+          setSiswa(d.siswa || [])
+        }
+        setSelectedIds([]) 
+      })
+      .catch(e => {
+        console.error("Fetch error:", e)
+        setSiswa([])
+      })
+      .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => { 

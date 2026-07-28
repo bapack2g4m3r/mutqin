@@ -41,8 +41,6 @@ model Kelas {
   tingkat       Int         // 7, 8, 9
   tahunAjaranId String
   tahunAjaran   TahunAjaran @relation(fields: [tahunAjaranId], references: [id], onDelete: Cascade)
-  waliKelasId   String?
-  waliKelas     Guru?       @relation(fields: [waliKelasId], references: [id])
   jumlahSiswa   Int         @default(0)
   createdAt     DateTime    @default(now())
 
@@ -90,7 +88,6 @@ model Guru {
   nip    String?
 
   setorans  Setoran[]
-  waliKelas Kelas[]
   halaqahs  Halaqah[]
 }
 

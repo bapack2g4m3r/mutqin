@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const siswa = await prisma.siswa.findUnique({
     where: { id: siswaId },
     include: {
-      kelasRef: { include: { waliKelas: { include: { user: true } }, tahunAjaran: true } },
+      kelasRef: { include: { tahunAjaran: true } },
       halaqah: { include: { guru: { include: { user: true } } } }
     }
   })

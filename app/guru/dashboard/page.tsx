@@ -9,6 +9,16 @@ interface DashboardData {
   totalSiswa: number
   setoranHariIni: number
   siswaBelumSetor: number
+  siswaBinaanPerKelas: Array<{
+    kelas: string
+    kelasId: string
+    siswa: Array<{
+      id: string
+      nama: string
+      nis: string
+      sudahSetorHariIni: boolean
+    }>
+  }>
   setoranTerbaru: Array<{
     id: string
     jenis: string
@@ -47,7 +57,7 @@ export default function GuruDashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/dashboard').then(r => r.json()).then(setData).finally(() => setLoading(false))
+    fetch('/api/guru/dashboard').then(r => r.json()).then(setData).finally(() => setLoading(false))
   }, [])
 
   const userName = session?.user?.name?.split(' ')[0] || 'Guru'
@@ -188,6 +198,53 @@ export default function GuruDashboardPage() {
             <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>Riwayat</div>
             <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Lihat semua setoran</div>
           </button>
+        </div>
+
+        {/* Siswa Binaan Saya */}
+        <div className="section-header" style={{ marginTop: '24px' }}>
+          <h3 className="section-title">Siswa Binaan Saya</h3>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
+          {loading ? (
+            <div className="skeleton" style={{ height: '100px', borderRadius: '16px' }} />
+          ) : data?.siswaBinaanPerKelas && data.siswaBinaanPerKelas.length > 0 ? (
+            data.siswaBinaanPerKelas.map((grup, idx) => (
+              <div key={idx} style={{ background: 'white', borderRadius: '16px', padding: '16px', border: '1px solid #f1f5f9' }}>
+                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+                  Kelas {grup.kelas}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {grup.siswa.length === 0 ? (
+                    <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>Tidak ada siswa di kelas ini.</div>
+                  ) : grup.siswa.map(s => (
+                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="avatar-placeholder" style={{ width: '32px', height: '32px', fontSize: '11px' }}>
+                          {getInitials(s.nama)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '13px', color: '#334155' }}>{s.nama}</div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8' }}>NIS: {s.nis}</div>
+                        </div>
+                      </div>
+                      <div>
+                        {s.sudahSetorHariIni ? (
+                          <span style={{ fontSize: '11px', padding: '4px 8px', background: '#d1fae5', color: '#059669', borderRadius: '6px', fontWeight: 600 }}>Sudah Setor</span>
+                        ) : (
+                          <span style={{ fontSize: '11px', padding: '4px 8px', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', fontWeight: 600 }}>Belum Setor</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state">
+              <p>Anda belum ditugaskan membina siswa manapun.</p>
+            </div>
+          )}
         </div>
 
         {/* Setoran Terbaru */}

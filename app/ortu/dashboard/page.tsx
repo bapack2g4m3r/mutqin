@@ -7,8 +7,10 @@ import MobileNav from '@/components/layout/MobileNav'
 interface SiswaDetail {
   id: string; nama: string; kelas: string; nis: string
   kelasRef?: {
-    waliKelas?: { user: { name: string } }
     halaqahs?: Array<{ guru: { user: { name: string } } }>
+  }
+  halaqah?: {
+    guru: { user: { name: string } }
   }
   progress: number; hasTasmi: boolean; surahSelesai: string[]
   setorans: Array<{
@@ -116,18 +118,11 @@ export default function OrtuDashboardPage() {
               <div style={{ flex: 1 }}>
                 <div style={{ color: 'white', fontWeight: 700, fontSize: '15px' }}>{siswa.nama}</div>
                 <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginBottom: '6px' }}>NIS {siswa.nis} · Kelas {siswa.kelas}</div>
-                {siswa.kelasRef && (siswa.kelasRef.waliKelas || (siswa.kelasRef.halaqahs && siswa.kelasRef.halaqahs.length > 0)) && (
+                {siswa.halaqah && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                    {siswa.kelasRef.waliKelas && (
-                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)' }}>
-                        <span style={{ color: 'rgba(255,255,255,0.6)' }}>Wali Kelas:</span> {siswa.kelasRef.waliKelas.user.name}
-                      </div>
-                    )}
-                    {siswa.kelasRef.halaqahs && siswa.kelasRef.halaqahs.length > 0 && (
-                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)' }}>
-                        <span style={{ color: 'rgba(255,255,255,0.6)' }}>Halaqah:</span> {siswa.kelasRef.halaqahs.map(h => h.guru.user.name).join(', ')}
-                      </div>
-                    )}
+                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>Guru Halaqah:</span> {siswa.halaqah.guru.user.name}
+                    </div>
                   </div>
                 )}
               </div>

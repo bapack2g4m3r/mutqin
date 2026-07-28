@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session || !isAdmin(session)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { nama, tingkat, tahunAjaranId, halaqahGuruIds, waliKelasId } = await req.json()
+  const { nama, tingkat, tahunAjaranId, halaqahGuruIds } = await req.json()
   if (!nama || !tingkat || !tahunAjaranId) {
     return NextResponse.json({ error: 'Nama, tingkat, dan tahun ajaran wajib' }, { status: 400 })
   }
@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
     const kelas = await prisma.kelas.create({
       data: {
         nama, tingkat: Number(tingkat), tahunAjaranId,
-        waliKelasId: waliKelasId || null,
         jumlahSiswa,
         halaqahs: {
           create: (halaqahGuruIds || []).map((guruId: string) => ({
@@ -34,7 +33,6 @@ export async function POST(req: NextRequest) {
       },
       include: {
         halaqahs: { include: { guru: { include: { user: { select: { name: true } } } } } },
-        waliKelas: { include: { user: { select: { name: true } } } },
       },
     })
     return NextResponse.json(kelas, { status: 201 })

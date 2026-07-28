@@ -74,7 +74,7 @@ export default function AdminDashboard() {
         <StatCard value={loading ? '—' : data?.totalSiswa ?? 0} label="Total Siswa" color="#2563eb"
           icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
         />
-        <StatCard value={loading ? '—' : data?.totalGuru ?? 0} label="Total Guru" color="#d97706"
+        <StatCard value={loading ? '—' : data?.totalGuru ?? 0} label="Total Guru Tahfizh" color="#d97706"
           icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
         />
         <StatCard value={loading ? '—' : data?.setoranHariIni ?? 0} label="Setoran Hari Ini" color="#059669"
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
               { label: 'Total Siswa', value: `${data?.totalSiswa ?? 0} siswa` },
-              { label: 'Total Guru', value: `${data?.totalGuru ?? 0} guru` },
+              { label: 'Total Guru Tahfizh', value: `${data?.totalGuru ?? 0} guru` },
               { label: 'Tahun Ajaran', value: tahunAjaran || '—' },
               { label: 'Semester Aktif', value: semesterAktif || '—' },
               { label: 'Target Hafalan', value: 'Juz 30 (37 Surah)' },

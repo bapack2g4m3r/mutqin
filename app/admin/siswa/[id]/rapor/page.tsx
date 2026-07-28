@@ -10,7 +10,9 @@ interface RaporData {
     kelasRef: {
       nama: string
       tahunAjaran: { nama: string }
-      waliKelas: { user: { name: string } }
+    }
+    halaqah?: {
+      guru: { user: { name: string } }
     }
   }
   rapor: {
@@ -253,8 +255,8 @@ export default function RaporPrintPage() {
         <div className="ttd-section">
           <div className="ttd-box">
             <div style={{ marginBottom: '4px' }}>Tajurhalang, {ts}</div>
-            <div>Wali Tahfizh</div>
-            <div className="nama-ttd">{s.kelasRef?.waliKelas?.user?.name || '_________________________'}</div>
+            <div>Guru Halaqah Tahfizh</div>
+            <div className="nama-ttd">{s.halaqah?.guru?.user?.name || '_________________________'}</div>
           </div>
         </div>
 

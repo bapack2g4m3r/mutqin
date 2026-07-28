@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { calcProgress } from '@/lib/surah-data'
 import { hash } from 'bcryptjs'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/siswa — list dengan filter
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -29,7 +31,7 @@ export async function GET(req: NextRequest) {
 
   const userRole = (session.user as any).role
   if (userRole === 'GURU') {
-    const guruId = (session.user as any).guruId
+    const guruId = (session?.user as any)?.guruId
     const guru = await prisma.guru.findUnique({ where: { id: guruId }, include: { halaqahs: true } })
     if (guru && guru.halaqahs.length > 0) {
       where.halaqahId = { in: guru.halaqahs.map(h => h.id) }
@@ -43,26 +45,36 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const [siswa, total] = await Promise.all([
-    prisma.siswa.findMany({
-      where,
-      skip,
-      take: limit,
-      include: {
-        ortu: { include: { user: { select: { name: true, email: true, username: true } } } },
-        kelasRef: true,
-        setorans: {
-          select: { jenis: true, nilaiAkhir: true, predikat: true, tanggal: true },
-          orderBy: { tanggal: 'desc' },
-          take: 5,
+  try {
+    const [siswa, total] = await Promise.all([
+      prisma.siswa.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          ortu: { include: { user: { select: { name: true, email: true, username: true } } } },
+          kelasRef: true,
+          setorans: {
+            select: { jenis: true, nilaiAkhir: true, predikat: true, tanggal: true },
+            orderBy: { tanggal: 'desc' },
+            take: 5,
+          },
         },
-      },
-      orderBy: [{ kelas: 'asc' }, { nama: 'asc' }],
-    }),
-    prisma.siswa.count({ where }),
-  ])
+        orderBy: [{ kelas: 'asc' }, { nama: 'asc' }],
+      }),
+      prisma.siswa.count({ where }),
+    ])
 
-  return NextResponse.json({ siswa, total, page, limit })
+    const mappedSiswa = siswa.map(s => ({
+      ...s,
+      kelas: s.kelasRef ? s.kelasRef.nama : s.kelas || ''
+    }))
+
+    return NextResponse.json({ siswa: mappedSiswa, total, page, limit })
+  } catch (error: any) {
+    console.error("GET /api/siswa ERROR:", error)
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
 }
 
 // POST /api/siswa — buat siswa baru (Admin only)
@@ -74,7 +86,7 @@ export async function POST(req: NextRequest) {
   if (role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
-  const { nis, nisn, nama, kelas, kelasId, namaOrtu, password } = body
+  const { nis, nisn, nama, kelas, kelasId, halaqahId, namaOrtu, password } = body
 
   if (!nis || !nama) {
     return NextResponse.json({ error: 'NIS dan nama wajib diisi' }, { status: 400 })
@@ -101,6 +113,7 @@ export async function POST(req: NextRequest) {
 
     const dataSiswa: any = { nis, nisn, nama, kelas }
     if (kelasId) dataSiswa.kelasId = kelasId
+    if (halaqahId) dataSiswa.halaqahId = halaqahId
     if (ortuId) dataSiswa.ortuId = ortuId
 
     const siswa = await prisma.siswa.create({ data: dataSiswa })

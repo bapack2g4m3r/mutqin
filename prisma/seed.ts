@@ -74,8 +74,8 @@ async function main() {
   })
 
   // ====== KELAS & HALAQAH ======
-  const kelas7A = await prisma.kelas.create({ data: { nama: '7A', tingkat: 7, tahunAjaranId: ta.id, waliKelasId: guru1.id } })
-  const kelas7B = await prisma.kelas.create({ data: { nama: '7B', tingkat: 7, tahunAjaranId: ta.id, waliKelasId: guru2.id } })
+  const kelas7A = await prisma.kelas.create({ data: { nama: '7A', tingkat: 7, tahunAjaranId: ta.id } })
+  const kelas7B = await prisma.kelas.create({ data: { nama: '7B', tingkat: 7, tahunAjaranId: ta.id } })
 
   const halaqahAisyah7A = await prisma.halaqah.create({ data: { nama: 'Halaqah Aisyah', kelasId: kelas7A.id, guruId: guru1.id } })
   const halaqahFauzi7A = await prisma.halaqah.create({ data: { nama: 'Halaqah Fauzi', kelasId: kelas7A.id, guruId: guru2.id } })

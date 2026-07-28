@@ -18,10 +18,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       ortu: { include: { user: { select: { name: true, email: true, username: true } } } },
       kelasRef: {
         include: {
-          waliKelas: { include: { user: { select: { name: true } } } },
           halaqahs: { include: { guru: { include: { user: { select: { name: true } } } } } },
         }
       },
+      halaqah: { include: { guru: { include: { user: { select: { name: true } } } } } },
       setorans: {
         orderBy: { tanggal: 'desc' },
         include: {
@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params
   const body = await req.json()
-  const { nis, nisn, nama, kelas, kelasId, namaOrtu, password } = body
+  const { nis, nisn, nama, kelas, kelasId, halaqahId, namaOrtu, password } = body
 
   const existingSiswa = await prisma.siswa.findUnique({ where: { id }, include: { ortu: { include: { user: true } } } })
   if (!existingSiswa) return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
@@ -82,6 +82,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const dataSiswa: any = { nis, nisn, nama, kelas }
   if (kelasId !== undefined) dataSiswa.kelasId = kelasId
+  if (halaqahId !== undefined) dataSiswa.halaqahId = halaqahId || null
   if (ortuId) dataSiswa.ortuId = ortuId
 
   try {
