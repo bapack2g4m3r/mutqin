@@ -49,7 +49,16 @@ export default function MonitorPage() {
     return () => clearInterval(interval)
   }, [])
 
-  if (loading) return <div style={{ padding: '2rem' }}>Memuat data monitoring...</div>
+  if (loading) return (
+    <div className="container" style={{ padding: '2rem' }}>
+      <div className="skeleton" style={{ height: '40px', width: '250px', borderRadius: '8px', marginBottom: '8px' }} />
+      <div className="skeleton" style={{ height: '20px', width: '350px', borderRadius: '6px', marginBottom: '32px' }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+        <div className="skeleton" style={{ height: '400px', borderRadius: '24px' }} />
+        <div className="skeleton" style={{ height: '400px', borderRadius: '24px', gridColumn: 'span 2' }} />
+      </div>
+    </div>
+  )
 
   return (
     <div className="container" style={{ padding: '2rem', paddingBottom: '8rem' }}>

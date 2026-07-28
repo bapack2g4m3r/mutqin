@@ -688,6 +688,27 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* ============================================
+   GLOBAL LOADING OVERLAY (Zero-JS Implementation)
+============================================ */
+body:has(.skeleton)::after {
+  content: "⏳ Sedang memuat data, mohon tunggu...";
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-gray-900);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.4);
+  z-index: 9999;
+  pointer-events: none;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), pulse 2s ease infinite;
+}
+
+/* ============================================
    SUCCESS ANIMATION
 ============================================ */
 .success-circle {
