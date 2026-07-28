@@ -23,104 +23,118 @@ export async function POST(req: NextRequest) {
   const mapKelas = new Map(dbKelas.map(k => [k.nama.toUpperCase(), k.id]))
 
   const allNis = rows.map((r: any) => String(r.nis).trim())
+  const allUsernames = rows.map((r: any) => r.nisn ? String(r.nisn).trim() : String(r.nis).trim())
 
-  // Find existing students by NIS
-  const existing = await prisma.siswa.findMany({
+  // Pre-fetch all existing Siswa
+  const existingSiswaList = await prisma.siswa.findMany({
     where: { nis: { in: allNis } },
     select: { id: true, nis: true, nisn: true, ortuId: true },
   })
-  const existingByNis = new Map(existing.map(s => [s.nis, s]))
+  const existingByNis = new Map(existingSiswaList.map(s => [s.nis, s]))
+
+  // Pre-fetch all existing Parent Users
+  const existingUsersList = await prisma.user.findMany({
+    where: { username: { in: allUsernames } },
+    include: { ortu: true }
+  })
+  const existingUsersByUsername = new Map(existingUsersList.map(u => [u.username, u]))
 
   let created = 0
   let updated = 0
   const errors: string[] = []
 
-  for (const r of rows) {
-    try {
-      const nis = String(r.nis).trim()
-      const nisn = r.nisn ? String(r.nisn).trim() : null
-      const nama = String(r.nama).trim()
-      const kelasStr = String(r.kelas).trim().toUpperCase()
-      const kelasId = mapKelas.get(kelasStr)
-      
-      if (!kelasId) {
-        errors.push(`Kelas "${kelasStr}" tidak ditemukan di database. (Siswa: ${nama})`)
-        continue
-      }
+  // Process in chunks to prevent Vercel/Prisma connection limits
+  const chunkSize = 25
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const chunk = rows.slice(i, i + chunkSize)
 
-      let ortuId = undefined
-      if (r.namaOrtu && r.password) {
-        const username = nisn || nis
-        let user = await prisma.user.findUnique({ where: { username }, include: { ortu: true } })
+    await Promise.all(chunk.map(async (r: any) => {
+      try {
+        const nis = String(r.nis).trim()
+        const nisn = r.nisn ? String(r.nisn).trim() : null
+        const nama = String(r.nama).trim()
+        const kelasStr = String(r.kelas).trim().toUpperCase()
+        const kelasId = mapKelas.get(kelasStr)
         
-        const hashedPassword = await hash(String(r.password).trim(), 10)
-        
-        if (user) {
-          // Update existing Ortu User
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { name: String(r.namaOrtu).trim(), password: hashedPassword }
-          })
-          if (user.ortu) {
-            ortuId = user.ortu.id
+        if (!kelasId) {
+          errors.push(`Kelas "${kelasStr}" tidak ditemukan di database. (Siswa: ${nama})`)
+          return
+        }
+
+        let ortuId = undefined
+        if (r.namaOrtu && r.password) {
+          const username = nisn || nis
+          const user = existingUsersByUsername.get(username)
+          
+          // Use salt rounds 8 for faster bulk hashing in serverless (still secure enough for school apps)
+          const hashedPassword = await hash(String(r.password).trim(), 8)
+          
+          if (user) {
+            // Update existing Ortu User
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { name: String(r.namaOrtu).trim(), password: hashedPassword }
+            })
+            if (user.ortu) {
+              ortuId = user.ortu.id
+            } else {
+              const newOrtu = await prisma.ortu.create({ data: { userId: user.id } })
+              ortuId = newOrtu.id
+            }
           } else {
-            const newOrtu = await prisma.ortu.create({ data: { userId: user.id } })
-            ortuId = newOrtu.id
+            // Create new Ortu User
+            const newUser = await prisma.user.create({
+              data: {
+                name: String(r.namaOrtu).trim(),
+                username,
+                password: hashedPassword,
+                role: 'ORTU',
+                ortu: { create: {} }
+              },
+              include: { ortu: true }
+            })
+            if (newUser.ortu) ortuId = newUser.ortu.id
           }
-        } else {
-          // Create new Ortu User
-          user = await prisma.user.create({
+        }
+
+        const existingSiswa = existingByNis.get(nis)
+
+        if (existingSiswa) {
+          // UPDATE (Upsert logic)
+          const finalOrtuId = ortuId || existingSiswa.ortuId
+          await prisma.siswa.update({
+            where: { id: existingSiswa.id },
             data: {
-              name: String(r.namaOrtu).trim(),
-              username,
-              password: hashedPassword,
-              role: 'ORTU',
-              ortu: { create: {} }
-            },
-            include: { ortu: true }
+              nisn,
+              nama,
+              kelas: kelasStr,
+              kelasId,
+              ortuId: finalOrtuId
+            }
           })
-          if (user.ortu) ortuId = user.ortu.id
+          updated++
+        } else {
+          // CREATE
+          await prisma.siswa.create({
+            data: {
+              nis,
+              nisn,
+              nama,
+              kelas: kelasStr,
+              kelasId,
+              ortuId
+            }
+          })
+          created++
+        }
+      } catch (e: any) {
+        if (e.code === 'P2002') {
+          errors.push(`Gagal import ${r.nama}: NIS/NISN atau Username sudah digunakan oleh entri lain.`)
+        } else {
+          errors.push(`Gagal import ${r.nama}: ${e.message}`)
         }
       }
-
-      const existingSiswa = existingByNis.get(nis)
-
-      if (existingSiswa) {
-        // UPDATE (Upsert logic)
-        // Keep existing ortuId if not provided in Excel
-        const finalOrtuId = ortuId || existingSiswa.ortuId
-        await prisma.siswa.update({
-          where: { id: existingSiswa.id },
-          data: {
-            nisn,
-            nama,
-            kelas: kelasStr,
-            kelasId,
-            ortuId: finalOrtuId
-          }
-        })
-        updated++
-      } else {
-        // CREATE
-        await prisma.siswa.create({
-          data: {
-            nis,
-            nisn,
-            nama,
-            kelas: kelasStr,
-            kelasId,
-            ortuId
-          }
-        })
-        created++
-      }
-    } catch (e: any) {
-      if (e.code === 'P2002') {
-        errors.push(`Gagal import ${r.nama}: NIS/NISN atau Username sudah digunakan oleh entri lain.`)
-      } else {
-        errors.push(`Gagal import ${r.nama}: ${e.message}`)
-      }
-    }
+    }))
   }
 
     return NextResponse.json({
