@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     // 1. Ambil Data Siswa (beserta ortu & kelas)
     const siswa = await prisma.siswa.findMany({
       include: {
-        kelasRel: true,
+        kelasRef: true,
         ortu: { include: { user: true } },
       }
     })
