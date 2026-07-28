@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const tahunAjaranList = await prisma.tahunAjaran.findMany({
+  let tahunAjaranList = await prisma.tahunAjaran.findMany({
     orderBy: { nama: 'desc' },
     include: {
       semesters: { orderBy: { nama: 'asc' } },
@@ -16,10 +16,21 @@ export async function GET(req: NextRequest) {
         orderBy: { nama: 'asc' },
         include: {
           halaqahs: { include: { guru: { include: { user: { select: { name: true } } } } } },
+          _count: { select: { siswa: true } },
         },
       },
     },
   })
+
+  // Map the accurate count into jumlahSiswa to ensure it's always synced with the actual database relationships
+  const formattedTahunAjaranList = tahunAjaranList.map(ta => ({
+    ...ta,
+    kelas: ta.kelas.map(k => ({
+      ...k,
+      jumlahSiswa: k._count.siswa,
+      _count: undefined,
+    }))
+  }))
 
   // Active semester info
   const aktivSemester = await prisma.semester.findFirst({
@@ -31,5 +42,5 @@ export async function GET(req: NextRequest) {
     include: { user: { select: { name: true } } },
   })
 
-  return NextResponse.json({ tahunAjaranList, aktivSemester, allGuru })
+  return NextResponse.json({ tahunAjaranList: formattedTahunAjaranList, aktivSemester, allGuru })
 }
