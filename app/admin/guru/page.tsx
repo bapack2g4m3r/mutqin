@@ -2,12 +2,12 @@
 import { useState, useEffect, useCallback } from 'react'
 
 interface Guru {
-  id: string; nip?: string; kelas: string
+  id: string; nip?: string;
   user: { id: string; name: string; email: string }
   setorans: { id: string }[]
 }
 
-const EMPTY_FORM = { nama: '', email: '', password: '', nip: '', kelas: [] as string[] }
+const EMPTY_FORM = { nama: '', email: '', password: '', nip: '' }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -71,23 +71,15 @@ function ConfirmDialog({ message, onConfirm, onCancel, loading }: {
   )
 }
 
-function GuruForm({ initial, isEdit, onSave, onClose, saving, kelasList }: {
-  initial: { nama: string; email: string; password: string; nip: string; kelas: string[] }
+function GuruForm({ initial, isEdit, onSave, onClose, saving }: {
+  initial: { nama: string; email: string; password: string; nip: string }
   isEdit: boolean
   onSave: (data: typeof initial) => void
   onClose: () => void
   saving: boolean
-  kelasList: string[]
 }) {
   const [form, setForm] = useState(initial)
   const [showPass, setShowPass] = useState(false)
-
-  function toggleKelas(k: string) {
-    setForm(p => ({
-      ...p,
-      kelas: p.kelas.includes(k) ? p.kelas.filter(x => x !== k) : [...p.kelas, k],
-    }))
-  }
 
   const valid = form.nama && form.email && (!isEdit || form.password === '' || form.password.length >= 6) && (!isEdit && form.password.length >= 6 || isEdit)
 
@@ -130,28 +122,6 @@ function GuruForm({ initial, isEdit, onSave, onClose, saving, kelasList }: {
         <input id="guru-form-nip" type="text" className="input" placeholder="Nomor Induk Pegawai"
           value={form.nip} onChange={e => setForm(p => ({ ...p, nip: e.target.value }))} />
       </div>
-      <div className="input-group">
-        <label className="input-label">Kelas yang Diampu</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {kelasList.map(k => {
-            const active = form.kelas.includes(k)
-            return (
-              <button key={k} type="button" onClick={() => toggleKelas(k)} style={{
-                padding: '6px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: 600,
-                border: `1.5px solid ${active ? '#1d4ed8' : '#e2e8f0'}`,
-                background: active ? '#dbeafe' : 'white',
-                color: active ? '#1d4ed8' : '#64748b',
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}>
-                {k}
-              </button>
-            )
-          })}
-        </div>
-        {form.kelas.length === 0 && (
-          <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0' }}>Belum ada kelas dipilih</p>
-        )}
-      </div>
       <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
         <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose} disabled={saving}>Batal</button>
         <button id="btn-save-guru" className="btn btn-primary" style={{ flex: 1 }}
@@ -167,7 +137,6 @@ function GuruForm({ initial, isEdit, onSave, onClose, saving, kelasList }: {
 
 export default function AdminGuruPage() {
   const [gurus, setGurus]     = useState<Guru[]>([])
-  const [kelasList, setKelasList] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [showEdit, setShowEdit]   = useState<Guru | null>(null)
@@ -196,29 +165,12 @@ export default function AdminGuruPage() {
 
   useEffect(() => { setPage(1) }, [search])
 
-  const fetchKelas = useCallback(async () => {
-    try {
-      const res = await fetch('/api/akademik')
-      const data = await res.json()
-      if (data.tahunAjaranList) {
-        let classes: any[] = []
-        data.tahunAjaranList.forEach((ta: any) => {
-          if (ta.isAktif) classes = classes.concat(ta.kelas)
-        })
-        if (classes.length === 0 && data.tahunAjaranList.length > 0) {
-          classes = data.tahunAjaranList[0].kelas
-        }
-        setKelasList(classes.sort((a: any, b: any) => a.nama.localeCompare(b.nama)).map((k: any) => k.nama))
-      }
-    } catch(e) {}
-  }, [])
-
   const load = useCallback(() => {
     setLoading(true)
     fetch('/api/guru').then(r => r.json()).then(d => setGurus(d.gurus || [])).finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { fetchKelas(); load() }, [load, fetchKelas])
+  useEffect(() => { load() }, [load])
 
   async function handleAdd(form: typeof EMPTY_FORM) {
     setSaving(true)
@@ -238,7 +190,7 @@ export default function AdminGuruPage() {
     if (!showEdit) return
     setSaving(true)
     try {
-      const payload: any = { nama: form.nama, email: form.email, nip: form.nip, kelas: form.kelas }
+      const payload: any = { nama: form.nama, email: form.email, nip: form.nip }
       if (form.password) payload.password = form.password
       const res = await fetch(`/api/guru/${showEdit.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -262,9 +214,7 @@ export default function AdminGuruPage() {
   }
 
   function getEditInitial(g: Guru): typeof EMPTY_FORM {
-    let kelasList: string[] = []
-    try { kelasList = JSON.parse(g.kelas || '[]') } catch {}
-    return { nama: g.user.name, email: g.user.email, password: '', nip: g.nip || '', kelas: kelasList }
+    return { nama: g.user.name, email: g.user.email, password: '', nip: g.nip || '' }
   }
 
   return (
@@ -305,7 +255,6 @@ export default function AdminGuruPage() {
               <th style={{ width: '40px' }}>#</th>
               <th onClick={() => handleSort('nama')} style={{ cursor: 'pointer', userSelect: 'none' }}>Nama Guru {renderSortIcon('nama')}</th>
               <th onClick={() => handleSort('email')} style={{ cursor: 'pointer', userSelect: 'none' }}>Kontak & NIP {renderSortIcon('email')}</th>
-              <th>Kelas Diampu</th>
               <th onClick={() => handleSort('totalSetoran')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}>Total Setoran {renderSortIcon('totalSetoran')}</th>
               <th style={{ textAlign: 'center', width: '100px' }}>Aksi</th>
             </tr>
@@ -313,7 +262,7 @@ export default function AdminGuruPage() {
           <tbody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
+                <tr key={i}>{Array.from({ length: 5 }).map((_, j) => (
                   <td key={j}><div className="skeleton" style={{ height: '14px', borderRadius: '4px' }} /></td>
                 ))}</tr>
               ))
@@ -339,7 +288,7 @@ export default function AdminGuruPage() {
 
               if (filteredGurus.length === 0) return (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -352,8 +301,6 @@ export default function AdminGuruPage() {
 
               return currentData.map((g, index) => {
                 const idx = (page - 1) * itemsPerPage + index
-                let kelasList: string[] = []
-                try { kelasList = JSON.parse(g.kelas || '[]') } catch {}
                 
                 return (
                   <tr key={g.id}>
@@ -374,15 +321,6 @@ export default function AdminGuruPage() {
                     <td>
                       <div style={{ fontSize: '13px', color: '#475569', marginBottom: '2px' }}>{g.user.email}</div>
                       {g.nip && <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>NIP: {g.nip}</div>}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        {kelasList.length > 0 ? kelasList.map(k => (
-                          <span key={k} style={{ padding: '2px 8px', background: '#dbeafe', color: '#1d4ed8', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>{k}</span>
-                        )) : (
-                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>—</span>
-                        )}
-                      </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <span style={{ padding: '3px 10px', background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569' }}>
@@ -449,14 +387,14 @@ export default function AdminGuruPage() {
       {/* Add Modal */}
       {showAdd && (
         <Modal title="Tambah Guru Baru" onClose={() => setShowAdd(false)}>
-          <GuruForm initial={EMPTY_FORM} isEdit={false} onSave={handleAdd} onClose={() => setShowAdd(false)} saving={saving} kelasList={kelasList} />
+          <GuruForm initial={EMPTY_FORM} isEdit={false} onSave={handleAdd} onClose={() => setShowAdd(false)} saving={saving} />
         </Modal>
       )}
 
       {/* Edit Modal */}
       {showEdit && (
         <Modal title="Edit Data Guru" onClose={() => setShowEdit(null)}>
-          <GuruForm initial={getEditInitial(showEdit)} isEdit={true} onSave={handleEdit} onClose={() => setShowEdit(null)} saving={saving} kelasList={kelasList} />
+          <GuruForm initial={getEditInitial(showEdit)} isEdit={true} onSave={handleEdit} onClose={() => setShowEdit(null)} saving={saving} />
         </Modal>
       )}
 
