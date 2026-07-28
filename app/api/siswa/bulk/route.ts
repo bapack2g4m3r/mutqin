@@ -23,31 +23,19 @@ export async function POST(req: NextRequest) {
   const mapKelas = new Map(dbKelas.map(k => [k.nama.toUpperCase(), k.id]))
 
   const allNis = rows.map((r: any) => String(r.nis).trim())
-  const allNisn = rows.filter((r: any) => !!r.nisn).map((r: any) => String(r.nisn).trim())
 
-  const orCondition: any[] = [{ nis: { in: allNis } }]
-  if (allNisn.length > 0) {
-    orCondition.push({ nisn: { in: allNisn } })
-  }
-
+  // Find existing students by NIS
   const existing = await prisma.siswa.findMany({
-    where: { OR: orCondition },
-    select: { nis: true, nisn: true },
+    where: { nis: { in: allNis } },
+    select: { id: true, nis: true, nisn: true, ortuId: true },
   })
-  const existingNis = new Set(existing.map(s => s.nis))
-  const existingNisn = new Set(existing.map(s => s.nisn).filter(Boolean))
-
-  const toCreate = rows.filter((r: any) => {
-    const nis = String(r.nis).trim()
-    const nisn = r.nisn ? String(r.nisn).trim() : null
-    return !existingNis.has(nis) && (!nisn || !existingNisn.has(nisn))
-  })
-  const skipped = rows.filter((r: any) => !toCreate.includes(r))
+  const existingByNis = new Map(existing.map(s => [s.nis, s]))
 
   let created = 0
+  let updated = 0
   const errors: string[] = []
 
-  for (const r of toCreate) {
+  for (const r of rows) {
     try {
       const nis = String(r.nis).trim()
       const nisn = r.nisn ? String(r.nisn).trim() : null
@@ -63,35 +51,82 @@ export async function POST(req: NextRequest) {
       let ortuId = undefined
       if (r.namaOrtu && r.password) {
         const username = nisn || nis
+        let user = await prisma.user.findUnique({ where: { username }, include: { ortu: true } })
+        
         const hashedPassword = await hash(String(r.password).trim(), 10)
-        const user = await prisma.user.create({
-          data: {
-            name: String(r.namaOrtu).trim(),
-            username,
-            password: hashedPassword,
-            role: 'ORTU',
-            ortu: { create: {} }
-          },
-          include: { ortu: true }
-        })
-        if (user.ortu) ortuId = user.ortu.id
+        
+        if (user) {
+          // Update existing Ortu User
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { name: String(r.namaOrtu).trim(), password: hashedPassword }
+          })
+          if (user.ortu) {
+            ortuId = user.ortu.id
+          } else {
+            const newOrtu = await prisma.ortu.create({ data: { userId: user.id } })
+            ortuId = newOrtu.id
+          }
+        } else {
+          // Create new Ortu User
+          user = await prisma.user.create({
+            data: {
+              name: String(r.namaOrtu).trim(),
+              username,
+              password: hashedPassword,
+              role: 'ORTU',
+              ortu: { create: {} }
+            },
+            include: { ortu: true }
+          })
+          if (user.ortu) ortuId = user.ortu.id
+        }
       }
 
-      await prisma.siswa.create({
-        data: {
-          nis, nisn, nama, kelas: kelasStr, kelasId, ortuId
-        }
-      })
-      created++
+      const existingSiswa = existingByNis.get(nis)
+
+      if (existingSiswa) {
+        // UPDATE (Upsert logic)
+        // Keep existing ortuId if not provided in Excel
+        const finalOrtuId = ortuId || existingSiswa.ortuId
+        await prisma.siswa.update({
+          where: { id: existingSiswa.id },
+          data: {
+            nisn,
+            nama,
+            kelas: kelasStr,
+            kelasId,
+            ortuId: finalOrtuId
+          }
+        })
+        updated++
+      } else {
+        // CREATE
+        await prisma.siswa.create({
+          data: {
+            nis,
+            nisn,
+            nama,
+            kelas: kelasStr,
+            kelasId,
+            ortuId
+          }
+        })
+        created++
+      }
     } catch (e: any) {
-      errors.push(`Gagal import ${r.nama}: ${e.message}`)
+      if (e.code === 'P2002') {
+        errors.push(`Gagal import ${r.nama}: NIS/NISN atau Username sudah digunakan oleh entri lain.`)
+      } else {
+        errors.push(`Gagal import ${r.nama}: ${e.message}`)
+      }
     }
   }
 
     return NextResponse.json({
       created,
-      skipped: skipped.length,
-      skippedNis: skipped.map((r: any) => r.nis),
+      updated,
+      skipped: 0,
       errors,
     })
   } catch (error: any) {

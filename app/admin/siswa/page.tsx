@@ -183,7 +183,7 @@ function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => voi
   const [rows, setRows] = useState<BulkRow[]>([])
   const [step, setStep] = useState<'upload' | 'preview' | 'result'>('upload')
   const [importing, setImporting] = useState(false)
-  const [result, setResult] = useState<{ created: number; skipped: number; skippedNis: string[], errors: string[] } | null>(null)
+  const [result, setResult] = useState<{ created: number; updated?: number; skipped: number; skippedNis?: string[], errors: string[] } | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [parseError, setParseError] = useState('')
 
@@ -357,7 +357,7 @@ function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => voi
           <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
             <div style={{ padding: '8px 14px', background: '#d1fae5', borderRadius: '10px', display: 'flex', gap: '6px', alignItems: 'center' }}>
               <span style={{ color: '#059669', fontWeight: 700, fontSize: '15px' }}>{validCount}</span>
-              <span style={{ color: '#065f46', fontSize: '12px' }}>siap diimport</span>
+              <span style={{ color: '#065f46', fontSize: '12px' }}>siap diproses</span>
             </div>
             {invalidCount > 0 && (
               <div style={{ padding: '8px 14px', background: '#fee2e2', borderRadius: '10px', display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -404,7 +404,7 @@ function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => voi
                     </td>
                     <td style={{ padding: '9px 12px' }}>
                       {r._valid
-                        ? <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>✓ OK</span>
+                        ? <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>✓ OK (Upsert)</span>
                         : <span style={{ fontSize: '11px', color: '#dc2626' }}>⚠ {r._error}</span>}
                     </td>
                   </tr>
@@ -417,7 +417,7 @@ function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => voi
             <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Batal</button>
             <button id="btn-confirm-import" className="btn btn-primary" style={{ flex: 2 }}
               onClick={handleImport} disabled={validCount === 0}>
-              Lanjutkan Import
+              Lanjutkan Import & Update
             </button>
           </div>
 
@@ -426,8 +426,8 @@ function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => voi
             <ConfirmDialog
               title="Konfirmasi Import"
               type="primary"
-              confirmText="Ya, Import"
-              message={`Rekap Data: Terdapat ${validCount} siswa yang valid dan siap diimport. ${invalidCount > 0 ? `(${invalidCount} data error akan dilewati). ` : ''}Apakah Anda yakin ingin memproses data ini?`}
+              confirmText="Ya, Proses"
+              message={`Sistem akan memproses ${validCount} baris data. Jika NIS sudah ada, data siswa tersebut akan diupdate (Upsert). ${invalidCount > 0 ? `Ada ${invalidCount} data error yang dilewati.` : ''} Lanjutkan?`}
               onConfirm={executeImport}
               onCancel={() => setShowConfirmImport(false)}
               loading={importing}
@@ -449,12 +449,16 @@ function BulkUploadPanel({ onClose, onSuccess, kelasList }: { onClose: () => voi
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-          <h4 style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b', marginBottom: '8px' }}>Import Selesai!</h4>
+          <h4 style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b', marginBottom: '8px' }}>Proses Selesai!</h4>
           
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px' }}>
             <div style={{ padding: '12px 20px', background: '#d1fae5', borderRadius: '12px' }}>
               <div style={{ fontSize: '28px', fontWeight: 800, color: '#059669' }}>{result.created}</div>
-              <div style={{ fontSize: '12px', color: '#065f46' }}>Berhasil</div>
+              <div style={{ fontSize: '12px', color: '#065f46' }}>Ditambahkan</div>
+            </div>
+            <div style={{ padding: '12px 20px', background: '#dbeafe', borderRadius: '12px' }}>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: '#1d4ed8' }}>{result.updated || 0}</div>
+              <div style={{ fontSize: '12px', color: '#1e40af' }}>Diperbarui</div>
             </div>
             <div style={{ padding: '12px 20px', background: '#fef3c7', borderRadius: '12px' }}>
               <div style={{ fontSize: '28px', fontWeight: 800, color: '#d97706' }}>{result.skipped}</div>
