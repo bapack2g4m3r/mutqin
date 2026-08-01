@@ -35,11 +35,6 @@ export default function LoginPage() {
     }
   }
 
-  const demoAccounts = [
-    { label: 'Admin', email: 'admin@globalinsani.sch.id', pass: 'admin123', color: '#1e3a8a' },
-    { label: 'Guru', email: 'ustadzah.aisyah@globalinsani.sch.id', pass: 'guru123', color: '#059669' },
-    { label: 'Ortu', email: 'ortu.ahmad@globalinsani.sch.id', pass: 'ortu123', color: '#d97706' },
-  ]
 
   return (
     <div style={{
@@ -215,51 +210,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo Accounts */}
-        <div style={{ marginTop: '28px' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '16px',
-          }}>
-            <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
-            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
-              Demo Akun
-            </span>
-            <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {demoAccounts.map((acc) => (
-              <button
-                key={acc.label}
-                type="button"
-                onClick={() => { setEmail(acc.email); setPassword(acc.pass) }}
-                style={{
-                  flex: 1,
-                  padding: '10px 8px',
-                  borderRadius: '12px',
-                  border: `1.5px solid ${acc.color}22`,
-                  background: `${acc.color}08`,
-                  color: acc.color,
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  letterSpacing: '0.01em',
-                }}
-                onMouseOver={e => (e.currentTarget.style.background = `${acc.color}18`)}
-                onMouseOut={e => (e.currentTarget.style.background = `${acc.color}08`)}
-              >
-                {acc.label}
-              </button>
-            ))}
-          </div>
-          <p style={{ textAlign: 'center', fontSize: '11px', color: '#94a3b8', marginTop: '10px' }}>
-            Klik tombol di atas lalu tekan Masuk
-          </p>
-        </div>
 
         <p style={{
           textAlign: 'center',
