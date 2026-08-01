@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import NextAuthProvider from '@/components/providers/NextAuthProvider'
 import { PingTracker } from '@/components/PingTracker'
+import { IdleTimer } from '@/components/IdleTimer'
 
 export const metadata: Metadata = {
   title: 'MUTQIN — Sistem Administrasi Tahfidz & Tahsin | SMP Global Insani',
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body>
         <NextAuthProvider>
           <PingTracker />
+          <IdleTimer />
           {children}
         </NextAuthProvider>
       </body>
