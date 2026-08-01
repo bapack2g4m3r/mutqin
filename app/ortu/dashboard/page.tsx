@@ -42,7 +42,7 @@ export default function OrtuDashboardPage() {
   const [loading, setLoading] = useState(true)
 
   const siswaId = (session?.user as any)?.siswaId
-  const parentName = session?.user?.name?.split(' ')[0] || 'Orang Tua'
+  const parentName = session?.user?.name || 'Orang Tua'
 
   useEffect(() => {
     if (!siswaId) return
