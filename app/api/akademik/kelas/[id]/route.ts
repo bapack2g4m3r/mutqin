@@ -31,10 +31,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   })
 
   if (Array.isArray(halaqahGuruIds)) {
-    await prisma.halaqah.deleteMany({ where: { kelasId: id } })
-    if (halaqahGuruIds.length > 0) {
+    const existingHalaqahs = await prisma.halaqah.findMany({ where: { kelasId: id } })
+    const existingGuruIds = existingHalaqahs.map(h => h.guruId)
+
+    const toAdd = halaqahGuruIds.filter((guruId: string) => !existingGuruIds.includes(guruId))
+    const toRemove = existingHalaqahs.filter(h => !halaqahGuruIds.includes(h.guruId))
+
+    if (toRemove.length > 0) {
+      await prisma.halaqah.deleteMany({
+        where: { id: { in: toRemove.map(h => h.id) } }
+      })
+    }
+
+    if (toAdd.length > 0) {
       await prisma.halaqah.createMany({
-        data: halaqahGuruIds.map((guruId: string) => ({
+        data: toAdd.map((guruId: string) => ({
           kelasId: id,
           nama: `Halaqah Kelas ${updated.nama}`,
           guruId
