@@ -22,6 +22,7 @@ interface ActivityLog {
 interface MonitorData {
   activeUsers: ActiveUser[]
   activityLogs: ActivityLog[]
+  allUsers: ActiveUser[]
 }
 
 export default function MonitorPage() {
@@ -57,6 +58,7 @@ export default function MonitorPage() {
         <div className="skeleton" style={{ height: '400px', borderRadius: '24px' }} />
         <div className="skeleton" style={{ height: '400px', borderRadius: '24px', gridColumn: 'span 2' }} />
       </div>
+      <div className="skeleton" style={{ height: '400px', borderRadius: '24px', marginTop: '2rem' }} />
     </div>
   )
 
@@ -151,6 +153,64 @@ export default function MonitorPage() {
               </table>
             )}
           </div>
+        </div>
+
+      </div>
+
+      {/* PANEL REPORT LAST LOGIN */}
+      <div className="card mt-8" style={{ padding: 0, display: 'flex', flexDirection: 'column', maxHeight: '600px' }}>
+        <div className="flex justify-between items-center" style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-gray-100)', background: 'var(--color-gray-50)', borderTopLeftRadius: 'var(--radius-xl)', borderTopRightRadius: 'var(--radius-xl)' }}>
+          <h2 className="font-semibold">Laporan Last Login (Terakhir Aktif)</h2>
+          <span className="badge badge-jayyid">
+            Total {data?.allUsers.length || 0} Pengguna
+          </span>
+        </div>
+        
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ position: 'sticky', top: '-1rem', zIndex: 10, background: 'white' }}>
+              <tr>
+                <th style={{ textAlign: 'left', padding: '1rem', borderBottom: '2px solid var(--color-gray-100)' }}>Nama Pengguna</th>
+                <th style={{ textAlign: 'left', padding: '1rem', borderBottom: '2px solid var(--color-gray-100)' }}>Peran (Role)</th>
+                <th style={{ textAlign: 'left', padding: '1rem', borderBottom: '2px solid var(--color-gray-100)' }}>Terakhir Login / Aktif</th>
+                <th style={{ textAlign: 'center', padding: '1rem', borderBottom: '2px solid var(--color-gray-100)' }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.allUsers.map(u => {
+                const isOnline = u.lastActiveAt && (Date.now() - new Date(u.lastActiveAt).getTime() < 5 * 60 * 1000)
+                return (
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--color-gray-50)' }}>
+                    <td style={{ padding: '1rem' }}>
+                      <div className="font-medium">{u.name}</div>
+                    </td>
+                    <td style={{ padding: '1rem' }}>
+                      <span className="text-xs font-medium" style={{ color: u.role === 'ADMIN' ? 'var(--color-error)' : u.role === 'GURU' ? 'var(--color-primary-600)' : 'var(--color-warning)' }}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
+                      {u.lastActiveAt ? (
+                        <div className="flex flex-col">
+                          <span>{new Date(u.lastActiveAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                          <span className="text-xs text-muted">{new Date(u.lastActiveAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted italic">Belum pernah login</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      {isOnline ? (
+                        <span className="badge badge-mumtaz text-xs">Online</span>
+                      ) : (
+                        <span className="badge badge-ghair text-xs">Offline</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

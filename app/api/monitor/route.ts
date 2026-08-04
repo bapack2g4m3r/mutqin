@@ -45,8 +45,22 @@ export async function GET() {
     }
   })
 
+  // Cari semua user untuk report last login (diurutkan berdasarkan aktivitas terakhir)
+  const allUsers = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      lastActiveAt: true
+    },
+    orderBy: {
+      lastActiveAt: { sort: 'desc', nulls: 'last' }
+    }
+  })
+
   return NextResponse.json({
     activeUsers,
-    activityLogs
+    activityLogs,
+    allUsers
   })
 }
