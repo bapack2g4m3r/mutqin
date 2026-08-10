@@ -47,7 +47,6 @@ function NilaiInput({ label, value, onChange, weight }: {
           backgroundColor: '#f8fafc'
         }}
         onFocus={e => {
-          e.target.select()
           e.target.style.borderColor = '#2563eb'
           e.target.style.backgroundColor = '#ffffff'
         }}
