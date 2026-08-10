@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v6'
+const CACHE_NAME = 'mutqin-v7'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -19,10 +19,9 @@ self.addEventListener('install', event => {
   self.skipWaiting()
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      // Add each asset individually so one failure doesn't fail the whole array
       return Promise.allSettled(
         STATIC_ASSETS.map(url => 
-          fetch(url).then(res => {
+          fetch(url, { credentials: 'omit' }).then(res => {
             if (res.ok) {
               return cache.put(url, res.clone());
             }
@@ -78,28 +77,32 @@ self.addEventListener('fetch', event => {
   // 2. Dynamic Pages (HTML Navigation) -> Network First dengan Timeout & Cache Fallback
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
+      (async () => {
+        try {
+          const response = await fetch(event.request)
           if (response.ok) {
             const clone = response.clone()
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
+            const cache = await caches.open(CACHE_NAME)
+            await cache.put(event.request, clone)
           }
           return response
-        })
-        .catch(async () => {
-          const cached = await caches.match(event.request, { ignoreSearch: true })
-          if (cached) return cached
-          // Fallback to guru dashboard or login if specific page not cached
-          const dashboardCached = await caches.match('/guru/dashboard')
-          if (dashboardCached) return dashboardCached
-          const loginCached = await caches.match('/login')
-          if (loginCached) return loginCached
-          
+        } catch (error) {
+          try {
+            const cached = await caches.match(event.request, { ignoreSearch: true })
+            if (cached) return cached
+            const dashboardCached = await caches.match('/guru/dashboard', { ignoreSearch: true })
+            if (dashboardCached) return dashboardCached
+            const loginCached = await caches.match('/login', { ignoreSearch: true })
+            if (loginCached) return loginCached
+          } catch (matchError) {
+            console.error('Cache match error', matchError)
+          }
           return new Response(
             '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline - MUTQIN</title><style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background:#f0f4f8;color:#333;text-align:center;padding:1rem;}h1{color:#1e3a8a;margin-bottom:0.5rem;}p{margin-bottom:2rem;}a{display:inline-block;padding:10px 20px;background:#1e3a8a;color:white;text-decoration:none;border-radius:8px;font-weight:bold;}</style></head><body><h1>Tidak Ada Koneksi</h1><p>Anda sedang offline dan halaman ini belum tersimpan.</p><a href="/">Kembali ke Beranda</a></body></html>',
             { status: 200, headers: { 'Content-Type': 'text/html' } }
           )
-        })
+        }
+      })()
     )
     return
   }
@@ -132,16 +135,17 @@ self.addEventListener('fetch', event => {
     fetch(event.request)
       .then(response => {
         if (response.ok) {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
+          // Do not cache RSC payloads, as they overwrite HTML caches for the same URL
+          const isRSC = event.request.headers.has('RSC') || event.request.headers.get('Accept')?.includes('text/x-component')
+          if (!isRSC && event.request.method === 'GET') {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
+          }
         }
         return response
       })
       .catch(async () => {
-        const cached = await caches.match(event.request)
-        if (cached) return cached
-        
-        // Return a generic error response if not in cache to avoid TypeError
+        // Return a generic error response if not in cache
         return new Response(JSON.stringify({ error: 'offline', offline: true }), {
           status: 503,
           headers: { 'Content-Type': 'application/json' }

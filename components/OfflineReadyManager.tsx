@@ -89,8 +89,12 @@ export function OfflineReadyManager() {
       const [dashRes, siswaRes] = await Promise.all([
         fetch('/api/guru/dashboard'),
         fetch('/api/siswa?limit=500'),
+        fetch('/guru/dashboard'),
+        fetch('/guru/siswa'),
         fetch('/guru/siswa/detail'),
-        fetch('/guru/siswa/setoran')
+        fetch('/guru/siswa/setoran'),
+        fetch('/guru/riwayat'),
+        fetch('/guru/profil')
       ])
 
       let siswaCount = 0
