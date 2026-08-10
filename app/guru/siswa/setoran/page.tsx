@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { QURAN_SURAHS, calcNilaiTahfidz, calcNilaiTahsin, getPredikat } from '@/lib/surah-data'
 
 type Jenis = 'TAHFIDZ' | 'TAHSIN'
@@ -160,12 +160,12 @@ function SurahAutocomplete({ value, onChange }: { value: string; onChange: (nama
 }
 
 export default function InputSetoranPage() {
-
   const searchParams = useSearchParams()
-  const siswaId = searchParams.get('id') as string
-  const jenisParam = (searchParams.get('jenis') || 'TAHFIDZ').toUpperCase() as Jenis
+  const router = useRouter()
+  const siswaId = searchParams.get('id')
+  const jenisFromUrl = (searchParams.get('jenis') || 'TAHFIDZ').toUpperCase() as Jenis
 
-  const [jenis, setJenis] = useState<Jenis>(jenisParam)
+  const [jenis, setJenis] = useState<Jenis>(jenisFromUrl)
   const [siswa, setSiswa] = useState<SiswaInfo | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -192,6 +192,7 @@ export default function InputSetoranPage() {
   const [catatan, setCatatan] = useState('')
 
   useEffect(() => {
+    if (!siswaId) return
     // 1. Instantly read from cached student list
     try {
       const cached = localStorage.getItem('mutqin_cached_siswa_list')
@@ -332,12 +333,12 @@ export default function InputSetoranPage() {
           </>
         )}
         {isOfflineSaved && <div style={{ marginBottom: '24px' }} />}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '320px' }}>
-          <button id="btn-siswa-berikutnya" className="btn btn-primary btn-lg" onClick={() => { window.location.href = `/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}` }}>
-            Siswa Berikutnya
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '320px' }}>
+          <button id="btn-siswa-berikutnya" className="btn btn-primary btn-lg" onClick={() => { router.push(`/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`) }}>
+            Pilih Siswa Lain di Kelas Ini
           </button>
-          <button id="btn-kembali-detail" className="btn btn-outline" onClick={() => { window.location.href = `/guru/siswa/detail?id=${siswaId}` }}>
-            Kembali ke Detail Siswa
+          <button id="btn-kembali-detail" className="btn btn-outline" onClick={() => { router.push(`/guru/siswa/detail?id=${siswaId}`) }}>
+            Kembali ke Profil Siswa
           </button>
         </div>
       </div>

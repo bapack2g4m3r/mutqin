@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 import MobileNav from '@/components/layout/MobileNav'
 
@@ -32,8 +33,8 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function RiwayatPage() {
-
+export default function GuruRiwayatPage() {
+  const router = useRouter()
   const [setorans, setSetorans] = useState<Setoran[]>([])
   const [loading, setLoading] = useState(true)
   const [jenis, setJenis] = useState('')
@@ -98,7 +99,7 @@ export default function RiwayatPage() {
                 key={s.id}
                 className="list-item"
                 style={{ width: '100%', textAlign: 'left' }}
-                onClick={() => { window.location.href = `/guru/siswa/detail?id=${s.siswa.id}` }}
+                onClick={() => { router.push(`/guru/siswa/detail?id=${s.siswa.id}`) }}
               >
                 <div style={{
                   width: '42px', height: '42px', borderRadius: '12px', flexShrink: 0,

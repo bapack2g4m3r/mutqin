@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import MobileNav from '@/components/layout/MobileNav'
 
 interface Siswa {
@@ -18,6 +18,7 @@ function getInitials(nama: string) {
 
 export default function GuruSiswaPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const kelasFromUrl = searchParams.get('kelas') || ''
   const [search, setSearch] = useState('')
   const [kelas, setKelas] = useState(kelasFromUrl)
@@ -246,7 +247,7 @@ export default function GuruSiswaPage() {
                 key={s.id}
                 id={`siswa-${s.id}`}
                 className="list-item"
-                onClick={() => { window.location.href = `/guru/siswa/detail?id=${s.id}` }}
+                onClick={() => { router.push(`/guru/siswa/detail?id=${s.id}`) }}
                 style={{ width: '100%', textAlign: 'left' }}
               >
                 <div className="avatar-placeholder avatar-md">

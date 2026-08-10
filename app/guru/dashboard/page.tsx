@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 import MobileNav from '@/components/layout/MobileNav'
 import { OfflineReadyManager } from '@/components/OfflineReadyManager'
@@ -53,6 +54,7 @@ function formatDate(d: string) {
 
 export default function GuruDashboardPage() {
   const { data: session } = useSession()
+  const router = useRouter()
 
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -128,7 +130,7 @@ export default function GuruDashboardPage() {
           )}
           <button
             id="btn-input-setoran-quick"
-            onClick={() => { window.location.href = '/guru/siswa' }}
+            onClick={() => { router.push('/guru/siswa') }}
             className="btn btn-primary"
             style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '12px' }}
           >
@@ -198,7 +200,7 @@ export default function GuruDashboardPage() {
         <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           <button
             id="btn-cari-siswa"
-            onClick={() => { window.location.href = '/guru/siswa' }}
+            onClick={() => { router.push('/guru/siswa') }}
             className="card card-sm"
             style={{ border: 'none', cursor: 'pointer', textAlign: 'left', padding: '16px' }}
           >
@@ -221,7 +223,7 @@ export default function GuruDashboardPage() {
 
           <button
             id="btn-riwayat"
-            onClick={() => { window.location.href = '/guru/riwayat' }}
+            onClick={() => { router.push('/guru/riwayat') }}
             className="card card-sm"
             style={{ border: 'none', cursor: 'pointer', textAlign: 'left', padding: '16px' }}
           >
@@ -295,7 +297,7 @@ export default function GuruDashboardPage() {
         {/* Setoran Terbaru */}
         <div className="section-header">
           <h3 className="section-title">Setoran Terbaru</h3>
-          <button className="section-link" onClick={() => { window.location.href = '/guru/riwayat' }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Lihat Semua</button>
+          <button className="section-link" onClick={() => { router.push('/guru/riwayat') }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Lihat Semua</button>
         </div>
 
         <div className="stagger-children" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
