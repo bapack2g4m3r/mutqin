@@ -23,10 +23,10 @@ function NilaiInput({ label, value, onChange, weight }: {
 }) {
   const color = value >= 90 ? '#059669' : value >= 80 ? '#2563eb' : value >= 70 ? '#d97706' : '#dc2626'
   return (
-    <div className="slider-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-      <div>
-        <span className="slider-label" style={{ fontWeight: 600, color: '#1e293b' }}>{label}</span>
-        <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '6px' }}>({weight})</span>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ fontWeight: 600, color: '#1e293b', fontSize: '13px' }}>{label}</span>
+        <span style={{ fontSize: '10px', color: '#94a3b8' }}>({weight})</span>
       </div>
       <input 
         type="number" 
@@ -39,17 +39,22 @@ function NilaiInput({ label, value, onChange, weight }: {
           onChange(v)
         }} 
         style={{ 
-          width: '70px', padding: '8px', 
-          borderRadius: '8px', border: '2px solid #e2e8f0',
-          fontSize: '18px', fontWeight: 'bold', 
+          width: '56px', padding: '4px 6px', 
+          borderRadius: '6px', border: '1px solid #cbd5e1',
+          fontSize: '14px', fontWeight: 'bold', 
           color: color, textAlign: 'center', outline: 'none',
-          transition: 'border-color 0.2s'
+          transition: 'border-color 0.2s',
+          backgroundColor: '#f8fafc'
         }}
         onFocus={e => {
           e.target.select()
           e.target.style.borderColor = '#2563eb'
+          e.target.style.backgroundColor = '#ffffff'
         }}
-        onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+        onBlur={e => {
+          e.target.style.borderColor = '#cbd5e1'
+          e.target.style.backgroundColor = '#f8fafc'
+        }}
       />
     </div>
   )
