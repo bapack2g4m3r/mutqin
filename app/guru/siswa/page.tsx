@@ -27,6 +27,8 @@ export default function GuruSiswaPage() {
   const [loading, setLoading] = useState(true)
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
+  const [isOffline, setIsOffline] = useState(false)
+
   // Debounce
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
@@ -45,20 +47,80 @@ export default function GuruSiswaPage() {
         if (classes.length === 0 && data.tahunAjaranList.length > 0) {
           classes = data.tahunAjaranList[0].kelas
         }
-        setKelasList(['Semua', ...classes.sort((a: any, b: any) => a.nama.localeCompare(b.nama)).map((k: any) => k.nama)])
+        const formatted = ['Semua', ...classes.sort((a: any, b: any) => a.nama.localeCompare(b.nama)).map((k: any) => k.nama)]
+        setKelasList(formatted)
+        try { localStorage.setItem('mutqin_cached_kelas_list', JSON.stringify(formatted)) } catch {}
       }
-    } catch(e) {}
+    } catch {
+      try {
+        const cached = localStorage.getItem('mutqin_cached_kelas_list')
+        if (cached) setKelasList(JSON.parse(cached))
+      } catch {}
+    }
   }, [])
 
   useEffect(() => {
-    setLoading(true)
+    setIsOffline(!navigator.onLine)
+    const onOnline = () => setIsOffline(false)
+    const onOffline = () => setIsOffline(true)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline) }
+  }, [])
+
+  // Load from cache first for instant response
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem('mutqin_cached_siswa_list')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        let filtered = parsed
+        if (debouncedSearch) {
+          const q = debouncedSearch.toLowerCase()
+          filtered = filtered.filter((s: Siswa) => s.nama.toLowerCase().includes(q) || s.nis.includes(q))
+        }
+        if (kelas) {
+          filtered = filtered.filter((s: Siswa) => s.kelas === kelas)
+        }
+        setSiswa(filtered)
+        setLoading(false)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
     const params = new URLSearchParams()
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (kelas) params.set('kelas', kelas)
-    params.set('limit', '100')
+    params.set('limit', '200')
+
     fetch(`/api/siswa?${params}`)
       .then(r => r.json())
-      .then(d => setSiswa(d.siswa || []))
+      .then(d => {
+        const list = d.siswa || []
+        setSiswa(list)
+        // Cache full un-filtered list or current list
+        if (!debouncedSearch && !kelas && list.length > 0) {
+          try { localStorage.setItem('mutqin_cached_siswa_list', JSON.stringify(list)) } catch {}
+        }
+      })
+      .catch(() => {
+        // Fallback filter from cache
+        try {
+          const cached = localStorage.getItem('mutqin_cached_siswa_list')
+          if (cached) {
+            let list: Siswa[] = JSON.parse(cached)
+            if (debouncedSearch) {
+              const q = debouncedSearch.toLowerCase()
+              list = list.filter(s => s.nama.toLowerCase().includes(q) || s.nis.includes(q))
+            }
+            if (kelas) {
+              list = list.filter(s => s.kelas === kelas)
+            }
+            setSiswa(list)
+          }
+        } catch {}
+      })
       .finally(() => setLoading(false))
   }, [debouncedSearch, kelas])
 
@@ -74,7 +136,13 @@ export default function GuruSiswaPage() {
           </svg>
         </button>
         <h1 style={{ flex: 1, fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>Cari Siswa</h1>
-        <span style={{ fontSize: '12px', color: '#64748b' }}>{siswa.length} siswa</span>
+        {isOffline ? (
+          <span style={{ fontSize: '11px', background: '#fef3c7', color: '#92400e', padding: '3px 8px', borderRadius: '8px', fontWeight: 600 }}>
+            📵 Offline ({siswa.length})
+          </span>
+        ) : (
+          <span style={{ fontSize: '12px', color: '#64748b' }}>{siswa.length} siswa</span>
+        )}
       </header>
 
       <div className="page-mobile">

@@ -193,7 +193,27 @@ export default function InputSetoranPage() {
   const [catatan, setCatatan] = useState('')
 
   useEffect(() => {
-    fetch(`/api/siswa/${siswaId}`).then(r => r.json()).then(setSiswa)
+    // 1. Instantly read from cached student list
+    try {
+      const cached = localStorage.getItem('mutqin_cached_siswa_list')
+      if (cached) {
+        const list = JSON.parse(cached)
+        const found = list.find((s: any) => s.id === siswaId)
+        if (found) setSiswa(found)
+      }
+    } catch {}
+
+    // 2. Fetch fresh details from API
+    fetch(`/api/siswa/${siswaId}`)
+      .then(r => {
+        if (!r.ok) throw new Error('Offline')
+        return r.json()
+      })
+      .then(d => {
+        if (d && !d.error) setSiswa(d)
+      })
+      .catch(() => {})
+
     setIsOnline(navigator.onLine)
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)

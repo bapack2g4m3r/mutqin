@@ -60,9 +60,48 @@ export default function DetailSiswaPage() {
   const [activeTab, setActiveTab] = useState<'semua' | 'tahfidz' | 'tahsin'>('semua')
 
   useEffect(() => {
+    // 1. Instantly try to load cached detail
+    try {
+      const cachedDetail = localStorage.getItem(`mutqin_cached_siswa_detail_${id}`)
+      if (cachedDetail) {
+        setSiswa(JSON.parse(cachedDetail))
+        setLoading(false)
+      } else {
+        // Fallback from summary list
+        const cachedList = localStorage.getItem('mutqin_cached_siswa_list')
+        if (cachedList) {
+          const list = JSON.parse(cachedList)
+          const found = list.find((s: any) => s.id === id)
+          if (found) {
+            setSiswa({
+              id: found.id,
+              nis: found.nis,
+              nama: found.nama,
+              kelas: found.kelas,
+              progress: 0,
+              hasTasmi: false,
+              surahSelesai: [],
+              setorans: found.setorans || [],
+            })
+            setLoading(false)
+          }
+        }
+      }
+    } catch {}
+
+    // 2. Fetch fresh details
     fetch(`/api/siswa/${id}`)
-      .then(r => r.json())
-      .then(setSiswa)
+      .then(r => {
+        if (!r.ok) throw new Error('Offline')
+        return r.json()
+      })
+      .then(d => {
+        if (d && !d.error) {
+          setSiswa(d)
+          try { localStorage.setItem(`mutqin_cached_siswa_detail_${id}`, JSON.stringify(d)) } catch {}
+        }
+      })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
 

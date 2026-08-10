@@ -55,9 +55,43 @@ export default function GuruDashboardPage() {
   const router = useRouter()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isOffline, setIsOffline] = useState(false)
 
   useEffect(() => {
-    fetch('/api/guru/dashboard').then(r => r.json()).then(setData).finally(() => setLoading(false))
+    setIsOffline(!navigator.onLine)
+    const onOnline = () => setIsOffline(false)
+    const onOffline = () => setIsOffline(true)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+
+    // 1. Instantly load from cache
+    try {
+      const cached = localStorage.getItem('mutqin_cached_guru_dashboard')
+      if (cached) {
+        setData(JSON.parse(cached))
+        setLoading(false)
+      }
+    } catch {}
+
+    // 2. Fetch fresh from network
+    fetch('/api/guru/dashboard')
+      .then(r => {
+        if (!r.ok) throw new Error('Offline')
+        return r.json()
+      })
+      .then(d => {
+        if (d && !d.error) {
+          setData(d)
+          try { localStorage.setItem('mutqin_cached_guru_dashboard', JSON.stringify(d)) } catch {}
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+
+    return () => {
+      window.removeEventListener('online', onOnline)
+      window.removeEventListener('offline', onOffline)
+    }
   }, [])
 
   const userName = session?.user?.name?.split(' ')[0] || 'Guru'
@@ -85,14 +119,21 @@ export default function GuruDashboardPage() {
             <div style={{ fontSize: '10px', color: '#64748b' }}>Global Insani School</div>
           </div>
         </div>
-        <button
-          id="btn-input-setoran-quick"
-          onClick={() => router.push('/guru/siswa')}
-          className="btn btn-primary"
-          style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '12px' }}
-        >
-          + Setoran
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {isOffline && (
+            <span style={{ fontSize: '11px', background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '8px', fontWeight: 600 }}>
+              📵 Offline
+            </span>
+          )}
+          <button
+            id="btn-input-setoran-quick"
+            onClick={() => router.push('/guru/siswa')}
+            className="btn btn-primary"
+            style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '12px' }}
+          >
+            + Setoran
+          </button>
+        </div>
       </header>
 
       <div className="page-mobile">
