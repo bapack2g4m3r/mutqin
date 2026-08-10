@@ -117,7 +117,7 @@ export default function RaporPrintPage() {
         .kop-surat {
           border-bottom: 4px solid black;
           padding-bottom: 4px;
-          margin-bottom: 20px;
+          margin-bottom: 12px;
         }
         .kop-surat-inner {
           display: flex;
@@ -129,7 +129,7 @@ export default function RaporPrintPage() {
           text-align: center;
         }
         .kop-logo {
-          width: 80px;
+          width: 70px;
           height: auto;
           margin: 0 auto;
         }
@@ -139,6 +139,7 @@ export default function RaporPrintPage() {
           margin-top: 4px;
           text-align: left;
           font-weight: bold;
+          line-height: 1.1;
         }
         .kop-center {
           flex: 1;
@@ -147,21 +148,21 @@ export default function RaporPrintPage() {
         }
         .kop-center h1 {
           margin: 0;
-          font-size: 18px;
+          font-size: 16px;
           text-transform: uppercase;
         }
         .kop-center h2 {
           margin: 0;
-          font-size: 22px;
+          font-size: 20px;
           font-weight: bold;
           letter-spacing: 1px;
         }
         .kop-center p {
           margin: 2px 0;
-          font-size: 12px;
+          font-size: 11px;
         }
         .kop-center .akreditasi {
-          font-size: 14px;
+          font-size: 13px;
           font-weight: bold;
         }
         .kop-nss {
@@ -171,30 +172,31 @@ export default function RaporPrintPage() {
           text-align: right;
           font-family: Arial, sans-serif;
           padding-bottom: 2px;
+          line-height: 1.2;
         }
 
         /* JUDUL */
         .judul-rapor {
           text-align: center;
           font-weight: bold;
-          font-size: 14px;
-          margin-bottom: 24px;
-          line-height: 1.4;
+          font-size: 13px;
+          margin-bottom: 16px;
+          line-height: 1.3;
         }
 
         /* INFO SISWA */
         .info-siswa {
           display: flex;
           justify-content: space-between;
-          font-size: 12px;
-          margin-bottom: 12px;
+          font-size: 11px;
+          margin-bottom: 8px;
           font-family: 'Times New Roman', Times, serif;
         }
         .info-siswa table {
           width: 48%;
         }
         .info-siswa td {
-          padding: 2px 0;
+          padding: 1px 0;
           vertical-align: top;
         }
         .info-siswa td:first-child {
@@ -208,12 +210,12 @@ export default function RaporPrintPage() {
         .table-rapor {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 24px;
-          font-size: 12px;
+          margin-bottom: 16px;
+          font-size: 11px;
         }
         .table-rapor th, .table-rapor td {
           border: 1px solid black;
-          padding: 6px;
+          padding: 4px;
           text-align: center;
         }
         .table-rapor th {
@@ -239,18 +241,18 @@ export default function RaporPrintPage() {
         /* KETERANGAN */
         .keterangan-box {
           border: 1px solid black;
-          padding: 6px 10px;
+          padding: 4px 8px;
           width: max-content;
-          font-size: 11px;
-          margin-bottom: 24px;
+          font-size: 10px;
+          margin-bottom: 12px;
           font-family: Arial, sans-serif;
-          line-height: 1.2;
+          line-height: 1.1;
         }
         .keterangan-box table {
           border-collapse: collapse;
         }
         .keterangan-box td {
-          padding: 2px 4px 2px 0;
+          padding: 1px 4px 1px 0;
           vertical-align: top;
         }
 
@@ -258,7 +260,7 @@ export default function RaporPrintPage() {
         .ttd-section {
           display: flex;
           justify-content: flex-end;
-          font-size: 12px;
+          font-size: 11px;
         }
         .ttd-box {
           text-align: left;
@@ -266,7 +268,7 @@ export default function RaporPrintPage() {
         }
         .ttd-box .nama-ttd {
           font-weight: bold;
-          margin-top: 60px;
+          margin-top: 50px;
           display: inline-block;
         }
       `}} />
