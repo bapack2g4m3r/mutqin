@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v5'
+const CACHE_NAME = 'mutqin-v6'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -6,6 +6,8 @@ const STATIC_ASSETS = [
   '/guru/siswa',
   '/guru/siswa/detail',
   '/guru/siswa/setoran',
+  '/guru/riwayat',
+  '/guru/profil',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',

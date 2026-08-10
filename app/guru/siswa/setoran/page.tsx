@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { QURAN_SURAHS, calcNilaiTahfidz, calcNilaiTahsin, getPredikat } from '@/lib/surah-data'
 
 type Jenis = 'TAHFIDZ' | 'TAHSIN'
@@ -160,7 +160,7 @@ function SurahAutocomplete({ value, onChange }: { value: string; onChange: (nama
 }
 
 export default function InputSetoranPage() {
-  const router = useRouter()
+
   const searchParams = useSearchParams()
   const siswaId = searchParams.get('id') as string
   const jenisParam = (searchParams.get('jenis') || 'TAHFIDZ').toUpperCase() as Jenis
@@ -333,10 +333,10 @@ export default function InputSetoranPage() {
         )}
         {isOfflineSaved && <div style={{ marginBottom: '24px' }} />}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '320px' }}>
-          <button id="btn-siswa-berikutnya" className="btn btn-primary btn-lg" onClick={() => router.push(`/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`)}>
+          <button id="btn-siswa-berikutnya" className="btn btn-primary btn-lg" onClick={() => { window.location.href = `/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}` }}>
             Siswa Berikutnya
           </button>
-          <button id="btn-kembali-detail" className="btn btn-outline" onClick={() => router.push(`/guru/siswa/detail?id=${siswaId}`)}>
+          <button id="btn-kembali-detail" className="btn btn-outline" onClick={() => { window.location.href = `/guru/siswa/detail?id=${siswaId}` }}>
             Kembali ke Detail Siswa
           </button>
         </div>
@@ -347,7 +347,7 @@ export default function InputSetoranPage() {
   return (
     <div style={{ background: 'var(--surface-bg)', minHeight: '100vh' }}>
       <header className="mobile-header">
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
+        <button onClick={() => window.history.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div style={{ flex: 1 }}>

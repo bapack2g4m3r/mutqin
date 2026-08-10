@@ -1,5 +1,5 @@
 'use client'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 interface MobileNavProps {
   role: 'guru' | 'ortu'
@@ -7,7 +7,7 @@ interface MobileNavProps {
 
 export default function MobileNav({ role }: MobileNavProps) {
   const pathname = usePathname()
-  const router = useRouter()
+
 
   // ─── GURU NAV: 4 items with FAB "Setoran" in the center ─────────────────
   if (role === 'guru') {
@@ -19,7 +19,7 @@ export default function MobileNav({ role }: MobileNavProps) {
         <button
           id="nav-beranda"
           className={`bottom-nav-item ${pathname === '/guru/dashboard' || pathname.startsWith('/guru/dashboard') ? 'active' : ''}`}
-          onClick={() => router.push('/guru/dashboard')}
+          onClick={() => { window.location.href = '/guru/dashboard' }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -32,7 +32,7 @@ export default function MobileNav({ role }: MobileNavProps) {
         <button
           id="nav-siswa"
           className={`bottom-nav-item ${pathname.startsWith('/guru/siswa') ? 'active' : ''}`}
-          onClick={() => router.push('/guru/siswa')}
+          onClick={() => { window.location.href = '/guru/siswa' }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -48,7 +48,7 @@ export default function MobileNav({ role }: MobileNavProps) {
           <button
             id="nav-setoran-fab"
             className={`bottom-nav-fab ${isSetoranActive ? 'active-page' : ''}`}
-            onClick={() => router.push('/guru/siswa')}
+            onClick={() => { window.location.href = '/guru/siswa' }}
             aria-label="Input Setoran"
           >
             {/* Quran / pencil icon */}
@@ -66,7 +66,7 @@ export default function MobileNav({ role }: MobileNavProps) {
         <button
           id="nav-riwayat"
           className={`bottom-nav-item ${pathname.startsWith('/guru/riwayat') ? 'active' : ''}`}
-          onClick={() => router.push('/guru/riwayat')}
+          onClick={() => { window.location.href = '/guru/riwayat' }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -78,7 +78,7 @@ export default function MobileNav({ role }: MobileNavProps) {
         <button
           id="nav-profil"
           className={`bottom-nav-item ${pathname.startsWith('/guru/profil') ? 'active' : ''}`}
-          onClick={() => router.push('/guru/profil')}
+          onClick={() => { window.location.href = '/guru/profil' }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -129,7 +129,7 @@ export default function MobileNav({ role }: MobileNavProps) {
             key={item.id}
             id={item.id}
             className={`bottom-nav-item ${isActive ? 'active' : ''}`}
-            onClick={() => router.push(item.href)}
+            onClick={() => { window.location.href = item.href }}
           >
             {item.icon}
             <span>{item.label}</span>

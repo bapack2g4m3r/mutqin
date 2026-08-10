@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import MobileNav from '@/components/layout/MobileNav'
 
 interface Siswa {
@@ -17,7 +17,6 @@ function getInitials(nama: string) {
 }
 
 export default function GuruSiswaPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const kelasFromUrl = searchParams.get('kelas') || ''
   const [search, setSearch] = useState('')
@@ -130,7 +129,7 @@ export default function GuruSiswaPage() {
     <div style={{ background: 'var(--surface-bg)', minHeight: '100vh' }}>
       {/* Header */}
       <header className="mobile-header">
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
+        <button onClick={() => window.history.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
@@ -244,7 +243,7 @@ export default function GuruSiswaPage() {
                 key={s.id}
                 id={`siswa-${s.id}`}
                 className="list-item"
-                onClick={() => router.push(`/guru/siswa/detail?id=${s.id}`)}
+                onClick={() => { window.location.href = `/guru/siswa/detail?id=${s.id}` }}
                 style={{ width: '100%', textAlign: 'left' }}
               >
                 <div className="avatar-placeholder avatar-md">

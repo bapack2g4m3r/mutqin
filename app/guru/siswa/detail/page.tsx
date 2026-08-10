@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import MobileNav from '@/components/layout/MobileNav'
 
 interface SiswaDetail {
@@ -52,7 +52,7 @@ function formatDate(d: string) {
 }
 
 export default function DetailSiswaPage() {
-  const router = useRouter()
+
   const searchParams = useSearchParams()
   const id = searchParams.get('id') as string
   const [siswa, setSiswa] = useState<SiswaDetail | null>(null)
@@ -115,7 +115,7 @@ export default function DetailSiswaPage() {
     return (
       <div style={{ background: 'var(--surface-bg)', minHeight: '100vh' }}>
         <header className="mobile-header">
-          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
+          <button onClick={() => window.history.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <h1 style={{ fontSize: '17px', fontWeight: 700 }}>Detail Siswa</h1>
@@ -135,7 +135,7 @@ export default function DetailSiswaPage() {
   return (
     <div style={{ background: 'var(--surface-bg)', minHeight: '100vh' }}>
       <header className="mobile-header">
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
+        <button onClick={() => window.history.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e3a8a', padding: '4px' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <h1 style={{ flex: 1, fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>Detail Siswa</h1>
@@ -203,7 +203,7 @@ export default function DetailSiswaPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           <button
             id="btn-input-tahfidz"
-            onClick={() => router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ`)}
+            onClick={() => { window.location.href = `/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ` }}
             className="btn btn-primary btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
           >
@@ -212,7 +212,7 @@ export default function DetailSiswaPage() {
           </button>
           <button
             id="btn-input-tahsin"
-            onClick={() => router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHSIN`)}
+            onClick={() => { window.location.href = `/guru/siswa/setoran?id=${id}&jenis=TAHSIN` }}
             className="btn btn-accent btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
           >
