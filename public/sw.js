@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v2'
+const CACHE_NAME = 'mutqin-v3'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -14,7 +14,18 @@ const STATIC_ASSETS = [
 self.addEventListener('install', event => {
   self.skipWaiting()
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS).catch(() => {}))
+    caches.open(CACHE_NAME).then(cache => {
+      // Add each asset individually so one failure doesn't fail the whole array
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url => 
+          fetch(url).then(res => {
+            if (res.ok) {
+              return cache.put(url, res.clone());
+            }
+          }).catch(err => console.error('Failed to cache', url, err))
+        )
+      )
+    })
   )
 })
 
@@ -79,7 +90,11 @@ self.addEventListener('fetch', event => {
           if (dashboardCached) return dashboardCached
           const loginCached = await caches.match('/login')
           if (loginCached) return loginCached
-          return new Response('Offline', { status: 503 })
+          
+          return new Response(
+            '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline - MUTQIN</title><style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background:#f0f4f8;color:#333;text-align:center;padding:1rem;}h1{color:#1e3a8a;margin-bottom:0.5rem;}p{margin-bottom:2rem;}a{display:inline-block;padding:10px 20px;background:#1e3a8a;color:white;text-decoration:none;border-radius:8px;font-weight:bold;}</style></head><body><h1>Tidak Ada Koneksi</h1><p>Anda sedang offline dan halaman ini belum tersimpan.</p><a href="/">Kembali ke Beranda</a></body></html>',
+            { status: 200, headers: { 'Content-Type': 'text/html' } }
+          )
         })
     )
     return
@@ -118,6 +133,15 @@ self.addEventListener('fetch', event => {
         }
         return response
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        const cached = await caches.match(event.request)
+        if (cached) return cached
+        
+        // Return a generic error response if not in cache to avoid TypeError
+        return new Response(JSON.stringify({ error: 'offline', offline: true }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      })
   )
 })

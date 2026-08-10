@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import MobileNav from '@/components/layout/MobileNav'
+import { OfflineReadyManager } from '@/components/OfflineReadyManager'
 
 interface DashboardData {
   totalSiswa: number
@@ -241,8 +242,11 @@ export default function GuruDashboardPage() {
           </button>
         </div>
 
+        {/* Offline Ready Panel */}
+        <OfflineReadyManager />
+
         {/* Siswa Binaan Saya */}
-        <div className="section-header" style={{ marginTop: '24px' }}>
+        <div className="section-header" style={{ marginTop: '8px' }}>
           <h3 className="section-title">Siswa Binaan Saya</h3>
         </div>
         
