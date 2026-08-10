@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v10'
+const CACHE_NAME = 'mutqin-v11'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -80,7 +80,7 @@ self.addEventListener('fetch', event => {
       (async () => {
         try {
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 15000)
+          const timeoutId = setTimeout(() => controller.abort(), 3000)
           
           const response = await fetch(event.request, { signal: controller.signal })
           clearTimeout(timeoutId)
@@ -154,15 +154,15 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     (async () => {
       try {
+        const isRSC = event.request.headers.has('RSC') || event.request.headers.get('Accept')?.includes('text/x-component')
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 15000)
+        const timeoutMs = isRSC ? 3000 : 15000
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
         
         const response = await fetch(event.request, { signal: controller.signal })
         clearTimeout(timeoutId)
         
         if (response.ok) {
-          // Do not cache RSC payloads, as they overwrite HTML caches for the same URL
-          const isRSC = event.request.headers.has('RSC') || event.request.headers.get('Accept')?.includes('text/x-component')
           if (!isRSC && event.request.method === 'GET') {
             const clone = response.clone()
             const cache = await caches.open(CACHE_NAME)
