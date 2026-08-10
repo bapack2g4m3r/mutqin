@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v3'
+const CACHE_NAME = 'mutqin-v4'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -85,6 +85,18 @@ self.addEventListener('fetch', event => {
         .catch(async () => {
           const cached = await caches.match(event.request)
           if (cached) return cached
+          
+          // Match student detail page: /guru/siswa/xxxx
+          if (url.pathname.match(/^\/guru\/siswa\/[^\/]+$/)) {
+            const shell = await caches.match('/guru/siswa/offline-shell')
+            if (shell) return shell
+          }
+          
+          // Match student setoran page: /guru/siswa/xxxx/setoran
+          if (url.pathname.match(/^\/guru\/siswa\/[^\/]+\/setoran$/)) {
+            const shell = await caches.match('/guru/siswa/offline-shell/setoran')
+            if (shell) return shell
+          }
           // Fallback to guru dashboard or login if specific page not cached
           const dashboardCached = await caches.match('/guru/dashboard')
           if (dashboardCached) return dashboardCached
