@@ -57,26 +57,7 @@ export default function RaporPrintPage() {
           body { background: white; margin: 0; padding: 0; }
           .no-print { display: none !important; }
           .print-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
-          @page { size: A4 portrait; margin: 20mm; }
-          .print-header { border-bottom: 4px solid black; padding-bottom: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
-          .print-header .middle-text { flex: 1; text-align: center; }
-          .print-header h1 { margin: 0; font-size: 18px; text-transform: uppercase; font-weight: bold; }
-          .print-header h2 { margin: 4px 0 0 0; font-size: 20px; font-weight: bold; }
-          .print-header p { margin: 2px 0 0 0; font-size: 11px; font-weight: bold; }
-          .print-header .contact-left { font-size: 10px; font-weight: bold; margin-top: 8px; }
-          .title-section { text-align: center; margin-bottom: 24px; }
-          .title-section h3 { margin: 0; font-size: 14px; text-transform: uppercase; font-weight: normal; }
-          .title-section h4 { margin: 4px 0 0 0; font-size: 16px; font-weight: bold; }
-          .table-rapor { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
-          .table-rapor th, .table-rapor td { border: 1px solid black; padding: 8px; text-align: center; }
-          .table-rapor th { background-color: #f1f5f9 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
-          .table-rapor .text-left { text-align: left; }
-          .table-rapor .section-title { background-color: #e2e8f0 !important; font-weight: bold; text-align: left; -webkit-print-color-adjust: exact; }
-          .table-rapor .total-row { background-color: #cbd5e1 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
-          .keterangan-box { border: 1px solid black; padding: 12px; width: max-content; font-size: 11px; margin-bottom: 32px; }
-          .ttd-section { display: flex; justify-content: flex-end; margin-top: 40px; font-size: 12px; }
-          .ttd-box { text-align: left; width: 200px; }
-          .ttd-box .nama-ttd { font-weight: bold; border-bottom: 1px solid black; display: inline-block; padding-bottom: 2px; margin-top: 60px; }
+          @page { size: A4 portrait; margin: 15mm; }
         }
         
         .print-container {
@@ -84,7 +65,7 @@ export default function RaporPrintPage() {
           max-width: 210mm;
           min-height: 297mm;
           margin: 40px auto;
-          padding: 20mm;
+          padding: 15mm;
           box-shadow: 0 10px 30px rgba(0,0,0,0.1);
           color: black;
           font-family: 'Times New Roman', Times, serif;
@@ -128,6 +109,158 @@ export default function RaporPrintPage() {
           z-index: 100;
         }
         .btn-back:hover { background: #f8fafc; }
+
+        /* KOP SURAT */
+        .kop-surat {
+          border-bottom: 4px solid black;
+          padding-bottom: 4px;
+          margin-bottom: 20px;
+          position: relative;
+        }
+        .kop-surat-inner {
+          display: flex;
+          align-items: center;
+        }
+        .kop-left {
+          width: 140px;
+          text-align: center;
+        }
+        .kop-logo {
+          width: 80px;
+          height: auto;
+          margin: 0 auto;
+        }
+        .kop-contact {
+          font-size: 10px;
+          font-family: Arial, sans-serif;
+          margin-top: 4px;
+          text-align: left;
+          font-weight: bold;
+        }
+        .kop-center {
+          flex: 1;
+          text-align: center;
+        }
+        .kop-center h1 {
+          margin: 0;
+          font-size: 18px;
+          text-transform: uppercase;
+        }
+        .kop-center h2 {
+          margin: 0;
+          font-size: 22px;
+          font-weight: bold;
+          letter-spacing: 1px;
+        }
+        .kop-center p {
+          margin: 2px 0;
+          font-size: 12px;
+        }
+        .kop-center .akreditasi {
+          font-size: 14px;
+          font-weight: bold;
+        }
+        .kop-nss {
+          position: absolute;
+          bottom: 4px;
+          right: 0;
+          font-size: 10px;
+          font-weight: bold;
+          text-align: right;
+          font-family: Arial, sans-serif;
+        }
+
+        /* JUDUL */
+        .judul-rapor {
+          text-align: center;
+          font-weight: bold;
+          font-size: 14px;
+          margin-bottom: 24px;
+          line-height: 1.4;
+        }
+
+        /* INFO SISWA */
+        .info-siswa {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          margin-bottom: 12px;
+          font-family: 'Times New Roman', Times, serif;
+        }
+        .info-siswa table {
+          width: 48%;
+        }
+        .info-siswa td {
+          padding: 2px 0;
+          vertical-align: top;
+        }
+        .info-siswa td:first-child {
+          width: 90px;
+        }
+        .info-siswa td:nth-child(2) {
+          width: 10px;
+        }
+
+        /* TABEL NILAI */
+        .table-rapor {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 24px;
+          font-size: 12px;
+        }
+        .table-rapor th, .table-rapor td {
+          border: 1px solid black;
+          padding: 6px;
+          text-align: center;
+        }
+        .table-rapor th {
+          font-weight: bold;
+          -webkit-print-color-adjust: exact;
+          text-transform: uppercase;
+        }
+        .table-rapor .text-left {
+          text-align: left;
+        }
+        .table-rapor .section-title {
+          background-color: #d1d5db !important;
+          font-weight: bold;
+          text-align: left;
+          -webkit-print-color-adjust: exact;
+        }
+        .table-rapor .total-row {
+          background-color: #9ca3af !important;
+          font-weight: bold;
+          -webkit-print-color-adjust: exact;
+        }
+
+        /* KETERANGAN */
+        .keterangan-box {
+          border: 1px solid black;
+          padding: 8px 12px;
+          width: max-content;
+          font-size: 11px;
+          margin-bottom: 24px;
+          font-family: Arial, sans-serif;
+        }
+        .keterangan-box table td {
+          padding: 2px 4px;
+        }
+
+        /* TTD */
+        .ttd-section {
+          display: flex;
+          justify-content: flex-end;
+          font-size: 12px;
+        }
+        .ttd-box {
+          text-align: left;
+          width: 200px;
+        }
+        .ttd-box .nama-ttd {
+          font-weight: bold;
+          margin-top: 60px;
+          display: inline-block;
+        }
       `}} />
 
       <button className="btn-back no-print" onClick={() => router.back()}>
@@ -147,46 +280,48 @@ export default function RaporPrintPage() {
 
       <div className="print-container">
         {/* KOP SURAT */}
-        <div className="print-header">
-          <div style={{ width: '150px', textAlign: 'left' }}>
-            <img src="/logo.png" alt="Logo" style={{ width: '80px', height: 'auto', display: 'block', margin: '0 auto' }} />
-            <div className="contact-left">
-              <div>☎ 0251 8555657</div>
-              <div>✉ SMP.GIS15@gmail.com</div>
+        <div className="kop-surat">
+          <div className="kop-surat-inner">
+            <div className="kop-left">
+              <img src="/logo.png" alt="Logo" className="kop-logo" />
+              <div className="kop-contact">
+                <div>☎ 0251 8555657</div>
+                <div>✉ SMP.GIS15@gmail.com</div>
+              </div>
+            </div>
+            <div className="kop-center">
+              <h1>SEKOLAH MENENGAH PERTAMA (SMP)</h1>
+              <h2>GLOBAL INSANI SCHOOL</h2>
+              <div className="akreditasi">Terakreditasi A</div>
+              <p>Jl. Cendrawasih No. 10 Tajurhalang – Bogor 16320. Tlp : (0251) 8555657</p>
             </div>
           </div>
-          <div className="middle-text">
-            <h1>SEKOLAH MENENGAH PERTAMA (SMP)</h1>
-            <h2>GLOBAL INSANI SCHOOL</h2>
-            <p>Terakreditasi A</p>
-            <p style={{ fontWeight: 'normal' }}>Jl. Cendrawasih No. 10 Tajurhalang – Bogor 16320. Tlp : (0251) 8555657</p>
-          </div>
-          <div style={{ width: '150px', textAlign: 'right', fontSize: '11px', fontWeight: 'bold', alignSelf: 'flex-end', paddingBottom: '4px' }}>
+          <div className="kop-nss">
             <div>NSS : 202020237406</div>
             <div>NPSN : 2023219</div>
           </div>
         </div>
 
         {/* JUDUL */}
-        <div className="title-section">
-          <h3>HASIL PENILAIAN TAHSIN TAHFIZH AL QURAN</h3>
-          <h3>TENGAH SEMESTER {data.semester || 'GANJIL'}</h3>
-          <h3>SMP GLOBAL INSANI SCHOOL</h3>
-          <h4>TAHUN PELAJARAN {s.kelasRef?.tahunAjaran?.nama || '-'}</h4>
+        <div className="judul-rapor">
+          <div>HASIL PENILAIAN TAHSIN TAHFIZH AL QURAN</div>
+          <div>TENGAH SEMESTER {data.semester || 'GANJIL'}</div>
+          <div>SMP GLOBAL INSANI SCHOOL</div>
+          <div>TAHUN PELAJARAN {s.kelasRef?.tahunAjaran?.nama || '-'}</div>
         </div>
 
         {/* INFO SISWA */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '12px' }}>
-          <table style={{ width: '45%' }}>
+        <div className="info-siswa">
+          <table>
             <tbody>
-              <tr><td style={{ width: '100px' }}>Alamat</td><td style={{ width: '10px' }}>:</td><td>Jl. Cendrawasih No.4</td></tr>
-              <tr><td>Nama</td><td>:</td><td style={{ fontWeight: 'bold' }}>{s.nama}</td></tr>
+              <tr><td>Alamat</td><td>:</td><td>Jl. Cendrawasih No.4</td></tr>
+              <tr><td>N a m a</td><td>:</td><td style={{ textTransform: 'uppercase' }}>{s.nama}</td></tr>
               <tr><td>Nomor Induk</td><td>:</td><td>{s.nis}</td></tr>
             </tbody>
           </table>
-          <table style={{ width: '45%' }}>
+          <table>
             <tbody>
-              <tr><td style={{ width: '100px' }}>Kelas</td><td style={{ width: '10px' }}>:</td><td>{s.kelasRef?.nama || '-'}</td></tr>
+              <tr><td>Kelas</td><td>:</td><td>{s.kelasRef?.nama || '-'}</td></tr>
               <tr><td>Semester</td><td>:</td><td style={{ textTransform: 'capitalize' }}>{data.semester ? data.semester.toLowerCase() : 'Ganjil'}</td></tr>
               <tr><td>Tahun Pelajaran</td><td>:</td><td>{s.kelasRef?.tahunAjaran?.nama || '-'}</td></tr>
             </tbody>
@@ -197,12 +332,12 @@ export default function RaporPrintPage() {
         <table className="table-rapor">
           <thead>
             <tr>
-              <th style={{ width: '50px' }}>NO</th>
+              <th style={{ width: '40px' }}>NO</th>
               <th>PENILAIAN</th>
-              <th style={{ width: '80px' }}>KKM</th>
-              <th style={{ width: '80px' }}>NILAI</th>
-              <th style={{ width: '80px' }}>GRADE</th>
-              <th style={{ width: '120px' }}>KRITERIA</th>
+              <th style={{ width: '70px' }}>KKM</th>
+              <th style={{ width: '70px' }}>NILAI</th>
+              <th style={{ width: '70px' }}>GRADE</th>
+              <th style={{ width: '150px' }}>KRITERIA</th>
             </tr>
           </thead>
           <tbody>
@@ -211,7 +346,7 @@ export default function RaporPrintPage() {
             {r.tahfidz.komponen.map((k, i) => (
               <tr key={i}>
                 <td>{i + 1}</td>
-                <td className="text-left">{k.nama}</td>
+                <td className="text-left">{k.nama.toUpperCase()}</td>
                 <td>{k.kkm}</td>
                 <td>{k.nilai}</td>
                 <td>{k.grade}</td>
@@ -222,8 +357,7 @@ export default function RaporPrintPage() {
               <td colSpan={2}>NILAI AKHIR</td>
               <td></td>
               <td>{r.tahfidz.nilaiAkhir}</td>
-              <td>{r.tahfidz.predikat.grade}</td>
-              <td>{r.tahfidz.nilaiAkhir > 0 ? r.tahfidz.predikat.label : '-'}</td>
+              <td colSpan={2}>{r.tahfidz.nilaiAkhir > 0 ? r.tahfidz.predikat.label : '-'}</td>
             </tr>
 
             {/* TAHSIN */}
@@ -231,7 +365,7 @@ export default function RaporPrintPage() {
             {r.tahsin.komponen.map((k, i) => (
               <tr key={i}>
                 <td>{i + 1}</td>
-                <td className="text-left">{k.nama}</td>
+                <td className="text-left">{k.nama.toUpperCase()}</td>
                 <td>{k.kkm}</td>
                 <td>{k.nilai}</td>
                 <td>{k.grade}</td>
@@ -242,18 +376,17 @@ export default function RaporPrintPage() {
               <td colSpan={2}>NILAI AKHIR</td>
               <td></td>
               <td>{r.tahsin.nilaiAkhir}</td>
-              <td>{r.tahsin.predikat.grade}</td>
-              <td>{r.tahsin.nilaiAkhir > 0 ? r.tahsin.predikat.label : '-'}</td>
+              <td colSpan={2}>{r.tahsin.nilaiAkhir > 0 ? r.tahsin.predikat.label : '-'}</td>
             </tr>
           </tbody>
         </table>
 
         {/* KETERANGAN */}
         <div className="keterangan-box">
-          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Grade:</div>
-          <table cellPadding={2}>
+          <div style={{ marginBottom: '2px' }}>Grade:</div>
+          <table cellPadding={0} cellSpacing={0}>
             <tbody>
-              <tr><td width="80">A : 90 - 100</td><td>Sangat Baik Sekali (Mumtaz)</td></tr>
+              <tr><td width="70">A : 90 - 100</td><td>Sangat Baik Sekali (Mumtaz)</td></tr>
               <tr><td>B : 80 - 89</td><td>Baik Sekali (Jayyid Jiddan)</td></tr>
               <tr><td>C : 70 - 79</td><td>Baik (Jayyid)</td></tr>
               <tr><td>K : &lt; 70</td><td>Kurang (Ghair Maqbul)</td></tr>
@@ -266,7 +399,10 @@ export default function RaporPrintPage() {
           <div className="ttd-box">
             <div style={{ marginBottom: '4px' }}>Tajurhalang, {ts}</div>
             <div>Wali Tahfizh</div>
-            <div className="nama-ttd">{s.halaqah?.guru?.user?.name || '_________________________'}</div>
+            <div className="nama-ttd">
+              {s.halaqah?.guru?.user?.name || '_________________________'}
+            </div>
+            <div style={{ fontWeight: 'bold' }}>0</div>
           </div>
         </div>
 
