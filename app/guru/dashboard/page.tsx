@@ -95,7 +95,7 @@ export default function GuruDashboardPage() {
     }
   }, [])
 
-  const userName = session?.user?.name?.split(' ')[0] || 'Guru'
+  const userName = session?.user?.name || 'Guru'
 
   return (
     <div style={{ background: 'var(--surface-bg)', minHeight: '100vh' }}>
