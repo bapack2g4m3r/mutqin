@@ -145,7 +145,19 @@ export default function AdminLaporanPage() {
             {filtered.length === data.length ? `Rekap ${data.length} siswa` : `Menampilkan ${filtered.length} dari ${data.length} siswa`}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <a
+            id="btn-cetak-rapor-massal"
+            href={`/admin/laporan/rapor-massal${kelas ? `?kelas=${encodeURIComponent(kelas)}` : ''}`}
+            className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Cetak Rapor Massal
+          </a>
           <button id="btn-export-excel" className="btn btn-outline" onClick={exportExcel} style={{ color: '#059669', borderColor: '#059669' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -160,7 +172,7 @@ export default function AdminLaporanPage() {
               <polyline points="14 2 14 8 20 8"/>
               <path d="M9 15v-4"/><path d="M12 15v-4"/><path d="M15 15v-4"/>
             </svg>
-            PDF
+            PDF Rekap
           </button>
         </div>
       </div>
