@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
 
 interface Siswa {
-  id: string; nis: string; nisn?: string; nama: string; kelas: string; kelasId?: string
+  id: string; nis: string; nisn?: string; nama: string; kelas: string; kelasId?: string; halaqahId?: string | null
   ortu?: { user: { name: string; email: string, username?: string } }
   setorans: Array<{ jenis: string; nilaiAkhir: number }>
 }
@@ -955,7 +955,7 @@ export default function AdminSiswaPage() {
           <SiswaForm
             initial={{ 
               nis: showEdit.nis, nisn: showEdit.nisn, nama: showEdit.nama, 
-              kelas: showEdit.kelas, kelasId: showEdit.kelasId,
+              kelas: showEdit.kelas, kelasId: showEdit.kelasId, halaqahId: showEdit.halaqahId || '',
               namaOrtu: showEdit.ortu?.user.name, password: '' 
             }}
             onSave={handleEdit}
