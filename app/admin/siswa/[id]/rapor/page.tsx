@@ -394,7 +394,7 @@ export default function RaporPrintPage() {
           <div style={{ marginBottom: '2px' }}>Grade:</div>
           <table cellPadding={0} cellSpacing={0}>
             <tbody>
-              <tr><td width="70">A : 90 - 100</td><td>Sangat Baik Sekali (Mumtaz)</td></tr>
+              <tr><td style={{ width: '85px', whiteSpace: 'nowrap' }}>A : 90 - 100</td><td>Sangat Baik Sekali (Mumtaz)</td></tr>
               <tr><td>B : 80 - 89</td><td>Baik Sekali (Jayyid Jiddan)</td></tr>
               <tr><td>C : 70 - 79</td><td>Baik (Jayyid)</td></tr>
               <tr><td>K : &lt; 70</td><td>Kurang (Ghair Maqbul)</td></tr>
