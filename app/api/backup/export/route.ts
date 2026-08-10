@@ -65,11 +65,40 @@ export async function GET(req: NextRequest) {
       })
     })
 
+    // 4. Ambil Data Setoran (beserta relasi siswa, guru, semester)
+    const setoran = await prisma.setoran.findMany({
+      include: {
+        siswa: true,
+        guru: { include: { user: true } },
+        semester: true,
+      },
+      orderBy: { tanggal: 'desc' }
+    })
+
+    const setoranData = setoran.map(s => ({
+      'ID Setoran': s.id,
+      'Tanggal': s.tanggal.toISOString().split('T')[0],
+      'Jenis': s.jenis,
+      'NIS Siswa': s.siswa.nis,
+      'Nama Siswa': s.siswa.nama,
+      'Guru Penilai': s.guru.user.name,
+      'Semester': s.semester?.nama || '-',
+      'Surah': s.surah || '-',
+      'Ayat Mulai': s.ayatMulai || '-',
+      'Ayat Akhir': s.ayatAkhir || '-',
+      'Buku Tahsin': s.bukuTahsin || '-',
+      'Halaman Tahsin': s.halamanTahsin || '-',
+      'Nilai Akhir': s.nilaiAkhir,
+      'Predikat': s.predikat,
+      'Catatan': s.catatan || '',
+    }))
+
     // Return full JSON so the client can generate Excel / CSV
     return NextResponse.json({
       siswa: siswaData,
       guru: guruData,
       akademik: akademikData,
+      setoran: setoranData,
       timestamp: new Date().toISOString()
     })
 

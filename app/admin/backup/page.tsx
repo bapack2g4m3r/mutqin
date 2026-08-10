@@ -34,6 +34,7 @@ export default function BackupPage() {
       const sheetSiswa = XLSX.utils.json_to_sheet(data.siswa || [])
       const sheetGuru = XLSX.utils.json_to_sheet(data.guru || [])
       const sheetAkademik = XLSX.utils.json_to_sheet(data.akademik || [])
+      const sheetSetoran = XLSX.utils.json_to_sheet(data.setoran || [])
 
       if (format === 'xlsx') {
         // Generate Multi-sheet Excel
@@ -41,6 +42,7 @@ export default function BackupPage() {
         XLSX.utils.book_append_sheet(wb, sheetSiswa, 'Data Siswa')
         XLSX.utils.book_append_sheet(wb, sheetGuru, 'Data Guru')
         XLSX.utils.book_append_sheet(wb, sheetAkademik, 'Data Akademik')
+        XLSX.utils.book_append_sheet(wb, sheetSetoran, 'Data Setoran')
         
         XLSX.writeFile(wb, fileNameXlsx)
         showToast('✓ Berhasil mendownload backup Excel (.xlsx)')
@@ -51,6 +53,7 @@ export default function BackupPage() {
         zip.file('Data_Siswa.csv', XLSX.utils.sheet_to_csv(sheetSiswa))
         zip.file('Data_Guru.csv', XLSX.utils.sheet_to_csv(sheetGuru))
         zip.file('Data_Akademik.csv', XLSX.utils.sheet_to_csv(sheetAkademik))
+        zip.file('Data_Setoran.csv', XLSX.utils.sheet_to_csv(sheetSetoran))
         
         const blob = await zip.generateAsync({ type: 'blob' })
         saveAs(blob, fileNameZip)
@@ -86,7 +89,7 @@ export default function BackupPage() {
             <div>
               <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b', marginBottom: '6px' }}>Export Keseluruhan Database</h2>
               <p style={{ color: '#64748b', fontSize: '14px', lineHeight: 1.5 }}>
-                Unduh seluruh data Siswa, Guru, dan Struktur Akademik. Anda dapat mengunduh dalam bentuk file Excel Tunggal (.xlsx) atau file Zip berisi sekumpulan CSV (.csv).
+                Unduh seluruh data Siswa, Guru, Struktur Akademik, dan <b>Riwayat Setoran (Tahfidz/Tahsin)</b>. Anda dapat mengunduh dalam bentuk file Excel Tunggal (.xlsx) atau file Zip berisi sekumpulan CSV (.csv).
               </p>
             </div>
           </div>
