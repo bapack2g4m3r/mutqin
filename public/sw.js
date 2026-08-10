@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v8'
+const CACHE_NAME = 'mutqin-v9'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -80,7 +80,7 @@ self.addEventListener('fetch', event => {
       (async () => {
         try {
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 3000)
+          const timeoutId = setTimeout(() => controller.abort(), 15000)
           
           const response = await fetch(event.request, { signal: controller.signal })
           clearTimeout(timeoutId)
@@ -118,7 +118,7 @@ self.addEventListener('fetch', event => {
       (async () => {
         try {
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 3000)
+          const timeoutId = setTimeout(() => controller.abort(), 15000)
           
           const response = await fetch(event.request, { signal: controller.signal })
           clearTimeout(timeoutId)
@@ -147,7 +147,7 @@ self.addEventListener('fetch', event => {
     (async () => {
       try {
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        const timeoutId = setTimeout(() => controller.abort(), 15000)
         
         const response = await fetch(event.request, { signal: controller.signal })
         clearTimeout(timeoutId)

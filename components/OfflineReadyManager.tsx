@@ -110,8 +110,8 @@ export function OfflineReadyManager() {
 
       if (siswaRes.ok) {
         const siswaData = await siswaRes.json()
-        const list = siswaData.siswa || []
-        if (list.length > 0) {
+        if (siswaData && !siswaData.error && !siswaData.offline) {
+          const list = siswaData.siswa || []
           localStorage.setItem('mutqin_cached_siswa_list', JSON.stringify(list))
           siswaCount = list.length
         }
