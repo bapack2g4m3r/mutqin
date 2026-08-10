@@ -96,6 +96,9 @@ export default function GuruSiswaPage() {
     fetch(`/api/siswa?${params}`)
       .then(r => r.json())
       .then(d => {
+        if (d.offline || d.error) {
+          throw new Error('Offline API response')
+        }
         const list = d.siswa || []
         setSiswa(list)
         // Cache full un-filtered list or current list
