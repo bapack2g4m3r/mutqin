@@ -91,7 +91,7 @@ export default function GuruSiswaPage() {
     const params = new URLSearchParams()
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (kelas) params.set('kelas', kelas)
-    params.set('limit', '200')
+    params.set('limit', '2000')
 
     fetch(`/api/siswa?${params}`)
       .then(r => r.json())

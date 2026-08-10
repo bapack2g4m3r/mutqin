@@ -88,7 +88,7 @@ export function OfflineReadyManager() {
       // Fetch and cache dashboard data, students, and HTML shells for dynamic routes
       const [dashRes, siswaRes] = await Promise.all([
         fetch('/api/guru/dashboard'),
-        fetch('/api/siswa?limit=500'),
+        fetch('/api/siswa?limit=2000'),
         fetch('/guru/dashboard'),
         fetch('/guru/siswa'),
         fetch('/guru/siswa/detail'),

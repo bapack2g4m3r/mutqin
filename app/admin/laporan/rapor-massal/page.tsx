@@ -58,7 +58,7 @@ export default function RaporMassalPage() {
       try {
         const [akademikRes, siswaRes] = await Promise.all([
           fetch('/api/akademik').then(r => r.json()),
-          fetch('/api/siswa?limit=500').then(r => r.json())
+          fetch('/api/siswa?limit=2000').then(r => r.json())
         ])
 
         if (akademikRes.tahunAjaranList) {
