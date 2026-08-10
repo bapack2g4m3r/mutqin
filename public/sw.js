@@ -1,9 +1,11 @@
-const CACHE_NAME = 'mutqin-v4'
+const CACHE_NAME = 'mutqin-v5'
 const STATIC_ASSETS = [
   '/',
   '/login',
   '/guru/dashboard',
   '/guru/siswa',
+  '/guru/siswa/detail',
+  '/guru/siswa/setoran',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -83,20 +85,8 @@ self.addEventListener('fetch', event => {
           return response
         })
         .catch(async () => {
-          const cached = await caches.match(event.request)
+          const cached = await caches.match(event.request, { ignoreSearch: true })
           if (cached) return cached
-          
-          // Match student detail page: /guru/siswa/xxxx
-          if (url.pathname.match(/^\/guru\/siswa\/[^\/]+$/)) {
-            const shell = await caches.match('/guru/siswa/offline-shell')
-            if (shell) return shell
-          }
-          
-          // Match student setoran page: /guru/siswa/xxxx/setoran
-          if (url.pathname.match(/^\/guru\/siswa\/[^\/]+\/setoran$/)) {
-            const shell = await caches.match('/guru/siswa/offline-shell/setoran')
-            if (shell) return shell
-          }
           // Fallback to guru dashboard or login if specific page not cached
           const dashboardCached = await caches.match('/guru/dashboard')
           if (dashboardCached) return dashboardCached

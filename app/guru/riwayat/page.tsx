@@ -98,7 +98,7 @@ export default function RiwayatPage() {
                 key={s.id}
                 className="list-item"
                 style={{ width: '100%', textAlign: 'left' }}
-                onClick={() => router.push(`/guru/siswa/${s.siswa.id}`)}
+                onClick={() => router.push(`/guru/siswa/detail?id=${s.siswa.id}`)}
               >
                 <div style={{
                   width: '42px', height: '42px', borderRadius: '12px', flexShrink: 0,

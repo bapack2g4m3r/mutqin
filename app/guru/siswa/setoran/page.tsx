@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { QURAN_SURAHS, calcNilaiTahfidz, calcNilaiTahsin, getPredikat } from '@/lib/surah-data'
 
 type Jenis = 'TAHFIDZ' | 'TAHSIN'
@@ -161,9 +161,8 @@ function SurahAutocomplete({ value, onChange }: { value: string; onChange: (nama
 
 export default function InputSetoranPage() {
   const router = useRouter()
-  const params = useParams()
   const searchParams = useSearchParams()
-  const siswaId = params.id as string
+  const siswaId = searchParams.get('id') as string
   const jenisParam = (searchParams.get('jenis') || 'TAHFIDZ').toUpperCase() as Jenis
 
   const [jenis, setJenis] = useState<Jenis>(jenisParam)
@@ -337,7 +336,7 @@ export default function InputSetoranPage() {
           <button id="btn-siswa-berikutnya" className="btn btn-primary btn-lg" onClick={() => router.push(`/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`)}>
             Siswa Berikutnya
           </button>
-          <button id="btn-kembali-detail" className="btn btn-outline" onClick={() => router.push(`/guru/siswa/${siswaId}`)}>
+          <button id="btn-kembali-detail" className="btn btn-outline" onClick={() => router.push(`/guru/siswa/detail?id=${siswaId}`)}>
             Kembali ke Detail Siswa
           </button>
         </div>

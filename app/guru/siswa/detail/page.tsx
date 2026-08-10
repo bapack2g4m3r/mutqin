@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import MobileNav from '@/components/layout/MobileNav'
 
 interface SiswaDetail {
@@ -53,8 +53,8 @@ function formatDate(d: string) {
 
 export default function DetailSiswaPage() {
   const router = useRouter()
-  const params = useParams()
-  const id = params.id as string
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id') as string
   const [siswa, setSiswa] = useState<SiswaDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'semua' | 'tahfidz' | 'tahsin'>('semua')
@@ -203,7 +203,7 @@ export default function DetailSiswaPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           <button
             id="btn-input-tahfidz"
-            onClick={() => router.push(`/guru/siswa/${id}/setoran?jenis=TAHFIDZ`)}
+            onClick={() => router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ`)}
             className="btn btn-primary btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
           >
@@ -212,7 +212,7 @@ export default function DetailSiswaPage() {
           </button>
           <button
             id="btn-input-tahsin"
-            onClick={() => router.push(`/guru/siswa/${id}/setoran?jenis=TAHSIN`)}
+            onClick={() => router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHSIN`)}
             className="btn btn-accent btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
           >
