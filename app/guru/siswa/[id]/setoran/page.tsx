@@ -18,20 +18,39 @@ const JUZ30_IDS = [78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,9
 const JUZ30_SURAHS = QURAN_SURAHS.filter(s => JUZ30_IDS.includes(s.id))
 const OFFLINE_QUEUE_KEY = 'mutqin_offline_queue'
 
-function NilaiSlider({ label, value, onChange, weight }: {
+function NilaiInput({ label, value, onChange, weight }: {
   label: string; value: number; onChange: (v: number) => void; weight: string
 }) {
   const color = value >= 90 ? '#059669' : value >= 80 ? '#2563eb' : value >= 70 ? '#d97706' : '#dc2626'
   return (
-    <div className="slider-wrap">
-      <div className="slider-header">
-        <div>
-          <span className="slider-label">{label}</span>
-          <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '6px' }}>({weight})</span>
-        </div>
-        <span className="slider-value" style={{ color }}>{value}</span>
+    <div className="slider-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <div>
+        <span className="slider-label" style={{ fontWeight: 600, color: '#1e293b' }}>{label}</span>
+        <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '6px' }}>({weight})</span>
       </div>
-      <input type="range" min={0} max={100} value={value} onChange={e => onChange(Number(e.target.value))} style={{ accentColor: color }} />
+      <input 
+        type="number" 
+        min={0} max={100} 
+        value={value || ''} 
+        onChange={e => {
+          let v = parseInt(e.target.value) || 0
+          if (v > 100) v = 100
+          if (v < 0) v = 0
+          onChange(v)
+        }} 
+        style={{ 
+          width: '70px', padding: '8px', 
+          borderRadius: '8px', border: '2px solid #e2e8f0',
+          fontSize: '18px', fontWeight: 'bold', 
+          color: color, textAlign: 'center', outline: 'none',
+          transition: 'border-color 0.2s'
+        }}
+        onFocus={e => {
+          e.target.select()
+          e.target.style.borderColor = '#2563eb'
+        }}
+        onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+      />
     </div>
   )
 }
@@ -384,9 +403,9 @@ export default function InputSetoranPage() {
 
             <div className="form-section" style={{ marginBottom: '12px' }}>
               <div className="form-section-title">Penilaian Tahfidz</div>
-              <NilaiSlider label="Kelancaran" value={kelancaran} onChange={setKelancaran} weight="40%" />
-              <NilaiSlider label="Tajwid" value={tajwid} onChange={setTajwid} weight="40%" />
-              <NilaiSlider label="Makhorijul Huruf" value={makhorijTahfidz} onChange={setMakhorijTahfidz} weight="20%" />
+              <NilaiInput label="Kelancaran" value={kelancaran} onChange={setKelancaran} weight="40%" />
+              <NilaiInput label="Tajwid" value={tajwid} onChange={setTajwid} weight="40%" />
+              <NilaiInput label="Makhorijul Huruf" value={makhorijTahfidz} onChange={setMakhorijTahfidz} weight="20%" />
             </div>
           </>
         )}
@@ -415,10 +434,10 @@ export default function InputSetoranPage() {
 
             <div className="form-section" style={{ marginBottom: '12px' }}>
               <div className="form-section-title">Penilaian Tahsin</div>
-              <NilaiSlider label="Makhorijul Huruf" value={makhorijTahsin} onChange={setMakhorijTahsin} weight="25%" />
-              <NilaiSlider label="Sifatul Huruf" value={sifatulHuruf} onChange={setSifatulHuruf} weight="25%" />
-              <NilaiSlider label="Ahkamul Mad" value={ahkamulMad} onChange={setAhkamulMad} weight="25%" />
-              <NilaiSlider label="Ahkamul Waqaf" value={ahkamulWaqaf} onChange={setAhkamulWaqaf} weight="25%" />
+              <NilaiInput label="Makhorijul Huruf" value={makhorijTahsin} onChange={setMakhorijTahsin} weight="25%" />
+              <NilaiInput label="Sifatul Huruf" value={sifatulHuruf} onChange={setSifatulHuruf} weight="25%" />
+              <NilaiInput label="Ahkamul Mad" value={ahkamulMad} onChange={setAhkamulMad} weight="25%" />
+              <NilaiInput label="Ahkamul Waqaf" value={ahkamulWaqaf} onChange={setAhkamulWaqaf} weight="25%" />
             </div>
           </>
         )}
