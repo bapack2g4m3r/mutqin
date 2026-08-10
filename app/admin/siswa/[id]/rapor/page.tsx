@@ -118,11 +118,11 @@ export default function RaporPrintPage() {
           border-bottom: 4px solid black;
           padding-bottom: 4px;
           margin-bottom: 20px;
-          position: relative;
         }
         .kop-surat-inner {
           display: flex;
-          align-items: center;
+          align-items: flex-end;
+          justify-content: space-between;
         }
         .kop-left {
           width: 140px;
@@ -143,6 +143,7 @@ export default function RaporPrintPage() {
         .kop-center {
           flex: 1;
           text-align: center;
+          padding: 0 10px;
         }
         .kop-center h1 {
           margin: 0;
@@ -164,13 +165,12 @@ export default function RaporPrintPage() {
           font-weight: bold;
         }
         .kop-nss {
-          position: absolute;
-          bottom: 4px;
-          right: 0;
+          width: 140px;
           font-size: 10px;
           font-weight: bold;
           text-align: right;
           font-family: Arial, sans-serif;
+          padding-bottom: 2px;
         }
 
         /* JUDUL */
@@ -303,10 +303,10 @@ export default function RaporPrintPage() {
               <div className="akreditasi">Terakreditasi A</div>
               <p>Jl. Cendrawasih No. 10 Tajurhalang – Bogor 16320. Tlp : (0251) 8555657</p>
             </div>
-          </div>
-          <div className="kop-nss">
-            <div>NSS : 202020237406</div>
-            <div>NPSN : 2023219</div>
+            <div className="kop-nss">
+              <div>NSS : 202020237406</div>
+              <div>NPSN : 2023219</div>
+            </div>
           </div>
         </div>
 
