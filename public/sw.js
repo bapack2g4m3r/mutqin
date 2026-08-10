@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v7'
+const CACHE_NAME = 'mutqin-v8'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -79,7 +79,12 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       (async () => {
         try {
-          const response = await fetch(event.request)
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 3000)
+          
+          const response = await fetch(event.request, { signal: controller.signal })
+          clearTimeout(timeoutId)
+          
           if (response.ok) {
             const clone = response.clone()
             const cache = await caches.open(CACHE_NAME)
@@ -110,46 +115,62 @@ self.addEventListener('fetch', event => {
   // 3. API Read Calls (/api/...) -> Network First with dynamic cache for offline read
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
+      (async () => {
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 3000)
+          
+          const response = await fetch(event.request, { signal: controller.signal })
+          clearTimeout(timeoutId)
+          
           if (response.ok) {
             const clone = response.clone()
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
+            const cache = await caches.open(CACHE_NAME)
+            await cache.put(event.request, clone)
           }
           return response
-        })
-        .catch(async () => {
+        } catch (error) {
           const cached = await caches.match(event.request)
           if (cached) return cached
           return new Response(JSON.stringify({ error: 'offline', offline: true }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
           })
-        })
+        }
+      })()
     )
     return
   }
 
   // Default Network First
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
+    (async () => {
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        
+        const response = await fetch(event.request, { signal: controller.signal })
+        clearTimeout(timeoutId)
+        
         if (response.ok) {
           // Do not cache RSC payloads, as they overwrite HTML caches for the same URL
           const isRSC = event.request.headers.has('RSC') || event.request.headers.get('Accept')?.includes('text/x-component')
           if (!isRSC && event.request.method === 'GET') {
             const clone = response.clone()
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
+            const cache = await caches.open(CACHE_NAME)
+            await cache.put(event.request, clone)
           }
         }
         return response
-      })
-      .catch(async () => {
-        // Return a generic error response if not in cache
+      } catch (error) {
+        const cached = await caches.match(event.request)
+        if (cached) return cached
+        // Return a generic error response if not cached
         return new Response(JSON.stringify({ error: 'offline', offline: true }), {
-          status: 503,
+          status: 200,
           headers: { 'Content-Type': 'application/json' }
         })
-      })
+      }
+    })()
   )
 })
