@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v9'
+const CACHE_NAME = 'mutqin-v10'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -93,10 +93,18 @@ self.addEventListener('fetch', event => {
           return response
         } catch (error) {
           try {
-            const cached = await caches.match(event.request, { ignoreSearch: true })
+            const urlObj = new URL(event.request.url)
+            urlObj.search = ''
+            
+            let cached = await caches.match(urlObj.toString())
+            if (!cached) {
+              cached = await caches.match(event.request, { ignoreSearch: true })
+            }
             if (cached) return cached
+
             const dashboardCached = await caches.match('/guru/dashboard', { ignoreSearch: true })
             if (dashboardCached) return dashboardCached
+            
             const loginCached = await caches.match('/login', { ignoreSearch: true })
             if (loginCached) return loginCached
           } catch (matchError) {
@@ -165,6 +173,14 @@ self.addEventListener('fetch', event => {
       } catch (error) {
         const cached = await caches.match(event.request)
         if (cached) return cached
+        
+        if (event.request.headers.get('Accept')?.includes('text/html')) {
+          return new Response(
+            '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline - MUTQIN</title><style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background:#f0f4f8;color:#333;text-align:center;padding:1rem;}h1{color:#1e3a8a;margin-bottom:0.5rem;}p{margin-bottom:2rem;}a{display:inline-block;padding:10px 20px;background:#1e3a8a;color:white;text-decoration:none;border-radius:8px;font-weight:bold;}</style></head><body><h1>Tidak Ada Koneksi</h1><p>Anda sedang offline dan halaman ini belum tersimpan.</p><a href="/">Kembali ke Beranda</a></body></html>',
+            { status: 200, headers: { 'Content-Type': 'text/html' } }
+          )
+        }
+        
         // Return a generic error response if not cached
         return new Response(JSON.stringify({ error: 'offline', offline: true }), {
           status: 200,
