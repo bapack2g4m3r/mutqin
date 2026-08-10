@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import MobileNav from '@/components/layout/MobileNav'
 
 interface Siswa {
@@ -18,8 +18,10 @@ function getInitials(nama: string) {
 
 export default function GuruSiswaPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const kelasFromUrl = searchParams.get('kelas') || ''
   const [search, setSearch] = useState('')
-  const [kelas, setKelas] = useState('')
+  const [kelas, setKelas] = useState(kelasFromUrl)
   const [kelasList, setKelasList] = useState<string[]>(['Semua'])
   const [siswa, setSiswa] = useState<Siswa[]>([])
   const [loading, setLoading] = useState(true)

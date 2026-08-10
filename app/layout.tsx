@@ -3,6 +3,7 @@ import './globals.css'
 import NextAuthProvider from '@/components/providers/NextAuthProvider'
 import { PingTracker } from '@/components/PingTracker'
 import { IdleTimer } from '@/components/IdleTimer'
+import { OfflineSyncManager } from '@/components/OfflineSyncManager'
 
 export const metadata: Metadata = {
   title: 'MUTQIN — Sistem Administrasi Tahfidz & Tahsin | SMP Global Insani',
@@ -17,10 +18,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1e3a8a" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+          }
+        `}} />
+      </head>
       <body>
         <NextAuthProvider>
           <PingTracker />
           <IdleTimer />
+          <OfflineSyncManager />
           {children}
         </NextAuthProvider>
       </body>
