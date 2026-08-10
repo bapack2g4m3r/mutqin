@@ -203,7 +203,7 @@ export function OfflineReadyManager() {
             </div>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-                {isReady ? 'Siap Offline' : 'Belum Siap Offline'}
+                {isReady ? 'Data Tersinkronisasi' : 'Belum Tersinkronisasi'}
               </div>
               <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
                 {isReady
