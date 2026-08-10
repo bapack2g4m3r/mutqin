@@ -410,7 +410,6 @@ export default function RaporPrintPage() {
             <div className="nama-ttd">
               {s.halaqah?.guru?.user?.name || '_________________________'}
             </div>
-            <div style={{ fontWeight: 'bold' }}>0</div>
           </div>
         </div>
 
