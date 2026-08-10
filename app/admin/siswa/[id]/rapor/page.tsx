@@ -27,6 +27,7 @@ interface RaporData {
       predikat: { kode: string, label: string, grade: string }
     }
   }
+  semester: string
 }
 
 export default function RaporPrintPage() {
@@ -57,10 +58,12 @@ export default function RaporPrintPage() {
           .no-print { display: none !important; }
           .print-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
           @page { size: A4 portrait; margin: 20mm; }
-          .print-header { border-bottom: 3px solid black; padding-bottom: 12px; margin-bottom: 16px; }
-          .print-header h1 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; }
-          .print-header h2 { margin: 4px 0 0 0; font-size: 22px; font-weight: bold; letter-spacing: 3px; color: #1e3a8a; }
-          .print-header p { margin: 4px 0 0 0; font-size: 11px; }
+          .print-header { border-bottom: 4px solid black; padding-bottom: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+          .print-header .middle-text { flex: 1; text-align: center; }
+          .print-header h1 { margin: 0; font-size: 18px; text-transform: uppercase; font-weight: bold; }
+          .print-header h2 { margin: 4px 0 0 0; font-size: 20px; font-weight: bold; }
+          .print-header p { margin: 2px 0 0 0; font-size: 11px; font-weight: bold; }
+          .print-header .contact-left { font-size: 10px; font-weight: bold; margin-top: 8px; }
           .title-section { text-align: center; margin-bottom: 24px; }
           .title-section h3 { margin: 0; font-size: 14px; text-transform: uppercase; font-weight: normal; }
           .title-section h4 { margin: 4px 0 0 0; font-size: 16px; font-weight: bold; }
@@ -144,23 +147,30 @@ export default function RaporPrintPage() {
 
       <div className="print-container">
         {/* KOP SURAT */}
-        <div className="print-header" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ width: '80px', height: '80px', background: '#e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: 'bold' }}>LOGO</span>
+        <div className="print-header">
+          <div style={{ width: '150px', textAlign: 'left' }}>
+            <img src="/logo.png" alt="Logo" style={{ width: '80px', height: 'auto', display: 'block', margin: '0 auto' }} />
+            <div className="contact-left">
+              <div>☎ 0251 8555657</div>
+              <div>✉ SMP.GIS15@gmail.com</div>
+            </div>
           </div>
-          <div style={{ flex: 1, textAlign: 'center' }}>
+          <div className="middle-text">
             <h1>SEKOLAH MENENGAH PERTAMA (SMP)</h1>
             <h2>GLOBAL INSANI SCHOOL</h2>
-            <p style={{ fontWeight: 'bold' }}>Terakreditasi A</p>
-            <p>Jl. Cendrawasih No. 10 Tajurhalang – Bogor 16320. Tlp : (0251) 8555657</p>
-            <p>NSS : 202020237406 | NPSN : 2023219 | Email: smpgis15@gmail.com</p>
+            <p>Terakreditasi A</p>
+            <p style={{ fontWeight: 'normal' }}>Jl. Cendrawasih No. 10 Tajurhalang – Bogor 16320. Tlp : (0251) 8555657</p>
+          </div>
+          <div style={{ width: '150px', textAlign: 'right', fontSize: '11px', fontWeight: 'bold', alignSelf: 'flex-end', paddingBottom: '4px' }}>
+            <div>NSS : 202020237406</div>
+            <div>NPSN : 2023219</div>
           </div>
         </div>
 
         {/* JUDUL */}
         <div className="title-section">
           <h3>HASIL PENILAIAN TAHSIN TAHFIZH AL QURAN</h3>
-          <h3>TENGAH SEMESTER</h3>
+          <h3>TENGAH SEMESTER {data.semester || 'GANJIL'}</h3>
           <h3>SMP GLOBAL INSANI SCHOOL</h3>
           <h4>TAHUN PELAJARAN {s.kelasRef?.tahunAjaran?.nama || '-'}</h4>
         </div>
@@ -177,7 +187,7 @@ export default function RaporPrintPage() {
           <table style={{ width: '45%' }}>
             <tbody>
               <tr><td style={{ width: '100px' }}>Kelas</td><td style={{ width: '10px' }}>:</td><td>{s.kelasRef?.nama || '-'}</td></tr>
-              <tr><td>Semester</td><td>:</td><td>Ganjil</td></tr>
+              <tr><td>Semester</td><td>:</td><td style={{ textTransform: 'capitalize' }}>{data.semester ? data.semester.toLowerCase() : 'Ganjil'}</td></tr>
               <tr><td>Tahun Pelajaran</td><td>:</td><td>{s.kelasRef?.tahunAjaran?.nama || '-'}</td></tr>
             </tbody>
           </table>
@@ -255,7 +265,7 @@ export default function RaporPrintPage() {
         <div className="ttd-section">
           <div className="ttd-box">
             <div style={{ marginBottom: '4px' }}>Tajurhalang, {ts}</div>
-            <div>Guru Halaqah Tahfizh</div>
+            <div>Wali Tahfizh</div>
             <div className="nama-ttd">{s.halaqah?.guru?.user?.name || '_________________________'}</div>
           </div>
         </div>

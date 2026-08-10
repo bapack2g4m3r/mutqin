@@ -24,6 +24,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!siswa) return NextResponse.json({ error: 'Siswa not found' }, { status: 404 })
 
+  let activeSemesterName = 'GANJIL'
+  if (siswa.kelasRef?.tahunAjaranId) {
+    const semester = await prisma.semester.findFirst({
+      where: { tahunAjaranId: siswa.kelasRef.tahunAjaranId, isAktif: true }
+    })
+    if (semester) activeSemesterName = semester.nama.toUpperCase()
+  }
+
   const whereSetoran: any = { siswaId }
   if (semesterId) whereSetoran.semesterId = semesterId
 
@@ -62,6 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({
     siswa,
+    semester: activeSemesterName,
     rapor: {
       tahfidz: {
         komponen: [
