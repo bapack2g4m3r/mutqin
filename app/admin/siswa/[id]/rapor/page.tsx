@@ -54,8 +54,11 @@ export default function RaporPrintPage() {
     <>
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body { background: white; margin: 0; padding: 0; }
+          body, html { background: white !important; margin: 0; padding: 0; }
           .no-print { display: none !important; }
+          aside, .sidebar { display: none !important; }
+          main { margin: 0 !important; padding: 0 !important; width: 100% !important; min-height: auto !important; background: white !important; flex: none !important; display: block !important; }
+          div[style*="display: flex"] { display: block !important; background: white !important; min-height: auto !important; }
           .print-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
           @page { size: A4 portrait; margin: 15mm; }
         }
@@ -236,14 +239,19 @@ export default function RaporPrintPage() {
         /* KETERANGAN */
         .keterangan-box {
           border: 1px solid black;
-          padding: 8px 12px;
+          padding: 6px 10px;
           width: max-content;
           font-size: 11px;
           margin-bottom: 24px;
           font-family: Arial, sans-serif;
+          line-height: 1.2;
         }
-        .keterangan-box table td {
-          padding: 2px 4px;
+        .keterangan-box table {
+          border-collapse: collapse;
+        }
+        .keterangan-box td {
+          padding: 2px 4px 2px 0;
+          vertical-align: top;
         }
 
         /* TTD */
