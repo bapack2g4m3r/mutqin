@@ -94,7 +94,8 @@ export function OfflineReadyManager() {
         fetch('/guru/siswa/detail'),
         fetch('/guru/siswa/setoran'),
         fetch('/guru/riwayat'),
-        fetch('/guru/profil')
+        fetch('/guru/profil'),
+        fetch('/api/auth/session')
       ])
 
       let siswaCount = 0

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v11'
+const CACHE_NAME = 'mutqin-v12'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -45,8 +45,11 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url)
 
-  // Jangan tangani POST/PUT/DELETE atau Auth API
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/auth/')) {
+  // Jangan tangani POST/PUT/DELETE atau Auth API (KECUALI session untuk offline support)
+  if (event.request.method !== 'GET') {
+    return
+  }
+  if (url.pathname.startsWith('/api/auth/') && url.pathname !== '/api/auth/session') {
     return
   }
 
