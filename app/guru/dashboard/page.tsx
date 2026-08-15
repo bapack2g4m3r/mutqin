@@ -59,6 +59,13 @@ export default function GuruDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [isOffline, setIsOffline] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date()
+    // adjust for local timezone roughly, or just use string
+    const offset = d.getTimezoneOffset()
+    d.setMinutes(d.getMinutes() - offset)
+    return d.toISOString().split('T')[0]
+  })
 
   useEffect(() => {
     setIsOffline(!navigator.onLine)
@@ -77,7 +84,8 @@ export default function GuruDashboardPage() {
     } catch {}
 
     // 2. Fetch fresh from network
-    fetch('/api/guru/dashboard')
+    setLoading(true)
+    fetch(`/api/guru/dashboard?date=${selectedDate}`)
       .then(r => {
         if (!r.ok) throw new Error('Offline')
         return r.json()
@@ -95,7 +103,7 @@ export default function GuruDashboardPage() {
       window.removeEventListener('online', onOnline)
       window.removeEventListener('offline', onOffline)
     }
-  }, [])
+  }, [selectedDate])
 
   const userName = session?.user?.name || 'Guru'
 
@@ -168,6 +176,23 @@ export default function GuruDashboardPage() {
           <h2 style={{ color: 'white', fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>
             {userName} 👋
           </h2>
+          <div style={{ marginBottom: '16px' }}>
+            <input 
+              type="date" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: 'white',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                outline: 'none',
+                colorScheme: 'dark'
+              }}
+            />
+          </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <div style={{
               background: 'rgba(255,255,255,0.12)',
@@ -179,7 +204,7 @@ export default function GuruDashboardPage() {
               <div style={{ fontSize: '24px', fontWeight: 800, color: 'white' }}>
                 {loading ? '—' : data?.setoranHariIni ?? 0}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginTop: '2px' }}>Setoran Hari Ini</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginTop: '2px' }}>Setoran Tgl Ini</div>
             </div>
             <div style={{
               background: 'rgba(180,83,9,0.25)',

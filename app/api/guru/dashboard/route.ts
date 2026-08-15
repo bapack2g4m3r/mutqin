@@ -10,7 +10,10 @@ export async function GET(req: NextRequest) {
   const guruId = (session.user as any).guruId
   if (!guruId) return NextResponse.json({ error: 'Guru ID not found' }, { status: 400 })
 
-  const today = new Date()
+  const { searchParams } = new URL(req.url)
+  const dateParam = searchParams.get('date')
+
+  const today = dateParam ? new Date(dateParam) : new Date()
   today.setHours(0, 0, 0, 0)
   const todayEnd = new Date(today)
   todayEnd.setHours(23, 59, 59, 999)

@@ -39,16 +39,37 @@ export default function GuruRiwayatPage() {
   const [loading, setLoading] = useState(true)
   const [jenis, setJenis] = useState('')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
-    const params = new URLSearchParams({ limit: '50' })
+    if (page === 1) setLoading(true)
+    else setLoadingMore(true)
+
+    const params = new URLSearchParams({ limit: '50', page: page.toString() })
     if (jenis) params.set('jenis', jenis)
+    
     fetch(`/api/setoran?${params}`)
       .then(r => r.json())
-      .then(d => setSetorans(d.setorans || []))
-      .finally(() => setLoading(false))
-  }, [jenis])
+      .then(d => {
+        if (page === 1) {
+          setSetorans(d.setorans || [])
+        } else {
+          setSetorans(prev => [...prev, ...(d.setorans || [])])
+        }
+        setTotal(d.total || 0)
+      })
+      .finally(() => {
+        setLoading(false)
+        setLoadingMore(false)
+      })
+  }, [jenis, page])
+
+  const handleJenisChange = (newJenis: string) => {
+    setJenis(newJenis)
+    setPage(1)
+  }
 
   const filtered = search
     ? setorans.filter(s => s.siswa.nama.toLowerCase().includes(search.toLowerCase()))
@@ -72,9 +93,9 @@ export default function GuruRiwayatPage() {
             <input id="search-riwayat" type="search" className="input" placeholder="Cari nama siswa..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <div className="tabs">
-            <button id="filter-semua" className={`tab ${!jenis ? 'active' : ''}`} onClick={() => setJenis('')}>Semua</button>
-            <button id="filter-tahfidz" className={`tab ${jenis === 'TAHFIDZ' ? 'active' : ''}`} onClick={() => setJenis('TAHFIDZ')}>📖 Tahfidz</button>
-            <button id="filter-tahsin" className={`tab ${jenis === 'TAHSIN' ? 'active' : ''}`} onClick={() => setJenis('TAHSIN')}>🗣 Tahsin</button>
+            <button id="filter-semua" className={`tab ${!jenis ? 'active' : ''}`} onClick={() => handleJenisChange('')}>Semua</button>
+            <button id="filter-tahfidz" className={`tab ${jenis === 'TAHFIDZ' ? 'active' : ''}`} onClick={() => handleJenisChange('TAHFIDZ')}>📖 Tahfidz</button>
+            <button id="filter-tahsin" className={`tab ${jenis === 'TAHSIN' ? 'active' : ''}`} onClick={() => handleJenisChange('TAHSIN')}>🗣 Tahsin</button>
           </div>
         </div>
 
@@ -127,6 +148,26 @@ export default function GuruRiwayatPage() {
                 </div>
               </button>
             ))
+          )}
+          
+          {!loading && setorans.length < total && !search && (
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={loadingMore}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#e2e8f0',
+                color: '#475569',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: 600,
+                marginTop: '10px',
+                cursor: 'pointer'
+              }}
+            >
+              {loadingMore ? 'Memuat...' : 'Muat Lebih Banyak'}
+            </button>
           )}
         </div>
       </div>
