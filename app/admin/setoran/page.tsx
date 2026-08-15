@@ -194,15 +194,15 @@ export default function AdminSetoranPage() {
           <thead>
             <tr>
               <th>#</th>
-              <th onClick={() => handleSort('siswa')} style={{ cursor: 'pointer', userSelect: 'none' }}>Siswa <SortIcon col="siswa"/></th>
-              <th onClick={() => handleSort('kelas')} style={{ cursor: 'pointer', userSelect: 'none' }}>Kelas <SortIcon col="kelas"/></th>
-              <th onClick={() => handleSort('jenis')} style={{ cursor: 'pointer', userSelect: 'none' }}>Jenis <SortIcon col="jenis"/></th>
+              <th onClick={() => handleSort('siswa')} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>Siswa <SortIcon col="siswa"/></th>
+              <th onClick={() => handleSort('kelas')} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>Kelas <SortIcon col="kelas"/></th>
+              <th onClick={() => handleSort('jenis')} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>Jenis <SortIcon col="jenis"/></th>
               <th>Materi</th>
-              <th onClick={() => handleSort('nilai')} style={{ cursor: 'pointer', userSelect: 'none' }}>Nilai <SortIcon col="nilai"/></th>
+              <th onClick={() => handleSort('nilai')} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>Nilai <SortIcon col="nilai"/></th>
               <th>Predikat</th>
-              <th onClick={() => handleSort('guru')} style={{ cursor: 'pointer', userSelect: 'none' }}>Guru <SortIcon col="guru"/></th>
+              <th onClick={() => handleSort('guru')} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>Guru <SortIcon col="guru"/></th>
               <th>Tasmi&apos;</th>
-              <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer', userSelect: 'none' }}>Tanggal <SortIcon col="tanggal"/></th>
+              <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>Tanggal <SortIcon col="tanggal"/></th>
               <th style={{ textAlign: 'center', width: '60px' }}>Aksi</th>
             </tr>
           </thead>
