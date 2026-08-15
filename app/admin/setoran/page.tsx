@@ -59,6 +59,7 @@ export default function AdminSetoranPage() {
   const [jenis, setJenis] = useState('')
   const [kelas, setKelas] = useState('')
   const [search, setSearch] = useState('')
+  const [searchGuru, setSearchGuru] = useState('')
   const [page, setPage] = useState(1)
   const itemsPerPage = 20
   const [showDelete, setShowDelete] = useState<Setoran | null>(null)
@@ -88,7 +89,7 @@ export default function AdminSetoranPage() {
   }, [jenis])
 
   useEffect(() => { fetchKelas(); load() }, [load, fetchKelas])
-  useEffect(() => { setPage(1) }, [search, kelas, jenis])
+  useEffect(() => { setPage(1) }, [search, kelas, jenis, searchGuru])
 
   async function handleDelete() {
     if (!showDelete) return
@@ -107,6 +108,10 @@ export default function AdminSetoranPage() {
     if (search) {
       const q = search.toLowerCase()
       if (!s.siswa.nama.toLowerCase().includes(q) && !s.siswa.nis.toLowerCase().includes(q)) return false
+    }
+    if (searchGuru) {
+      const qG = searchGuru.toLowerCase()
+      if (!s.guru?.user?.name.toLowerCase().includes(qG)) return false
     }
     return true
   })
@@ -132,6 +137,15 @@ export default function AdminSetoranPage() {
           </span>
           <input type="search" className="input" placeholder="Cari nama atau NIS siswa..."
             value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="input-icon-wrap" style={{ flex: 1, minWidth: '180px' }}>
+          <span className="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+          <input type="search" className="input" placeholder="Cari nama Guru..."
+            value={searchGuru} onChange={e => setSearchGuru(e.target.value)} />
         </div>
         <select id="filter-setoran-jenis" className="input" value={jenis} onChange={e => setJenis(e.target.value)} style={{ width: '160px' }}>
           <option value="">Semua Jenis</option>
