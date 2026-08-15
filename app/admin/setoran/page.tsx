@@ -60,6 +60,8 @@ export default function AdminSetoranPage() {
   const [kelas, setKelas] = useState('')
   const [search, setSearch] = useState('')
   const [searchGuru, setSearchGuru] = useState('')
+  const [sortCol, setSortCol] = useState('tanggal')
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc')
   const [page, setPage] = useState(1)
   const itemsPerPage = 20
   const [showDelete, setShowDelete] = useState<Setoran | null>(null)
@@ -102,7 +104,21 @@ export default function AdminSetoranPage() {
     } finally { setDeleting(false) }
   }
 
-  // Client-side filter
+  const handleSort = (col: string) => {
+    if (sortCol === col) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortCol(col)
+      setSortDir('asc')
+    }
+  }
+
+  const SortIcon = ({ col }: { col: string }) => {
+    if (sortCol !== col) return <span style={{ opacity: 0.3, marginLeft: '4px', fontSize: '10px' }}>↕</span>
+    return <span style={{ marginLeft: '4px', fontSize: '12px' }}>{sortDir === 'asc' ? '↑' : '↓'}</span>
+  }
+
+  // Client-side filter & sort
   const filtered = setorans.filter(s => {
     if (kelas && s.siswa.kelas !== kelas) return false
     if (search) {
@@ -114,6 +130,21 @@ export default function AdminSetoranPage() {
       if (!s.guru?.user?.name.toLowerCase().includes(qG)) return false
     }
     return true
+  }).sort((a, b) => {
+    let valA: any = ''
+    let valB: any = ''
+    switch(sortCol) {
+      case 'siswa': valA = a.siswa.nama.toLowerCase(); valB = b.siswa.nama.toLowerCase(); break;
+      case 'kelas': valA = a.siswa.kelas.toLowerCase(); valB = b.siswa.kelas.toLowerCase(); break;
+      case 'jenis': valA = a.jenis.toLowerCase(); valB = b.jenis.toLowerCase(); break;
+      case 'nilai': valA = a.nilaiAkhir; valB = b.nilaiAkhir; break;
+      case 'guru': valA = a.guru?.user?.name.toLowerCase() || ''; valB = b.guru?.user?.name.toLowerCase() || ''; break;
+      case 'tanggal': valA = new Date(a.tanggal).getTime(); valB = new Date(b.tanggal).getTime(); break;
+      default: valA = new Date(a.tanggal).getTime(); valB = new Date(b.tanggal).getTime(); break;
+    }
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1
+    return 0
   })
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
@@ -162,8 +193,17 @@ export default function AdminSetoranPage() {
         <table>
           <thead>
             <tr>
-              <th>#</th><th>Siswa</th><th>Kelas</th><th>Jenis</th>
-              <th>Materi</th><th>Nilai</th><th>Predikat</th><th>Guru</th><th>Tasmi&apos;</th><th>Tanggal</th><th style={{ textAlign: 'center', width: '60px' }}>Aksi</th>
+              <th>#</th>
+              <th onClick={() => handleSort('siswa')} style={{ cursor: 'pointer', userSelect: 'none' }}>Siswa <SortIcon col="siswa"/></th>
+              <th onClick={() => handleSort('kelas')} style={{ cursor: 'pointer', userSelect: 'none' }}>Kelas <SortIcon col="kelas"/></th>
+              <th onClick={() => handleSort('jenis')} style={{ cursor: 'pointer', userSelect: 'none' }}>Jenis <SortIcon col="jenis"/></th>
+              <th>Materi</th>
+              <th onClick={() => handleSort('nilai')} style={{ cursor: 'pointer', userSelect: 'none' }}>Nilai <SortIcon col="nilai"/></th>
+              <th>Predikat</th>
+              <th onClick={() => handleSort('guru')} style={{ cursor: 'pointer', userSelect: 'none' }}>Guru <SortIcon col="guru"/></th>
+              <th>Tasmi&apos;</th>
+              <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer', userSelect: 'none' }}>Tanggal <SortIcon col="tanggal"/></th>
+              <th style={{ textAlign: 'center', width: '60px' }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
