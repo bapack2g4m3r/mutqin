@@ -161,12 +161,17 @@ function SurahAutocomplete({ value, onChange }: { value: string; onChange: (nama
 
 export default function InputSetoranPage() {
   const searchParams = useSearchParams()
-  const router = useRouter()
-  const siswaId = searchParams.get('id')
-  const editId = searchParams.get('editId')
-  const jenisFromUrl = (searchParams.get('jenis') || 'TAHFIDZ').toUpperCase() as Jenis
+  let siswaId = searchParams.get('id') as string
+  let jenisParam = searchParams.get('jenis') as Jenis | null
+  let editId = searchParams.get('editId') as string | null
 
-  const [jenis, setJenis] = useState<Jenis>(jenisFromUrl)
+  if (!siswaId && typeof window !== 'undefined' && !navigator.onLine) {
+    siswaId = localStorage.getItem('offline_nav_id') || ''
+    jenisParam = (localStorage.getItem('offline_nav_jenis') as Jenis) || null
+    editId = localStorage.getItem('offline_nav_edit_id') || null
+  }
+
+  const [jenis, setJenis] = useState<Jenis>((jenisParam || 'TAHFIDZ').toUpperCase() as Jenis)
   const [siswa, setSiswa] = useState<SiswaInfo | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -407,16 +412,22 @@ export default function InputSetoranPage() {
             Input Surah Lain untuk {siswa?.nama.split(' ')[0]}
           </button>
           <button id="btn-siswa-berikutnya" className="btn btn-outline" style={{ border: '2px solid #e2e8f0', color: '#475569', background: 'white' }} onClick={() => {
-            const path = `/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`
-            if (!navigator.onLine) window.location.href = path
-            else router.push(path)
+            if (!navigator.onLine) {
+              if (siswa?.kelas) localStorage.setItem('offline_nav_kelas', siswa.kelas)
+              window.location.href = '/guru/siswa'
+            } else {
+              router.push(`/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`)
+            }
           }}>
             Pilih Siswa Lain di Kelas Ini
           </button>
           <button id="btn-kembali-detail" className="btn btn-outline" style={{ border: 'none', color: '#64748b' }} onClick={() => {
-            const path = `/guru/siswa/detail?id=${siswaId}`
-            if (!navigator.onLine) window.location.href = path
-            else router.push(path)
+            if (!navigator.onLine) {
+              localStorage.setItem('offline_nav_detail_id', siswaId)
+              window.location.href = '/guru/siswa/detail'
+            } else {
+              router.push(`/guru/siswa/detail?id=${siswaId}`)
+            }
           }}>
             Kembali ke Profil Siswa
           </button>
@@ -596,9 +607,12 @@ export default function InputSetoranPage() {
                 try {
                   const res = await fetch(`/api/setoran/${editId}`, { method: 'DELETE' })
                   if (!res.ok) throw new Error('Gagal')
-                  const path = `/guru/siswa/detail?id=${siswaId}`
-                  if (!navigator.onLine) window.location.href = path
-                  else router.push(path)
+                  if (!navigator.onLine) {
+                    localStorage.setItem('offline_nav_detail_id', siswaId)
+                    window.location.href = '/guru/siswa/detail'
+                  } else {
+                    router.push(`/guru/siswa/detail?id=${siswaId}`)
+                  }
                 } catch {
                   alert('Gagal menghapus data')
                   setLoading(false)

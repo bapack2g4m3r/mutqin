@@ -18,8 +18,13 @@ function getInitials(nama: string) {
 
 export default function GuruSiswaPage() {
   const searchParams = useSearchParams()
+  let kelasFromUrl = searchParams.get('kelas') || ''
+
+  if (!kelasFromUrl && typeof window !== 'undefined' && !navigator.onLine) {
+    kelasFromUrl = localStorage.getItem('offline_nav_kelas') || ''
+  }
+
   const router = useRouter()
-  const kelasFromUrl = searchParams.get('kelas') || ''
   const [search, setSearch] = useState('')
   const [kelas, setKelas] = useState(kelasFromUrl)
   const [kelasList, setKelasList] = useState<string[]>(['Semua'])
@@ -248,9 +253,12 @@ export default function GuruSiswaPage() {
                 id={`siswa-${s.id}`}
                 className="list-item"
                 onClick={() => {
-                  const path = `/guru/siswa/detail?id=${s.id}`
-                  if (!navigator.onLine) window.location.href = path
-                  else router.push(path)
+                  if (!navigator.onLine) {
+                    localStorage.setItem('offline_nav_detail_id', s.id)
+                    window.location.href = '/guru/siswa/detail'
+                  } else {
+                    router.push(`/guru/siswa/detail?id=${s.id}`)
+                  }
                 }}
                 style={{ width: '100%', textAlign: 'left' }}
               >

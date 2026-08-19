@@ -57,12 +57,22 @@ export default function DetailSiswaPage() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const id = searchParams.get('id') as string
+  let id = searchParams.get('id') as string
+
+  if (!id && typeof window !== 'undefined' && !navigator.onLine) {
+    id = localStorage.getItem('offline_nav_detail_id') || ''
+  }
+
   const [siswa, setSiswa] = useState<SiswaDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'semua' | 'tahfidz' | 'tahsin'>('semua')
 
   useEffect(() => {
+    if (!id) {
+        setLoading(false)
+        return
+    }
+
     // 1. Instantly try to load cached detail
     const loadCache = async () => {
       try {
@@ -222,9 +232,14 @@ export default function DetailSiswaPage() {
           <button
             id="btn-input-tahfidz"
             onClick={() => {
-              const path = `/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ`
-              if (!navigator.onLine) window.location.href = path
-              else router.push(path)
+              if (!navigator.onLine) {
+                localStorage.setItem('offline_nav_id', id)
+                localStorage.setItem('offline_nav_jenis', 'TAHFIDZ')
+                localStorage.removeItem('offline_nav_edit_id')
+                window.location.href = '/guru/siswa/setoran'
+              } else {
+                router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ`)
+              }
             }}
             className="btn btn-primary btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
@@ -235,9 +250,14 @@ export default function DetailSiswaPage() {
           <button
             id="btn-input-tahsin"
             onClick={() => {
-              const path = `/guru/siswa/setoran?id=${id}&jenis=TAHSIN`
-              if (!navigator.onLine) window.location.href = path
-              else router.push(path)
+              if (!navigator.onLine) {
+                localStorage.setItem('offline_nav_id', id)
+                localStorage.setItem('offline_nav_jenis', 'TAHSIN')
+                localStorage.removeItem('offline_nav_edit_id')
+                window.location.href = '/guru/siswa/setoran'
+              } else {
+                router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHSIN`)
+              }
             }}
             className="btn btn-accent btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
@@ -324,9 +344,14 @@ export default function DetailSiswaPage() {
                   {(session?.user as any)?.guruId === s.guruId && (
                     <button 
                       onClick={() => {
-                        const path = `/guru/siswa/setoran?id=${siswa.id}&jenis=${s.jenis}&editId=${s.id}`
-                        if (!navigator.onLine) window.location.href = path
-                        else router.push(path)
+                        if (!navigator.onLine) {
+                          localStorage.setItem('offline_nav_id', siswa.id)
+                          localStorage.setItem('offline_nav_jenis', s.jenis)
+                          localStorage.setItem('offline_nav_edit_id', s.id)
+                          window.location.href = '/guru/siswa/setoran'
+                        } else {
+                          router.push(`/guru/siswa/setoran?id=${siswa.id}&jenis=${s.jenis}&editId=${s.id}`)
+                        }
                       }}
                       style={{ 
                         padding: '6px 12px', background: '#e0e7ff', color: '#4338ca', 

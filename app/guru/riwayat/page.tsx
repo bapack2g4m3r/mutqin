@@ -159,9 +159,12 @@ export default function GuruRiwayatPage() {
                 className="list-item"
                 style={{ width: '100%', textAlign: 'left' }}
                 onClick={() => {
-                  const path = `/guru/siswa/detail?id=${s.siswa.id}`
-                  if (!navigator.onLine) window.location.href = path
-                  else router.push(path)
+                  if (!navigator.onLine) {
+                    localStorage.setItem('offline_nav_detail_id', s.siswa.id)
+                    window.location.href = '/guru/siswa/detail'
+                  } else {
+                    router.push(`/guru/siswa/detail?id=${s.siswa.id}`)
+                  }
                 }}
               >
                 <div style={{
@@ -191,9 +194,14 @@ export default function GuruRiwayatPage() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation()
-                        const path = `/guru/siswa/setoran?id=${s.siswa.id}&jenis=${s.jenis}&editId=${s.id}`
-                        if (!navigator.onLine) window.location.href = path
-                        else router.push(path)
+                        if (!navigator.onLine) {
+                          localStorage.setItem('offline_nav_id', s.siswa.id)
+                          localStorage.setItem('offline_nav_jenis', s.jenis)
+                          localStorage.setItem('offline_nav_edit_id', s.id)
+                          window.location.href = '/guru/siswa/setoran'
+                        } else {
+                          router.push(`/guru/siswa/setoran?id=${s.siswa.id}&jenis=${s.jenis}&editId=${s.id}`)
+                        }
                       }}
                       style={{ 
                         marginTop: '8px', padding: '4px 8px', background: '#e0e7ff', color: '#4338ca', 

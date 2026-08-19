@@ -308,9 +308,12 @@ export default function GuruDashboardPage() {
                     <div 
                       key={s.id} 
                       onClick={() => {
-                        const path = `/guru/siswa/setoran?id=${s.id}`
-                        if (!navigator.onLine) window.location.href = path
-                        else router.push(path)
+                        if (!navigator.onLine) {
+                          localStorage.setItem('offline_nav_id', s.id)
+                          window.location.href = '/guru/siswa/setoran'
+                        } else {
+                          router.push(`/guru/siswa/setoran?id=${s.id}`)
+                        }
                       }}
                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 8px', cursor: 'pointer', borderRadius: '10px', transition: 'background 0.2s', margin: '0 -8px' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
