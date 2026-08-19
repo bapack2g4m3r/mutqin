@@ -7,6 +7,7 @@ interface Siswa {
   id: string; nis: string; nisn?: string; nama: string; kelas: string; kelasId?: string; halaqahId?: string | null
   ortu?: { user: { name: string; email: string, username?: string } }
   setorans: Array<{ jenis: string; nilaiAkhir: number }>
+  capaianJuz?: number
 }
 
 interface Kelas {
@@ -16,7 +17,7 @@ interface Kelas {
 
 interface BulkRow { nis: string; nisn?: string; nama: string; kelas: string; namaOrtu?: string; password?: string; _valid?: boolean; _error?: string }
 
-const EMPTY_FORM = { nis: '', nisn: '', nama: '', kelasId: '', kelas: '', halaqahId: '', namaOrtu: '', password: '' }
+const EMPTY_FORM = { nis: '', nisn: '', nama: '', kelasId: '', kelas: '', halaqahId: '', namaOrtu: '', password: '', capaianJuz: 0 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -92,7 +93,7 @@ function ConfirmDialog({ message, onConfirm, onCancel, loading, title = 'Konfirm
 }
 
 function SiswaForm({ initial, onSave, onClose, saving, kelasList }: {
-  initial: { nis: string; nisn?: string; nama: string; kelasId?: string; kelas: string; halaqahId?: string; namaOrtu?: string; password?: string }
+  initial: { nis: string; nisn?: string; nama: string; kelasId?: string; kelas: string; halaqahId?: string; namaOrtu?: string; password?: string; capaianJuz?: number }
   onSave: (data: any) => void
   onClose: () => void
   saving: boolean
@@ -146,6 +147,16 @@ function SiswaForm({ initial, onSave, onClose, saving, kelasList }: {
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="input-group">
+        <label className="input-label">Capaian Tahfidz (Juz) <span style={{ color: '#dc2626' }}>*</span></label>
+        <select className="input" value={form.capaianJuz ?? 0} onChange={e => setForm(p => ({ ...p, capaianJuz: parseInt(e.target.value) }))}>
+          <option value={0}>&lt; 1 Juz</option>
+          <option value={1}>1 Juz</option>
+          <option value={2}>2 Juz</option>
+          <option value={3}>&gt; 2 Juz</option>
+        </select>
       </div>
 
       {/* Akun Orang Tua */}
@@ -956,7 +967,7 @@ export default function AdminSiswaPage() {
             initial={{ 
               nis: showEdit.nis, nisn: showEdit.nisn, nama: showEdit.nama, 
               kelas: showEdit.kelas, kelasId: showEdit.kelasId, halaqahId: showEdit.halaqahId || '',
-              namaOrtu: showEdit.ortu?.user.name, password: '' 
+              namaOrtu: showEdit.ortu?.user.name, password: '', capaianJuz: showEdit.capaianJuz || 0
             }}
             onSave={handleEdit}
             onClose={() => setShowEdit(null)}

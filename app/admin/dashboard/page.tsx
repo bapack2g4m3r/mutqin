@@ -14,6 +14,9 @@ interface DashData {
     guru: { user: { name: string } }
   }>
   predikatStats: Array<{ predikat: string; _count: { id: number } }>
+  tahfidzStats: Array<{ capaianJuz: number; count: number }>
+  tasmiCount: number
+  tahsinStats: Array<{ buku: string; count: number }>
 }
 
 const PREDIKAT_INFO: Record<string, { label: string; color: string }> = {
@@ -48,14 +51,28 @@ export default function AdminDashboard() {
   const [semesterAktif, setSemesterAktif] = useState('')
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [toggling, setToggling] = useState(false)
+  const [kelasFilter, setKelasFilter] = useState('')
+  const [kelasOptions, setKelasOptions] = useState<string[]>([])
 
   useEffect(() => {
-    fetch('/api/dashboard').then(r => r.json()).then(setData).finally(() => setLoading(false))
+    setLoading(true)
+    fetch(`/api/dashboard?kelas=${kelasFilter}`)
+      .then(r => r.json())
+      .then(setData)
+      .finally(() => setLoading(false))
+  }, [kelasFilter])
+
+  useEffect(() => {
     fetch('/api/settings/maintenance').then(r => r.json()).then(d => setMaintenanceMode(d.maintenanceMode || false)).catch(() => {})
     fetch('/api/akademik').then(r => r.json()).then(d => {
       if (d.tahunAjaranList) {
         const aktif = d.tahunAjaranList.find((t: any) => t.isAktif)
-        if (aktif) setTahunAjaran(aktif.nama)
+        if (aktif) {
+          setTahunAjaran(aktif.nama)
+          // extract unique class names to populate the filter dropdown
+          const uniqueClasses = Array.from(new Set(aktif.kelas.map((k: any) => k.nama.replace(/[^0-9]/g, '')))) as string[]
+          setKelasOptions(uniqueClasses.sort())
+        }
       }
       if (d.aktivSemester) setSemesterAktif(d.aktivSemester.nama)
     }).catch(() => {})
@@ -94,6 +111,23 @@ export default function AdminDashboard() {
           </p>
         </div>
 
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          {/* Class Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>Filter Kelas:</span>
+            <select
+              className="input"
+              style={{ width: '120px', padding: '4px 8px', minHeight: '32px' }}
+              value={kelasFilter}
+              onChange={e => setKelasFilter(e.target.value)}
+            >
+              <option value="">Semua</option>
+              <option value="7">Kelas 7</option>
+              <option value="8">Kelas 8</option>
+              <option value="9">Kelas 9</option>
+            </select>
+          </div>
+
         {/* Maintenance Mode Toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <div>
@@ -119,6 +153,7 @@ export default function AdminDashboard() {
             }} />
           </button>
         </div>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -135,6 +170,88 @@ export default function AdminDashboard() {
         <StatCard value={loading ? '—' : data?.siswaBelumSetor ?? 0} label="Belum Setor Hari Ini" color="#dc2626"
           icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
         />
+      </div>
+
+      {/* Capaian Siswa Section */}
+      <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1e293b', marginBottom: '16px' }}>Capaian Siswa</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
+        
+        {/* Capaian Tahfiz */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>📖</span> Capaian Tahfiz
+          </div>
+          {loading ? (
+            <div className="skeleton" style={{ flex: 1, borderRadius: '8px' }} />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+              {[
+                { label: '< 1 Juz', val: 0, color: '#94a3b8' },
+                { label: '1 Juz', val: 1, color: '#3b82f6' },
+                { label: '2 Juz', val: 2, color: '#8b5cf6' },
+                { label: '> 2 Juz', val: 3, color: '#059669' },
+              ].map(item => {
+                const stat = data?.tahfidzStats?.find(s => s.capaianJuz === item.val)
+                const count = stat ? stat.count : 0
+                const pct = data?.totalSiswa ? Math.round((count / data.totalSiswa) * 100) : 0
+                return (
+                  <div key={item.val}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>{item.label}</span>
+                      <span style={{ fontSize: '13px', color: '#64748b' }}>{count} ({pct}%)</span>
+                    </div>
+                    <div className="progress-wrap">
+                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: '9999px', background: item.color, transition: 'width 0.8s ease' }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Capaian Tahsin */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>🗣</span> Capaian Tahsin (Jilid)
+          </div>
+          {loading ? (
+            <div className="skeleton" style={{ flex: 1, borderRadius: '8px' }} />
+          ) : (
+            <div style={{ flex: 1, overflowY: 'auto', maxHeight: '220px', paddingRight: '4px' }}>
+              {data?.tahsinStats && data.tahsinStats.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {data.tahsinStats.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{item.buku}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px' }}>{item.count} Siswa</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px' }}>Belum ada data</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* KPI Tasmi */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>
+          <div style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px', opacity: 0.9 }}>KPI Sudah Tasmi&apos;</div>
+          {loading ? (
+            <div className="skeleton" style={{ width: '100px', height: '64px', borderRadius: '8px', background: 'rgba(255,255,255,0.2)' }} />
+          ) : (
+            <>
+              <div style={{ fontSize: '56px', fontWeight: 800, lineHeight: 1.1, textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                {data?.totalSiswa ? Math.round(((data?.tasmiCount || 0) / data.totalSiswa) * 100) : 0}%
+              </div>
+              <div style={{ fontSize: '15px', marginTop: '8px', background: 'rgba(255,255,255,0.2)', padding: '4px 16px', borderRadius: '99px', fontWeight: 600 }}>
+                {data?.tasmiCount || 0} dari {data?.totalSiswa || 0} Siswa
+              </div>
+            </>
+          )}
+        </div>
+
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', marginBottom: '24px' }}>

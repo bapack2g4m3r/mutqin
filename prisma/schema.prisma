@@ -116,6 +116,9 @@ model Siswa {
 
   setorans  Setoran[]
   createdAt DateTime  @default(now())
+  
+  // Capaian Tahfidz (0: <1 Juz, 1: 1 Juz, 2: 2 Juz, 3: >2 Juz)
+  capaianJuz Int      @default(0)
 }
 
 model Setoran {

@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params
   const body = await req.json()
-  const { nis, nisn, nama, kelas, kelasId, halaqahId, namaOrtu, password } = body
+  const { nis, nisn, nama, kelas, kelasId, halaqahId, namaOrtu, password, capaianJuz } = body
 
   const existingSiswa = await prisma.siswa.findUnique({ where: { id }, include: { ortu: { include: { user: true } } } })
   if (!existingSiswa) return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
@@ -84,6 +84,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (kelasId !== undefined) dataSiswa.kelasId = kelasId
   if (halaqahId !== undefined) dataSiswa.halaqahId = halaqahId || null
   if (ortuId) dataSiswa.ortuId = ortuId
+  if (capaianJuz !== undefined) dataSiswa.capaianJuz = parseInt(capaianJuz)
 
   try {
     const siswa = await prisma.siswa.update({ where: { id }, data: dataSiswa })
