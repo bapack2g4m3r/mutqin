@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v14'
+const CACHE_NAME = 'mutqin-v15'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -64,6 +64,12 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') {
     return
   }
+  
+  // Bypass SW for file downloads to prevent caching binary blobs and timeouts
+  if (url.pathname.startsWith('/api/guru/export')) {
+    return
+  }
+  
   if (url.pathname.startsWith('/api/auth/') && url.pathname !== '/api/auth/session') {
     return
   }
