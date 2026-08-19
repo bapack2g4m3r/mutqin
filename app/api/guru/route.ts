@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     include: {
       user: { select: { id: true, name: true, email: true } },
       setorans: { select: { id: true } },
+      halaqahs: { select: { _count: { select: { siswa: true } } } },
     },
     orderBy: { user: { name: 'asc' } },
   })

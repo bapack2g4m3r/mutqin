@@ -5,6 +5,7 @@ interface Guru {
   id: string; nip?: string;
   user: { id: string; name: string; email: string }
   setorans: { id: string }[]
+  halaqahs?: { _count: { siswa: number } }[]
 }
 
 const EMPTY_FORM = { nama: '', email: '', password: '', nip: '' }
@@ -147,7 +148,7 @@ export default function AdminGuruPage() {
   const [search, setSearch]   = useState('')
   const [page, setPage]       = useState(1)
   const itemsPerPage = 15
-  type SortKey = 'nama' | 'email' | 'nip' | 'totalSetoran'
+  type SortKey = 'nama' | 'email' | 'nip' | 'totalSetoran' | 'siswaBinaan'
   const [sortKey, setSortKey] = useState<SortKey>('nama')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
@@ -255,6 +256,7 @@ export default function AdminGuruPage() {
               <th style={{ width: '40px' }}>#</th>
               <th onClick={() => handleSort('nama')} style={{ cursor: 'pointer', userSelect: 'none' }}>Nama Guru {renderSortIcon('nama')}</th>
               <th onClick={() => handleSort('email')} style={{ cursor: 'pointer', userSelect: 'none' }}>Kontak & NIP {renderSortIcon('email')}</th>
+              <th onClick={() => handleSort('siswaBinaan')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}>Siswa Binaan {renderSortIcon('siswaBinaan')}</th>
               <th onClick={() => handleSort('totalSetoran')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}>Total Setoran {renderSortIcon('totalSetoran')}</th>
               <th style={{ textAlign: 'center', width: '100px' }}>Aksi</th>
             </tr>
@@ -278,6 +280,10 @@ export default function AdminGuruPage() {
                 else if (sortKey === 'email') { valA = a.user.email; valB = b.user.email }
                 else if (sortKey === 'nip') { valA = a.nip || ''; valB = b.nip || '' }
                 else if (sortKey === 'totalSetoran') { valA = a.setorans?.length || 0; valB = b.setorans?.length || 0 }
+                else if (sortKey === 'siswaBinaan') {
+                  valA = a.halaqahs?.reduce((sum, h) => sum + h._count.siswa, 0) || 0;
+                  valB = b.halaqahs?.reduce((sum, h) => sum + h._count.siswa, 0) || 0;
+                }
                 
                 if (valA < valB) return sortOrder === 'asc' ? -1 : 1
                 if (valA > valB) return sortOrder === 'asc' ? 1 : -1
@@ -321,6 +327,11 @@ export default function AdminGuruPage() {
                     <td>
                       <div style={{ fontSize: '13px', color: '#475569', marginBottom: '2px' }}>{g.user.email}</div>
                       {g.nip && <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>NIP: {g.nip}</div>}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{ padding: '3px 10px', background: '#e0e7ff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#3730a3' }}>
+                        {g.halaqahs?.reduce((sum, h) => sum + h._count.siswa, 0) || 0} Siswa
+                      </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <span style={{ padding: '3px 10px', background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#475569' }}>
