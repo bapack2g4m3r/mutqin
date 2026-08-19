@@ -2,11 +2,14 @@
   "name": "MUTQIN — Tahfidz & Tahsin",
   "short_name": "MUTQIN",
   "description": "Sistem Administrasi Tahfidz dan Tahsin SMP Global Insani School",
-  "start_url": "/",
+  "start_url": "/offline.html",
+  "id": "/offline.html",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#f0f4f8",
   "theme_color": "#1e3a8a",
   "orientation": "portrait",
+  "scope": "/",
   "icons": [
     {
       "src": "/icon-192.png",

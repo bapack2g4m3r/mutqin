@@ -287,6 +287,14 @@ const QK='mutqin_offline_queue'
 let allSiswa=[],filtered=[],selSiswa=null,jenis='TAHFIDZ',buku='Metode Ummi Jilid 1',kelasF='Semua'
 
 window.onload=function(){
+  // Auto-redirect to main app if online
+  if (navigator.onLine) {
+    window.location.replace("/guru/dashboard")
+    return
+  }
+  window.addEventListener("online", function() {
+    window.location.replace("/guru/dashboard")
+  })
   // Setup surah select
   const s=document.getElementById('surah-sel')
   SURAHS.forEach(x=>{
