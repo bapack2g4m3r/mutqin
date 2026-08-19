@@ -162,22 +162,37 @@ function SurahAutocomplete({ value, onChange }: { value: string; onChange: (nama
 export default function InputSetoranPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  let siswaId = searchParams.get('id') as string
-  let jenisParam = searchParams.get('jenis') as Jenis | null
-  let editId = searchParams.get('editId') as string | null
+  const idFromUrl = searchParams.get('id')
+  const jenisFromUrl = searchParams.get('jenis') as Jenis | null
+  const editIdFromUrl = searchParams.get('editId')
 
-  if (!siswaId && typeof window !== 'undefined' && !navigator.onLine) {
-    siswaId = localStorage.getItem('offline_nav_id') || ''
-    jenisParam = (localStorage.getItem('offline_nav_jenis') as Jenis) || null
-    editId = localStorage.getItem('offline_nav_edit_id') || null
-  }
+  // Resolve params after hydration — fallback to localStorage when offline
+  const [siswaId, setSiswaId] = useState<string>(idFromUrl || '')
+  const [editId, setEditId] = useState<string | null>(editIdFromUrl)
 
-  const [jenis, setJenis] = useState<Jenis>((jenisParam || 'TAHFIDZ').toUpperCase() as Jenis)
+  const [jenis, setJenis] = useState<Jenis>((jenisFromUrl || 'TAHFIDZ').toUpperCase() as Jenis)
   const [siswa, setSiswa] = useState<SiswaInfo | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [isOfflineSaved, setIsOfflineSaved] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
+
+  // After hydration: resolve offline_nav params from localStorage if URL params empty
+  useEffect(() => {
+    if (!idFromUrl && !navigator.onLine) {
+      const offlineId = localStorage.getItem('offline_nav_id') || ''
+      const offlineJenis = (localStorage.getItem('offline_nav_jenis') as Jenis) || null
+      const offlineEditId = localStorage.getItem('offline_nav_edit_id') || null
+      if (offlineId) setSiswaId(offlineId)
+      if (offlineJenis) setJenis(offlineJenis.toUpperCase() as Jenis)
+      if (offlineEditId) setEditId(offlineEditId)
+    } else if (idFromUrl) {
+      setSiswaId(idFromUrl)
+      if (jenisFromUrl) setJenis(jenisFromUrl.toUpperCase() as Jenis)
+      if (editIdFromUrl) setEditId(editIdFromUrl)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Tahfidz fields
   const [surah, setSurah] = useState('')

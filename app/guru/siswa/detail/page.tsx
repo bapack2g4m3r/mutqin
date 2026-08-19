@@ -57,17 +57,26 @@ export default function DetailSiswaPage() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
-  let id = searchParams.get('id') as string
+  const idFromUrl = searchParams.get('id')
 
-  if (!id && typeof window !== 'undefined' && !navigator.onLine) {
-    id = localStorage.getItem('offline_nav_detail_id') || ''
-  }
-
+  // Resolve the actual siswa ID: prefer URL param, fallback to localStorage when offline
+  const [resolvedId, setResolvedId] = useState<string>(idFromUrl || '')
   const [siswa, setSiswa] = useState<SiswaDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'semua' | 'tahfidz' | 'tahsin'>('semua')
 
+  // Resolve offline_nav_detail_id from localStorage ONLY after hydration (in useEffect)
   useEffect(() => {
+    if (!idFromUrl && !navigator.onLine) {
+      const offlineId = localStorage.getItem('offline_nav_detail_id') || ''
+      if (offlineId) setResolvedId(offlineId)
+    } else if (idFromUrl) {
+      setResolvedId(idFromUrl)
+    }
+  }, [idFromUrl])
+
+  useEffect(() => {
+    const id = resolvedId
     if (!id) {
         setLoading(false)
         return
@@ -131,7 +140,7 @@ export default function DetailSiswaPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [id])
+  }, [resolvedId])
 
   const filtered = siswa?.setorans.filter(s => {
     if (activeTab === 'tahfidz') return s.jenis === 'TAHFIDZ'
@@ -233,12 +242,12 @@ export default function DetailSiswaPage() {
             id="btn-input-tahfidz"
             onClick={() => {
               if (!navigator.onLine) {
-                localStorage.setItem('offline_nav_id', id)
+                localStorage.setItem('offline_nav_id', resolvedId)
                 localStorage.setItem('offline_nav_jenis', 'TAHFIDZ')
                 localStorage.removeItem('offline_nav_edit_id')
                 window.location.href = '/guru/siswa/setoran'
               } else {
-                router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ`)
+                router.push(`/guru/siswa/setoran?id=${resolvedId}&jenis=TAHFIDZ`)
               }
             }}
             className="btn btn-primary btn-lg"
@@ -251,12 +260,12 @@ export default function DetailSiswaPage() {
             id="btn-input-tahsin"
             onClick={() => {
               if (!navigator.onLine) {
-                localStorage.setItem('offline_nav_id', id)
+                localStorage.setItem('offline_nav_id', resolvedId)
                 localStorage.setItem('offline_nav_jenis', 'TAHSIN')
                 localStorage.removeItem('offline_nav_edit_id')
                 window.location.href = '/guru/siswa/setoran'
               } else {
-                router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHSIN`)
+                router.push(`/guru/siswa/setoran?id=${resolvedId}&jenis=TAHSIN`)
               }
             }}
             className="btn btn-accent btn-lg"

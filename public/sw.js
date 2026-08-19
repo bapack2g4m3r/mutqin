@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v12'
+const CACHE_NAME = 'mutqin-v13'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -41,15 +41,58 @@ self.addEventListener('activate', event => {
   )
 })
 
+// Helper: check if request is a Next.js RSC (React Server Component) payload
+function isRSCRequest(request) {
+  return (
+    request.headers.get('RSC') === '1' ||
+    request.headers.get('Next-Router-Prefetch') !== null ||
+    new URL(request.url).searchParams.has('_rsc')
+  )
+}
+
 // Fetch — Network First for pages & data, Cache First for static immutable assets
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url)
 
-  // Jangan tangani POST/PUT/DELETE atau Auth API (KECUALI session untuk offline support)
+  // Jangan tangani POST/PUT/DELETE
   if (event.request.method !== 'GET') {
     return
   }
   if (url.pathname.startsWith('/api/auth/') && url.pathname !== '/api/auth/session') {
+    return
+  }
+
+  // 0. RSC Payload Requests (Next.js internal data fetches for client navigation)
+  //    Jika offline: kembalikan empty RSC response agar Next.js tidak crash
+  //    Ini HARUS dicek SEBELUM handler navigate
+  if (isRSCRequest(event.request)) {
+    event.respondWith(
+      (async () => {
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 3000)
+          const response = await fetch(event.request, { signal: controller.signal })
+          clearTimeout(timeoutId)
+          if (response.ok) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then(c => c.put(event.request, clone))
+          }
+          return response
+        } catch {
+          // Offline: coba cache dulu
+          const cached = await caches.match(event.request)
+          if (cached) return cached
+          // Return empty RSC payload — Next.js akan tetap render dari HTML shell
+          return new Response('', {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/x-component',
+              'X-Offline': '1',
+            }
+          })
+        }
+      })()
+    )
     return
   }
 
@@ -91,11 +134,16 @@ self.addEventListener('fetch', event => {
           if (response.ok) {
             const clone = response.clone()
             const cache = await caches.open(CACHE_NAME)
+            // Cache dengan URL tanpa query params agar bisa di-match saat offline
+            const cleanUrl = new URL(event.request.url)
+            cleanUrl.search = ''
+            await cache.put(cleanUrl.toString(), response.clone())
             await cache.put(event.request, clone)
           }
           return response
         } catch (error) {
           try {
+            // Coba match dengan URL bersih (tanpa query params) terlebih dahulu
             const urlObj = new URL(event.request.url)
             urlObj.search = ''
             

@@ -86,18 +86,31 @@ export function OfflineReadyManager() {
     setDownloadResult(null)
 
     try {
-      // Fetch and cache dashboard data, students, and HTML shells for dynamic routes
-      const [dashRes, siswaRes, setoranRes] = await Promise.all([
-        fetch('/api/guru/dashboard'),
-        fetch('/api/siswa?limit=2000'),
-        fetch('/api/setoran?limit=99999'),
+      // Step 1: Pre-cache session for offline auth
+      const sessionRes = await fetch('/api/auth/session')
+      if (sessionRes.ok) {
+        // Store in localStorage as backup
+        const sessionData = await sessionRes.json()
+        if (sessionData && sessionData.user) {
+          try { localStorage.setItem('mutqin_cached_session', JSON.stringify(sessionData)) } catch {}
+        }
+      }
+
+      // Step 2: Pre-cache all guru pages (send navigation fetch to force SW to cache HTML)
+      await Promise.allSettled([
         fetch('/guru/dashboard'),
         fetch('/guru/siswa'),
         fetch('/guru/siswa/detail'),
         fetch('/guru/siswa/setoran'),
         fetch('/guru/riwayat'),
         fetch('/guru/profil'),
-        fetch('/api/auth/session')
+      ])
+
+      // Step 3: Fetch data
+      const [dashRes, siswaRes, setoranRes] = await Promise.all([
+        fetch('/api/guru/dashboard'),
+        fetch('/api/siswa?limit=2000'),
+        fetch('/api/setoran?limit=99999'),
       ])
 
       let siswaCount = 0
