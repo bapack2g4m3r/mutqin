@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e3a8a">
+  <title>MUTQIN — Mode Offline</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #1e3a8a; --blue2: #2563eb; --green: #059669; --amber: #d97706;
+      --red: #dc2626; --slate: #64748b;
+      --radius: 14px; --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    body { font-family: var(--font); background: #f0f4f8; min-height: 100vh; color: #1e293b; }
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 2px 8px rgba(30,58,138,0.06);
+    }
+    .logo { width: 36px; height: 36px; background: linear-gradient(135deg,#1e3a8a,#2563eb); border-radius: 10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    header h1 { font-size: 15px; font-weight: 700; color: var(--blue); flex: 1; }
+    .offline-badge { background: #fef3c7; color: var(--amber); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+    .page { padding: 12px 16px 100px; max-width: 480px; margin: 0 auto; }
+    .card { background: white; border-radius: var(--radius); padding: 14px 16px; box-shadow: 0 2px 8px rgba(30,58,138,0.05); border: 1px solid rgba(30,58,138,0.06); margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--slate); margin-bottom: 5px; }
+    input, select, textarea { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-family: var(--font); background: white; color: #1e293b; transition: border 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue2); outline: none; }
+    textarea { resize: vertical; min-height: 70px; }
+    .field { margin-bottom: 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .slider-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+    .slider-label { flex: 1; font-size: 13px; font-weight: 600; color: #1e293b; }
+    .slider-label small { font-size: 10px; color: var(--slate); font-weight: 400; }
+    .slider-val { font-size: 16px; font-weight: 800; min-width: 36px; text-align: right; }
+    input[type=range] { width: 100px; accent-color: var(--blue2); }
+    .nilai-box { background: #f8faff; border-radius: 10px; padding: 12px; margin: 12px 0; text-align: center; }
+    .nilai-num { font-size: 42px; font-weight: 900; line-height: 1; }
+    .nilai-pred { font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 20px; display: inline-block; margin-top: 4px; }
+    .mumtaz { background: #d1fae5; color: #065f46; }
+    .jayyidj { background: #dbeafe; color: #1e3a8a; }
+    .jayyid { background: #fef3c7; color: #92400e; }
+    .ghair { background: #fee2e2; color: #991b1b; }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(135deg, var(--blue), var(--blue2)); color: white; box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-outline { background: white; border: 2px solid #e2e8f0; color: var(--slate); margin-top: 8px; }
+    .siswa-item { padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 12px; }
+    .siswa-item:active { border-color: var(--blue2); background: #eff6ff; transform: scale(0.99); }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: var(--blue); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .siswa-name { font-size: 14px; font-weight: 600; color: #1e293b; }
+    .siswa-meta { font-size: 11px; color: var(--slate); }
+    .empty { text-align: center; padding: 32px 16px; color: var(--slate); font-size: 13px; }
+    .queue-item { padding: 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; margin-bottom: 8px; }
+    .jenis-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+    .jenis-btn { flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--slate); transition: all 0.2s; }
+    .jenis-btn.at { border-color: var(--blue2); background: #eff6ff; color: var(--blue2); }
+    .jenis-btn.as { border-color: var(--green); background: #ecfdf5; color: var(--green); }
+    .buku-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .buku-opt { padding: 8px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; color: var(--slate); transition: all 0.2s; }
+    .buku-opt.sel { border-color: var(--green); background: #ecfdf5; color: var(--green); }
+    .info-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #1e3a8a; margin-bottom: 14px; }
+    .goto-app { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding: 12px 16px; display: flex; gap: 8px; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; }
+    .goto-app button { flex: 1; padding: 11px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .g-input { background: linear-gradient(135deg, var(--blue), var(--blue2)); color: white; }
+    .g-queue { background: #fef3c7; color: #92400e; position: relative; }
+    .qbadge { position: absolute; top: -4px; right: -4px; background: #dc2626; color: white; border-radius: 10px; font-size: 10px; font-weight: 700; padding: 1px 5px; }
+    .kelas-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .kf-btn { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1.5px solid #e2e8f0; background: white; color: var(--slate); }
+    .kf-btn.active { border-color: var(--blue2); background: #eff6ff; color: var(--blue2); }
+    .success-screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; padding: 32px; }
+    .suc-circle { width: 80px; height: 80px; background: linear-gradient(135deg, #d97706, #f59e0b); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; animation: pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+    @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .back-btn { background: none; border: none; cursor: pointer; color: var(--blue); padding: 0; display: flex; align-items: center; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M11 3H3v8h8V3z" fill="rgba(255,255,255,0.9)"/>
+      <path d="M21 3h-8v8h8V3z" fill="rgba(255,255,255,0.5)"/>
+      <path d="M21 13h-8v8h8v-8z" fill="rgba(255,255,255,0.7)"/>
+      <path d="M11 13H3v8h8v-8z" fill="rgba(255,255,255,0.3)"/>
+    </svg>
+  </div>
+  <h1>MUTQIN</h1>
+  <span class="offline-badge">📵 Mode Offline</span>
+</header>
+
+<div class="page">
+  <!-- SCREEN: SISWA -->
+  <div id="sc-siswa">
+    <div class="card" style="margin-top:4px">
+      <div class="info-banner">📥 Mode offline — data dari sinkronisasi terakhir. Setoran tersimpan otomatis ke antrian.</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px">Pilih Siswa</div>
+      <div style="font-size:12px;color:var(--slate);margin-bottom:12px" id="siswa-sub">Memuat data...</div>
+      <div class="field"><input type="text" id="search-inp" placeholder="🔍 Cari nama atau NIS..." oninput="filterSiswa()"></div>
+      <div class="kelas-filter" id="kelas-filter"></div>
+      <div id="siswa-list"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: SETORAN -->
+  <div id="sc-setoran" style="display:none">
+    <div class="card" style="margin-top:4px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button class="back-btn" onclick="goSiswa()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <div style="font-size:15px;font-weight:700" id="st-nama"></div>
+          <div style="font-size:12px;color:var(--slate)" id="st-meta"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Jenis Setoran</label>
+        <div class="jenis-toggle">
+          <button class="jenis-btn at" id="btn-tf" onclick="setJenis('TAHFIDZ')">📖 Tahfidz</button>
+          <button class="jenis-btn" id="btn-ts" onclick="setJenis('TAHSIN')">🗣 Tahsin</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tanggal</label>
+        <input type="date" id="tgl">
+      </div>
+
+      <!-- Tahfidz -->
+      <div id="fld-tf">
+        <div class="field">
+          <label>Surah</label>
+          <select id="surah-sel"><option value="">-- Pilih Surah --</option></select>
+        </div>
+        <div class="row field">
+          <div><label>Ayat Mulai</label><input type="number" id="ayat-a" value="1" min="1"></div>
+          <div><label>Ayat Akhir</label><input type="number" id="ayat-b" value="10" min="1"></div>
+        </div>
+        <div class="field" style="display:flex;align-items:center;gap:10px;padding:6px 0">
+          <input type="checkbox" id="tasmi" style="width:18px;height:18px;accent-color:var(--blue2)">
+          <label for="tasmi" style="margin:0;font-size:13px;cursor:pointer">Tasmi' (Hafalan Utuh)</label>
+        </div>
+        <div class="card" style="padding:12px;background:#f8faff;border:none;box-shadow:none;margin-top:8px">
+          <label style="margin-bottom:10px">Nilai Komponen</label>
+          <div class="slider-row">
+            <div class="slider-label">Kelancaran <small>(40%)</small></div>
+            <input type="range" min="0" max="100" value="85" id="sl-kel" oninput="upVal()">
+            <span class="slider-val" id="vl-kel" style="color:var(--blue2)">85</span>
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">Tajwid <small>(40%)</small></div>
+            <input type="range" min="0" max="100" value="85" id="sl-taj" oninput="upVal()">
+            <span class="slider-val" id="vl-taj" style="color:var(--blue2)">85</span>
+          </div>
+          <div class="slider-row" style="border:none">
+            <div class="slider-label">Makhorijul Huruf <small>(20%)</small></div>
+            <input type="range" min="0" max="100" value="85" id="sl-mkt" oninput="upVal()">
+            <span class="slider-val" id="vl-mkt" style="color:var(--blue2)">85</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tahsin -->
+      <div id="fld-ts" style="display:none">
+        <div class="field">
+          <label>Buku Tahsin</label>
+          <div class="buku-opts" id="buku-opts">
+            <div class="buku-opt sel" onclick="selBuku(this,'Metode Ummi Jilid 1')">Ummi Jilid 1</div>
+            <div class="buku-opt" onclick="selBuku(this,'Metode Ummi Jilid 2')">Ummi Jilid 2</div>
+            <div class="buku-opt" onclick="selBuku(this,'Metode Ummi Jilid 3')">Ummi Jilid 3</div>
+            <div class="buku-opt" onclick="selBuku(this,'Metode Ummi Jilid 4')">Ummi Jilid 4</div>
+            <div class="buku-opt" onclick="selBuku(this,'Metode Ummi Jilid 5')">Ummi Jilid 5</div>
+            <div class="buku-opt" onclick="selBuku(this,'Metode Ummi Jilid 6')">Ummi Jilid 6</div>
+            <div class="buku-opt" onclick="selBuku(this,'Ghoroyib')">Ghoroyib</div>
+            <div class="buku-opt" onclick="selBuku(this,'Tajwid Lengkap')">Tajwid Lengkap</div>
+          </div>
+        </div>
+        <div class="field"><label>Halaman</label><input type="text" id="hal-ts" placeholder="Contoh: 12"></div>
+        <div class="card" style="padding:12px;background:#f8faff;border:none;box-shadow:none;margin-top:8px">
+          <label style="margin-bottom:10px">Nilai Komponen</label>
+          <div class="slider-row">
+            <div class="slider-label">Makhorijul Huruf <small>(25%)</small></div>
+            <input type="range" min="0" max="100" value="85" id="sl-mks" oninput="upVal()">
+            <span class="slider-val" id="vl-mks" style="color:var(--green)">85</span>
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">Sifatul Huruf <small>(25%)</small></div>
+            <input type="range" min="0" max="100" value="85" id="sl-sif" oninput="upVal()">
+            <span class="slider-val" id="vl-sif" style="color:var(--green)">85</span>
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">Ahkamul Mad <small>(25%)</small></div>
+            <input type="range" min="0" max="100" value="85" id="sl-mad" oninput="upVal()">
+            <span class="slider-val" id="vl-mad" style="color:var(--green)">85</span>
+          </div>
+          <div class="slider-row" style="border:none">
+            <div class="slider-label">Ahkamul Waqaf <small>(25%)</small></div>
+            <input type="range" min="0" max="100" value="85" id="sl-wqf" oninput="upVal()">
+            <span class="slider-val" id="vl-wqf" style="color:var(--green)">85</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nilai-box">
+        <div style="font-size:11px;color:var(--slate);margin-bottom:4px">Nilai Akhir</div>
+        <div class="nilai-num" id="n-val" style="color:var(--blue2)">85</div>
+        <div class="nilai-pred jayyidj" id="n-pred">B — Jayyid Jiddan</div>
+      </div>
+
+      <div class="field">
+        <label>Catatan (opsional)</label>
+        <textarea id="catatan" placeholder="Catatan untuk siswa..."></textarea>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveSetoran()">💾 Simpan Offline</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: SUCCESS -->
+  <div id="sc-success" class="success-screen">
+    <div class="suc-circle">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="13 2 13 9 20 9"/>
+      </svg>
+    </div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:6px">Disimpan Offline!</div>
+    <div style="font-size:13px;color:var(--slate);margin-bottom:14px">Setoran <span id="suc-nama"></span> berhasil dicatat</div>
+    <div style="background:#fef3c7;color:#92400e;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;margin-bottom:24px;max-width:300px">
+      📶 Akan terkirim otomatis saat kembali online
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:280px">
+      <button class="btn btn-primary" onclick="goSiswa()">➕ Input Siswa Lain</button>
+      <button class="btn btn-outline" onclick="goQueue()">📋 Lihat Antrian (<span id="suc-qcount">0</span>)</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: QUEUE -->
+  <div id="sc-queue" style="display:none">
+    <div class="card" style="margin-top:4px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button class="back-btn" onclick="goSiswa()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <div style="font-size:15px;font-weight:700">Antrian Setoran Offline</div>
+          <div style="font-size:12px;color:var(--slate)" id="q-sub"></div>
+        </div>
+      </div>
+      <div id="q-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="goto-app">
+  <button class="g-input" onclick="goSiswa()">📖 Input Setoran</button>
+  <button class="g-queue" onclick="goQueue()">
+    📋 Antrian
+    <span class="qbadge" id="q-badge" style="display:none">0</span>
+  </button>
+</div>
+
+<script>
+// Juz 30 + popular surahs
+const SURAHS=[
+  {id:78,n:'An-Naba',a:40},{id:79,n:"An-Naazi'aat",a:46},{id:80,n:'Abasa',a:42},
+  {id:81,n:'At-Takwiir',a:29},{id:82,n:'Al-Infitaar',a:19},{id:83,n:"Al-Mutaffifiin",a:36},
+  {id:84,n:"Al-Inshiqaaq",a:25},{id:85,n:"Al-Burooj",a:22},{id:86,n:"At-Taariq",a:17},
+  {id:87,n:"Al-A'laa",a:19},{id:88,n:'Al-Gaashiya',a:26},{id:89,n:'Al-Fajr',a:30},
+  {id:90,n:'Al-Balad',a:20},{id:91,n:'Ash-Shams',a:15},{id:92,n:'Al-Layl',a:21},
+  {id:93,n:'Ad-Dhuhaa',a:11},{id:94,n:'Ash-Sharh',a:8},{id:95,n:"At-Tiin",a:8},
+  {id:96,n:"Al-'Alaq",a:19},{id:97,n:'Al-Qadr',a:5},{id:98,n:'Al-Bayyina',a:8},
+  {id:99,n:'Az-Zalzala',a:8},{id:100,n:"Al-'Aadiyaat",a:11},{id:101,n:"Al-Qaari'a",a:11},
+  {id:102,n:'At-Takaatsur',a:8},{id:103,n:"Al-'Asr",a:3},{id:104,n:'Al-Humaza',a:9},
+  {id:105,n:'Al-Fiil',a:5},{id:106,n:'Quraish',a:4},{id:107,n:"Al-Maa'un",a:7},
+  {id:108,n:'Al-Kawthar',a:3},{id:109,n:'Al-Kaafiroon',a:6},{id:110,n:'An-Nasr',a:3},
+  {id:111,n:'Al-Masad',a:5},{id:112,n:'Al-Ikhlaas',a:4},{id:113,n:'Al-Falaq',a:5},
+  {id:114,n:'An-Naas',a:6},{id:1,n:'Al-Faatiha',a:7},{id:2,n:'Al-Baqara',a:286},
+  {id:36,n:'Yaasiin',a:83},{id:55,n:'Ar-Rahmaan',a:78},{id:67,n:'Al-Mulk',a:30},
+  {id:18,n:'Al-Kahf',a:110},{id:56,n:"Al-Waaqi'a",a:96},
+]
+
+const QK='mutqin_offline_queue'
+let allSiswa=[],filtered=[],selSiswa=null,jenis='TAHFIDZ',buku='Metode Ummi Jilid 1',kelasF='Semua'
+
+window.onload=function(){
+  // Setup surah select
+  const s=document.getElementById('surah-sel')
+  SURAHS.forEach(x=>{
+    const o=document.createElement('option')
+    o.value=x.n; o.textContent=x.n+' ('+x.a+' ayat)'; o.dataset.a=x.a; s.appendChild(o)
+  })
+  s.onchange=function(){
+    const o=s.options[s.selectedIndex]
+    if(o.dataset.a){document.getElementById('ayat-b').value=o.dataset.a;document.getElementById('ayat-a').value=1}
+  }
+  // Set today
+  const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset())
+  document.getElementById('tgl').value=d.toISOString().split('T')[0]
+  loadSiswa(); upBadge(); upVal()
+}
+
+function loadSiswa(){
+  try{
+    const c=localStorage.getItem('mutqin_cached_siswa_list')
+    if(c){
+      allSiswa=JSON.parse(c); filtered=[...allSiswa]
+      document.getElementById('siswa-sub').textContent=allSiswa.length+' siswa tersedia'
+      renderKelas(); renderSiswa()
+    } else {
+      document.getElementById('siswa-sub').textContent='⚠️ Belum ada data. Buka aplikasi saat online → klik "Unduh Data"'
+      document.getElementById('siswa-list').innerHTML='<div class="empty">Belum ada data siswa tersimpan.<br>Buka aplikasi saat online terlebih dahulu.</div>'
+    }
+  }catch(e){document.getElementById('siswa-sub').textContent='Gagal memuat data'}
+}
+
+function renderKelas(){
+  const ks=['Semua',...new Set(allSiswa.map(s=>s.kelas).filter(Boolean).sort())]
+  document.getElementById('kelas-filter').innerHTML=ks.map(k=>
+    `<button class="kf-btn ${k===kelasF?'active':''}" onclick="filterKelas('${k}')">${k}</button>`
+  ).join('')
+}
+function filterKelas(k){kelasF=k;filterSiswa();renderKelas()}
+
+function filterSiswa(){
+  const q=(document.getElementById('search-inp').value||'').toLowerCase()
+  filtered=allSiswa.filter(s=>{
+    const ms=!q||s.nama.toLowerCase().includes(q)||(s.nis&&s.nis.includes(q))
+    const mk=kelasF==='Semua'||s.kelas===kelasF
+    return ms&&mk
+  })
+  renderSiswa()
+}
+
+function renderSiswa(){
+  const c=document.getElementById('siswa-list')
+  if(!filtered.length){c.innerHTML='<div class="empty">Tidak ada siswa ditemukan</div>';return}
+  const show=filtered.slice(0,60)
+  c.innerHTML=show.map(s=>{
+    const ini=s.nama.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase()
+    return `<div class="siswa-item" onclick="selSis('${s.id}')">
+      <div class="avatar">${ini}</div>
+      <div><div class="siswa-name">${s.nama}</div><div class="siswa-meta">NIS ${s.nis||'-'} · ${s.kelas||'-'}</div></div>
+    </div>`
+  }).join('')+(filtered.length>60?`<div class="empty">+${filtered.length-60} lainnya — gunakan pencarian</div>`:'')
+}
+
+function selSis(id){
+  selSiswa=allSiswa.find(s=>s.id===id); if(!selSiswa)return
+  show('sc-setoran')
+  document.getElementById('st-nama').textContent=selSiswa.nama
+  document.getElementById('st-meta').textContent='NIS '+(selSiswa.nis||'-')+' · Kelas '+(selSiswa.kelas||'-')
+  setJenis('TAHFIDZ')
+  document.getElementById('catatan').value=''
+  document.getElementById('ayat-a').value=1; document.getElementById('ayat-b').value=10
+  document.getElementById('tasmi').checked=false
+  document.getElementById('hal-ts').value=''
+  ;['sl-kel','sl-taj','sl-mkt','sl-mks','sl-sif','sl-mad','sl-wqf'].forEach(id=>document.getElementById(id).value=85)
+  upVal()
+}
+
+function setJenis(j){
+  jenis=j
+  document.getElementById('btn-tf').className='jenis-btn'+(j==='TAHFIDZ'?' at':'')
+  document.getElementById('btn-ts').className='jenis-btn'+(j==='TAHSIN'?' as':'')
+  document.getElementById('fld-tf').style.display=j==='TAHFIDZ'?'block':'none'
+  document.getElementById('fld-ts').style.display=j==='TAHSIN'?'block':'none'
+  upVal()
+}
+
+function selBuku(el,b){
+  buku=b
+  document.querySelectorAll('.buku-opt').forEach(x=>x.classList.remove('sel'))
+  el.classList.add('sel')
+}
+
+function upVal(){
+  const ids=['kel','taj','mkt','mks','sif','mad','wqf']
+  ids.forEach(id=>{
+    const s=document.getElementById('sl-'+id),v=document.getElementById('vl-'+id)
+    if(s&&v)v.textContent=s.value
+  })
+  let n=0
+  if(jenis==='TAHFIDZ'){
+    const k=+document.getElementById('sl-kel').value
+    const t=+document.getElementById('sl-taj').value
+    const m=+document.getElementById('sl-mkt').value
+    n=Math.round(k*.4+t*.4+m*.2)
+  } else {
+    const a=+document.getElementById('sl-mks').value
+    const b=+document.getElementById('sl-sif').value
+    const c=+document.getElementById('sl-mad').value
+    const d=+document.getElementById('sl-wqf').value
+    n=Math.round((a+b+c+d)/4)
+  }
+  let pred,cls,col
+  if(n>=90){pred='A — Mumtaz';cls='mumtaz';col='#059669'}
+  else if(n>=80){pred='B — Jayyid Jiddan';cls='jayyidj';col='#2563eb'}
+  else if(n>=70){pred='C — Jayyid';cls='jayyid';col='#d97706'}
+  else{pred='K — Ghair Maqbul';cls='ghair';col='#dc2626'}
+  document.getElementById('n-val').textContent=n
+  document.getElementById('n-val').style.color=col
+  const pe=document.getElementById('n-pred'); pe.textContent=pred; pe.className='nilai-pred '+cls
+}
+
+function saveSetoran(){
+  if(!selSiswa)return
+  if(jenis==='TAHFIDZ'&&!document.getElementById('surah-sel').value){alert('Pilih surah dulu!');return}
+  const t=document.getElementById('tgl').value
+  const d=t?new Date(t):new Date(); d.setHours(12,0,0,0)
+  const body={siswaId:selSiswa.id,jenis,catatan:document.getElementById('catatan').value||null,tanggal:d.toISOString()}
+  if(jenis==='TAHFIDZ'){
+    body.surah=document.getElementById('surah-sel').value
+    body.ayatMulai=+document.getElementById('ayat-a').value
+    body.ayatAkhir=+document.getElementById('ayat-b').value
+    body.isTasmi=document.getElementById('tasmi').checked
+    body.nilaiKomponen={kelancaran:+document.getElementById('sl-kel').value,tajwid:+document.getElementById('sl-taj').value,makhorijulHuruf:+document.getElementById('sl-mkt').value}
+  } else {
+    body.bukuTahsin=buku; body.halamanTahsin=document.getElementById('hal-ts').value
+    body.nilaiKomponen={makhorijulHuruf:+document.getElementById('sl-mks').value,sifatulHuruf:+document.getElementById('sl-sif').value,ahkamulMad:+document.getElementById('sl-mad').value,ahkamulWaqaf:+document.getElementById('sl-wqf').value}
+  }
+  try{
+    const q=getQ(); q.push({id:Date.now(),body,savedAt:new Date().toISOString()})
+    localStorage.setItem(QK,JSON.stringify(q))
+  }catch(e){alert('Gagal simpan!');return}
+  show('sc-success')
+  document.getElementById('suc-nama').textContent=selSiswa.nama
+  document.getElementById('suc-qcount').textContent=getQ().length
+  upBadge()
+}
+
+function getQ(){try{const r=localStorage.getItem(QK);return r?JSON.parse(r):[]}catch{return[]}}
+function upBadge(){
+  const n=getQ().length,b=document.getElementById('q-badge')
+  b.textContent=n; b.style.display=n>0?'block':'none'
+}
+function goSiswa(){show('sc-siswa')}
+function goQueue(){
+  show('sc-queue'); renderQueue()
+}
+function renderQueue(){
+  const q=getQ(),sm={}; allSiswa.forEach(s=>{sm[s.id]=s})
+  document.getElementById('q-sub').textContent=q.length+' setoran menunggu sinkronisasi'
+  if(!q.length){document.getElementById('q-list').innerHTML='<div class="empty">Tidak ada antrian</div>';return}
+  document.getElementById('q-list').innerHTML=q.map(item=>{
+    const s=sm[item.body.siswaId]; const nama=s?s.nama:item.body.siswaId
+    const det=item.body.jenis==='TAHFIDZ'?(item.body.surah||''):(item.body.bukuTahsin||'')
+    const tgl=new Date(item.savedAt).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+    return `<div class="queue-item">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div style="font-size:13px;font-weight:700">${nama}</div><div style="font-size:11px;color:var(--slate)">${det} · ${tgl}</div></div>
+        <span style="font-size:11px;background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 7px;font-weight:600">${item.body.jenis}</span>
+      </div>
+    </div>`
+  }).join('')
+}
+function show(id){
+  ;['sc-siswa','sc-setoran','sc-success','sc-queue'].forEach(x=>document.getElementById(x).style.display='none')
+  const el=document.getElementById(id)
+  el.style.display=id==='sc-success'?'flex':'block'
+}
+</script>
+</body>
+</html>

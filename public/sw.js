@@ -1,7 +1,8 @@
-const CACHE_NAME = 'mutqin-v13'
+const CACHE_NAME = 'mutqin-v14'
 const STATIC_ASSETS = [
   '/',
   '/login',
+  '/offline.html',
   '/guru/dashboard',
   '/guru/siswa',
   '/guru/siswa/detail',
@@ -19,15 +20,20 @@ self.addEventListener('install', event => {
   self.skipWaiting()
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return Promise.allSettled(
-        STATIC_ASSETS.map(url => 
-          fetch(url, { credentials: 'omit' }).then(res => {
-            if (res.ok) {
-              return cache.put(url, res.clone());
-            }
-          }).catch(err => console.error('Failed to cache', url, err))
+      // offline.html MUST be cached first — it's the critical offline fallback
+      return cache.add('/offline.html').then(() => {
+        return Promise.allSettled(
+          STATIC_ASSETS.filter(u => u !== '/offline.html').map(url => 
+            fetch(url, { credentials: 'include' }).then(res => {
+              if (res.ok) {
+                return cache.put(url, res.clone());
+              }
+            }).catch(err => console.warn('SW: Failed to cache', url, err))
+          )
         )
-      )
+      }).catch(err => {
+        console.error('SW: Critical! Failed to cache offline.html', err)
+      })
     })
   )
 })
@@ -155,9 +161,10 @@ self.addEventListener('fetch', event => {
 
             const dashboardCached = await caches.match('/guru/dashboard', { ignoreSearch: true })
             if (dashboardCached) return dashboardCached
-            
-            const loginCached = await caches.match('/login', { ignoreSearch: true })
-            if (loginCached) return loginCached
+
+            // Final fallback: serve standalone offline.html — always pre-cached
+            const offlinePage = await caches.match('/offline.html')
+            if (offlinePage) return offlinePage
           } catch (matchError) {
             console.error('Cache match error', matchError)
           }
