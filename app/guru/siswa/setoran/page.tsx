@@ -208,7 +208,7 @@ export default function InputSetoranPage() {
   const [sifatulHuruf, setSifatulHuruf] = useState(85)
   const [ahkamulMad, setAhkamulMad] = useState(85)
   const [ahkamulWaqaf, setAhkamulWaqaf] = useState(85)
-  const [bukuTahsin, setBukuTahsin] = useState('Metode Ummi Jilid 1')
+  const [bukuTahsin, setBukuTahsin] = useState('Ummi Jilid 1')
   const [halamanTahsin, setHalamanTahsin] = useState('')
 
   const [catatan, setCatatan] = useState('')
@@ -273,7 +273,7 @@ export default function InputSetoranPage() {
             } catch {}
           }
         } else {
-          setBukuTahsin(d.bukuTahsin || 'Metode Ummi Jilid 1')
+          setBukuTahsin(d.bukuTahsin || 'Ummi Jilid 1')
           setHalamanTahsin(d.halamanTahsin || '')
           if (d.nilaiKomponen) {
             try {
@@ -563,13 +563,12 @@ export default function InputSetoranPage() {
               <div className="input-group">
                 <label className="input-label">Metode / Buku</label>
                 <select className="input" value={bukuTahsin} onChange={e => setBukuTahsin(e.target.value)}>
-                  <option value="Metode Ummi Jilid 1">Metode Ummi Jilid 1</option>
-                  <option value="Metode Ummi Jilid 2">Metode Ummi Jilid 2</option>
-                  <option value="Metode Ummi Jilid 3">Metode Ummi Jilid 3</option>
-                  <option value="Metode Ummi Jilid 4">Metode Ummi Jilid 4</option>
-                  <option value="Metode Ummi Jilid 5">Metode Ummi Jilid 5</option>
-                  <option value="Metode Ummi Jilid 6">Metode Ummi Jilid 6</option>
+                  <option value="Ummi Jilid 1">Ummi Jilid 1</option>
+                  <option value="Ummi Jilid 2">Ummi Jilid 2</option>
+                  <option value="Ummi Jilid 3">Ummi Jilid 3</option>
                   <option value="Al-Quran">Al-Quran</option>
+                  <option value="Gharib">Gharib</option>
+                  <option value="Tajwid">Tajwid</option>
                 </select>
               </div>
               <div className="input-group">
