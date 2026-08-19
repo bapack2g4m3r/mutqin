@@ -346,10 +346,25 @@ export default function InputSetoranPage() {
         )}
         {isOfflineSaved && <div style={{ marginBottom: '24px' }} />}
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '320px' }}>
-          <button id="btn-siswa-berikutnya" className="btn btn-primary btn-lg" onClick={() => { router.push(`/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`) }}>
+          <button 
+            id="btn-input-lagi" 
+            className="btn btn-primary btn-lg" 
+            onClick={() => {
+              setSuccess(false);
+              setSurah('');
+              setAyatMulai(1);
+              setAyatAkhir(10);
+              setCatatan('');
+              setHalamanTahsin('');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            Input Surah Lain untuk {siswa?.nama.split(' ')[0]}
+          </button>
+          <button id="btn-siswa-berikutnya" className="btn btn-outline" style={{ border: '2px solid #e2e8f0', color: '#475569', background: 'white' }} onClick={() => { router.push(`/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`) }}>
             Pilih Siswa Lain di Kelas Ini
           </button>
-          <button id="btn-kembali-detail" className="btn btn-outline" onClick={() => { router.push(`/guru/siswa/detail?id=${siswaId}`) }}>
+          <button id="btn-kembali-detail" className="btn btn-outline" style={{ border: 'none', color: '#64748b' }} onClick={() => { router.push(`/guru/siswa/detail?id=${siswaId}`) }}>
             Kembali ke Profil Siswa
           </button>
         </div>
