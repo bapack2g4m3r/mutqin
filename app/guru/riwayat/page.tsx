@@ -158,7 +158,11 @@ export default function GuruRiwayatPage() {
                 key={s.id}
                 className="list-item"
                 style={{ width: '100%', textAlign: 'left' }}
-                onClick={() => { router.push(`/guru/siswa/detail?id=${s.siswa.id}`) }}
+                onClick={() => {
+                  const path = `/guru/siswa/detail?id=${s.siswa.id}`
+                  if (!navigator.onLine) window.location.href = path
+                  else router.push(path)
+                }}
               >
                 <div style={{
                   width: '42px', height: '42px', borderRadius: '12px', flexShrink: 0,
@@ -187,7 +191,9 @@ export default function GuruRiwayatPage() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation()
-                        router.push(`/guru/siswa/setoran?id=${s.siswa.id}&jenis=${s.jenis}&editId=${s.id}`)
+                        const path = `/guru/siswa/setoran?id=${s.siswa.id}&jenis=${s.jenis}&editId=${s.id}`
+                        if (!navigator.onLine) window.location.href = path
+                        else router.push(path)
                       }}
                       style={{ 
                         marginTop: '8px', padding: '4px 8px', background: '#e0e7ff', color: '#4338ca', 

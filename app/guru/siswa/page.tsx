@@ -247,7 +247,11 @@ export default function GuruSiswaPage() {
                 key={s.id}
                 id={`siswa-${s.id}`}
                 className="list-item"
-                onClick={() => { router.push(`/guru/siswa/detail?id=${s.id}`) }}
+                onClick={() => {
+                  const path = `/guru/siswa/detail?id=${s.id}`
+                  if (!navigator.onLine) window.location.href = path
+                  else router.push(path)
+                }}
                 style={{ width: '100%', textAlign: 'left' }}
               >
                 <div className="avatar-placeholder avatar-md">

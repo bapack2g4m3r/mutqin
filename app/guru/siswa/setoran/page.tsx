@@ -406,10 +406,18 @@ export default function InputSetoranPage() {
           >
             Input Surah Lain untuk {siswa?.nama.split(' ')[0]}
           </button>
-          <button id="btn-siswa-berikutnya" className="btn btn-outline" style={{ border: '2px solid #e2e8f0', color: '#475569', background: 'white' }} onClick={() => { router.push(`/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`) }}>
+          <button id="btn-siswa-berikutnya" className="btn btn-outline" style={{ border: '2px solid #e2e8f0', color: '#475569', background: 'white' }} onClick={() => {
+            const path = `/guru/siswa${siswa?.kelas ? `?kelas=${encodeURIComponent(siswa.kelas)}` : ''}`
+            if (!navigator.onLine) window.location.href = path
+            else router.push(path)
+          }}>
             Pilih Siswa Lain di Kelas Ini
           </button>
-          <button id="btn-kembali-detail" className="btn btn-outline" style={{ border: 'none', color: '#64748b' }} onClick={() => { router.push(`/guru/siswa/detail?id=${siswaId}`) }}>
+          <button id="btn-kembali-detail" className="btn btn-outline" style={{ border: 'none', color: '#64748b' }} onClick={() => {
+            const path = `/guru/siswa/detail?id=${siswaId}`
+            if (!navigator.onLine) window.location.href = path
+            else router.push(path)
+          }}>
             Kembali ke Profil Siswa
           </button>
         </div>
@@ -588,7 +596,9 @@ export default function InputSetoranPage() {
                 try {
                   const res = await fetch(`/api/setoran/${editId}`, { method: 'DELETE' })
                   if (!res.ok) throw new Error('Gagal')
-                  router.push(`/guru/siswa/detail?id=${siswaId}`)
+                  const path = `/guru/siswa/detail?id=${siswaId}`
+                  if (!navigator.onLine) window.location.href = path
+                  else router.push(path)
                 } catch {
                   alert('Gagal menghapus data')
                   setLoading(false)

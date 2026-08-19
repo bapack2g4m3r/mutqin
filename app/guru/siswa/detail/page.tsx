@@ -221,7 +221,11 @@ export default function DetailSiswaPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           <button
             id="btn-input-tahfidz"
-            onClick={() => { router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ`) }}
+            onClick={() => {
+              const path = `/guru/siswa/setoran?id=${id}&jenis=TAHFIDZ`
+              if (!navigator.onLine) window.location.href = path
+              else router.push(path)
+            }}
             className="btn btn-primary btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
           >
@@ -230,7 +234,11 @@ export default function DetailSiswaPage() {
           </button>
           <button
             id="btn-input-tahsin"
-            onClick={() => { router.push(`/guru/siswa/setoran?id=${id}&jenis=TAHSIN`) }}
+            onClick={() => {
+              const path = `/guru/siswa/setoran?id=${id}&jenis=TAHSIN`
+              if (!navigator.onLine) window.location.href = path
+              else router.push(path)
+            }}
             className="btn btn-accent btn-lg"
             style={{ flexDirection: 'column', gap: '6px', height: '80px', borderRadius: '16px' }}
           >
@@ -316,7 +324,9 @@ export default function DetailSiswaPage() {
                   {(session?.user as any)?.guruId === s.guruId && (
                     <button 
                       onClick={() => {
-                        router.push(`/guru/siswa/setoran?id=${siswa.id}&jenis=${s.jenis}&editId=${s.id}`)
+                        const path = `/guru/siswa/setoran?id=${siswa.id}&jenis=${s.jenis}&editId=${s.id}`
+                        if (!navigator.onLine) window.location.href = path
+                        else router.push(path)
                       }}
                       style={{ 
                         padding: '6px 12px', background: '#e0e7ff', color: '#4338ca', 

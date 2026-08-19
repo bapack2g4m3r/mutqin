@@ -139,7 +139,10 @@ export default function GuruDashboardPage() {
           )}
           <button
             id="btn-input-setoran-quick"
-            onClick={() => { router.push('/guru/siswa') }}
+            onClick={() => {
+              if (!navigator.onLine) window.location.href = '/guru/siswa'
+              else router.push('/guru/siswa')
+            }}
             className="btn btn-primary"
             style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '12px' }}
           >
@@ -226,7 +229,10 @@ export default function GuruDashboardPage() {
         <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           <button
             id="btn-cari-siswa"
-            onClick={() => { router.push('/guru/siswa') }}
+            onClick={() => {
+              if (!navigator.onLine) window.location.href = '/guru/siswa'
+              else router.push('/guru/siswa')
+            }}
             className="card card-sm"
             style={{ border: 'none', cursor: 'pointer', textAlign: 'left', padding: '16px' }}
           >
@@ -249,7 +255,10 @@ export default function GuruDashboardPage() {
 
           <button
             id="btn-riwayat"
-            onClick={() => { router.push('/guru/riwayat') }}
+            onClick={() => {
+              if (!navigator.onLine) window.location.href = '/guru/riwayat'
+              else router.push('/guru/riwayat')
+            }}
             className="card card-sm"
             style={{ border: 'none', cursor: 'pointer', textAlign: 'left', padding: '16px' }}
           >
@@ -298,7 +307,11 @@ export default function GuruDashboardPage() {
                   ) : grup.siswa.map(s => (
                     <div 
                       key={s.id} 
-                      onClick={() => router.push(`/guru/siswa/setoran?id=${s.id}`)}
+                      onClick={() => {
+                        const path = `/guru/siswa/setoran?id=${s.id}`
+                        if (!navigator.onLine) window.location.href = path
+                        else router.push(path)
+                      }}
                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 8px', cursor: 'pointer', borderRadius: '10px', transition: 'background 0.2s', margin: '0 -8px' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -338,7 +351,10 @@ export default function GuruDashboardPage() {
         {/* Setoran Terbaru */}
         <div className="section-header">
           <h3 className="section-title">Setoran Terbaru</h3>
-          <button className="section-link" onClick={() => { router.push('/guru/riwayat') }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Lihat Semua</button>
+          <button className="section-link" onClick={() => {
+            if (!navigator.onLine) window.location.href = '/guru/riwayat'
+            else router.push('/guru/riwayat')
+          }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Lihat Semua</button>
         </div>
 
         <div className="stagger-children" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
