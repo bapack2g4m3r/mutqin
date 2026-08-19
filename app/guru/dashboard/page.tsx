@@ -19,6 +19,7 @@ interface DashboardData {
       nama: string
       nis: string
       sudahSetorHariIni: boolean
+      setoranId?: string | null
     }>
   }>
   setoranTerbaru: Array<{
@@ -32,6 +33,7 @@ interface DashboardData {
     guru: { user: { name: string } }
   }>
   priorityLevel?: string
+  activeDates?: string[]
 }
 
 function PredikatBadge({ predikat }: { predikat: string }) {
@@ -196,6 +198,40 @@ export default function GuruDashboardPage() {
                 colorScheme: 'dark'
               }}
             />
+            
+            {/* Active Dates Indicator */}
+            {data?.activeDates && data.activeDates.length > 0 && (
+              <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'wrap' }}>
+                {data.activeDates.slice(0, 14).map(dateStr => {
+                  const isSelected = dateStr === selectedDate;
+                  const d = new Date(dateStr);
+                  const dayName = d.toLocaleDateString('id-ID', { weekday: 'short' });
+                  const dateNum = d.getDate();
+                  
+                  return (
+                    <div 
+                      key={dateStr}
+                      onClick={() => setSelectedDate(dateStr)}
+                      title={formatDate(dateStr)}
+                      style={{ 
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                        justifyContent: 'center',
+                        width: '32px', height: '36px', 
+                        borderRadius: '8px',
+                        background: isSelected ? 'white' : 'rgba(255,255,255,0.15)',
+                        color: isSelected ? '#1e3a8a' : 'rgba(255,255,255,0.8)',
+                        cursor: 'pointer',
+                        border: isSelected ? '1px solid #60a5fa' : '1px solid transparent',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <span style={{ fontSize: '9px', fontWeight: 600 }}>{dayName}</span>
+                      <span style={{ fontSize: '11px', fontWeight: 700 }}>{dateNum}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <div style={{
@@ -331,7 +367,30 @@ export default function GuruDashboardPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {s.sudahSetorHariIni ? (
-                          <span style={{ fontSize: '11px', padding: '4px 8px', background: '#d1fae5', color: '#059669', borderRadius: '6px', fontWeight: 600, whiteSpace: 'nowrap' }}>Sudah Setor</span>
+                          <>
+                            <span style={{ fontSize: '11px', padding: '4px 8px', background: '#d1fae5', color: '#059669', borderRadius: '6px', fontWeight: 600, whiteSpace: 'nowrap' }}>Sudah Setor</span>
+                            {s.setoranId && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (!navigator.onLine) {
+                                    localStorage.setItem('offline_nav_id', s.id)
+                                    localStorage.setItem('offline_nav_edit_id', s.setoranId!)
+                                    window.location.href = '/guru/siswa/setoran'
+                                  } else {
+                                    router.push(`/guru/siswa/setoran?id=${s.id}&editId=${s.setoranId}`)
+                                  }
+                                }}
+                                style={{
+                                  background: '#e0e7ff', color: '#4f46e5', border: 'none',
+                                  padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
+                                  fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
+                                }}
+                              >
+                                ✏️ Edit
+                              </button>
+                            )}
+                          </>
                         ) : (
                           <span style={{ fontSize: '11px', padding: '4px 8px', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', fontWeight: 600, whiteSpace: 'nowrap' }}>Belum Setor</span>
                         )}

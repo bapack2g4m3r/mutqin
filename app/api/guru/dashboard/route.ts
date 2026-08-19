@@ -18,6 +18,9 @@ export async function GET(req: NextRequest) {
   const todayEnd = new Date(today)
   todayEnd.setHours(23, 59, 59, 999)
 
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
   // 1. Dapatkan Halaqah milik Guru ini
   const halaqahs = await prisma.halaqah.findMany({
     where: { guruId },
@@ -28,6 +31,7 @@ export async function GET(req: NextRequest) {
         include: {
           setorans: {
             where: { tanggal: { gte: today, lte: todayEnd } },
+            orderBy: { createdAt: 'desc' },
             take: 1
           }
         }
@@ -49,7 +53,8 @@ export async function GET(req: NextRequest) {
       id: s.id,
       nama: s.nama,
       nis: s.nis,
-      sudahSetorHariIni: s.setorans.length > 0
+      sudahSetorHariIni: s.setorans.length > 0,
+      setoranId: s.setorans.length > 0 ? s.setorans[0].id : null
     }))
   }))
 
@@ -82,12 +87,29 @@ export async function GET(req: NextRequest) {
     },
   })
 
+  // Get active dates for the calendar dots (last 30 days)
+  const recentSetorans = await prisma.setoran.findMany({
+    where: { 
+      guruId,
+      tanggal: { gte: thirtyDaysAgo }
+    },
+    select: { tanggal: true }
+  })
+  
+  const activeDates = Array.from(new Set(recentSetorans.map(s => {
+    const d = new Date(s.tanggal)
+    const offset = d.getTimezoneOffset()
+    d.setMinutes(d.getMinutes() - offset)
+    return d.toISOString().split('T')[0]
+  })))
+
   return NextResponse.json({
     totalSiswa: totalSiswaBinaan,
     setoranHariIni: setoranHariIniCount,
     siswaBelumSetor: belumSetorCount,
     siswaBinaanPerKelas,
     setoranTerbaru,
-    priorityLevel
+    priorityLevel,
+    activeDates
   })
 }
