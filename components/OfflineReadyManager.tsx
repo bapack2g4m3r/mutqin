@@ -56,10 +56,20 @@ export function OfflineReadyManager() {
   const [downloadResult, setDownloadResult] = useState<'success' | 'error' | null>(null)
   const [syncResult, setSyncResult] = useState(0)
   const [showPanel, setShowPanel] = useState(false)
+  const [silentSyncing, setSilentSyncing] = useState(false)
 
   const refresh = useCallback(() => {
     setMeta(getCacheMeta())
     setQueueCount(getQueue().length)
+  }, [])
+
+  // Auto-sync in background once per session when app opens
+  useEffect(() => {
+    if (navigator.onLine && !sessionStorage.getItem('mutqin_auto_synced')) {
+      handleSilentSync()
+      sessionStorage.setItem('mutqin_auto_synced', 'true')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -161,6 +171,71 @@ export function OfflineReadyManager() {
     }
   }
 
+  async function handleSilentSync() {
+    setSilentSyncing(true)
+    try {
+      // Step 1: Pre-cache session
+      const sessionRes = await fetch('/api/auth/session')
+      if (sessionRes.ok) {
+        const sessionData = await sessionRes.json()
+        if (sessionData && sessionData.user) {
+          try { localStorage.setItem('mutqin_cached_session', JSON.stringify(sessionData)) } catch {}
+        }
+      }
+
+      // Step 2: Fetch data silently
+      const [dashRes, siswaRes, setoranRes] = await Promise.all([
+        fetch('/api/guru/dashboard'),
+        fetch('/api/siswa?limit=2000'),
+        fetch('/api/setoran?limit=99999'),
+      ])
+
+      let siswaCount = meta.siswaCount
+      let setoranCount = meta.setoranCount
+      let dashboardCached = meta.dashboardCached
+
+      if (dashRes.ok) {
+        const dashData = await dashRes.json()
+        if (dashData && !dashData.error) {
+          localStorage.setItem('mutqin_cached_guru_dashboard', JSON.stringify(dashData))
+          dashboardCached = true
+        }
+      }
+
+      if (siswaRes.ok) {
+        const siswaData = await siswaRes.json()
+        if (siswaData && !siswaData.error && !siswaData.offline) {
+          const list = siswaData.siswa || []
+          localStorage.setItem('mutqin_cached_siswa_list', JSON.stringify(list))
+          siswaCount = list.length
+        }
+      }
+
+      if (setoranRes.ok) {
+        const setoranData = await setoranRes.json()
+        if (setoranData && !setoranData.error) {
+          const { set } = await import('idb-keyval')
+          const setorans = setoranData.setorans || []
+          await set('mutqin_cached_setoran_list', setorans)
+          setoranCount = setorans.length
+        }
+      }
+
+      const newMeta: CacheMeta = {
+        lastDownload: new Date().toISOString(),
+        siswaCount,
+        setoranCount,
+        dashboardCached,
+      }
+      saveCacheMeta(newMeta)
+      setMeta(newMeta)
+    } catch {
+      // Silent fail
+    } finally {
+      setSilentSyncing(false)
+    }
+  }
+
   async function handleSyncNow() {
     const queue = getQueue()
     if (queue.length === 0 || !isOnline || syncing) return
@@ -234,7 +309,7 @@ export function OfflineReadyManager() {
               </div>
               <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
                 {isReady
-                  ? `${meta.siswaCount} siswa tersimpan · ${meta.lastDownload ? formatRelativeTime(meta.lastDownload) : ''}`
+                  ? (silentSyncing ? '🔄 Menyinkronkan di latar belakang...' : `${meta.siswaCount} siswa · Terakhir: ${meta.lastDownload ? formatRelativeTime(meta.lastDownload) : ''}`)
                   : 'Unduh data untuk bisa digunakan offline'}
               </div>
             </div>
