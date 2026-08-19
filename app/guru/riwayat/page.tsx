@@ -48,18 +48,22 @@ export default function GuruRiwayatPage() {
 
   useEffect(() => {
     // 1. Instantly load from cache
-    try {
-      const cached = localStorage.getItem('mutqin_cached_setoran_list')
-      if (cached) {
-        let list: Setoran[] = JSON.parse(cached)
-        if (jenis) list = list.filter((s: Setoran) => s.jenis === jenis)
-        if (page === 1) {
-          setSetorans(list.slice(0, 50))
-          setTotal(list.length)
+    const loadCache = async () => {
+      try {
+        const { get } = await import('idb-keyval')
+        const cached = await get('mutqin_cached_setoran_list') as Setoran[] | undefined
+        if (cached && Array.isArray(cached)) {
+          let list = cached
+          if (jenis) list = list.filter(s => s.jenis === jenis)
+          if (page === 1) {
+            setSetorans(list.slice(0, 50))
+            setTotal(list.length)
+          }
+          setLoading(false)
         }
-        setLoading(false)
-      }
-    } catch {}
+      } catch {}
+    }
+    loadCache()
 
     if (page === 1) setLoading(true)
     else setLoadingMore(true)
@@ -83,15 +87,16 @@ export default function GuruRiwayatPage() {
       })
       .catch(() => {
         // Fallback offline filter from cache
-        try {
-          const cached = localStorage.getItem('mutqin_cached_setoran_list')
-          if (cached) {
-            let list: Setoran[] = JSON.parse(cached)
-            if (jenis) list = list.filter(s => s.jenis === jenis)
-            setSetorans(list.slice(0, page * 50))
-            setTotal(list.length)
-          }
-        } catch {}
+        import('idb-keyval').then(({ get }) => {
+          get('mutqin_cached_setoran_list').then((cached) => {
+            if (cached && Array.isArray(cached)) {
+              let list = cached as Setoran[]
+              if (jenis) list = list.filter(s => s.jenis === jenis)
+              setSetorans(list.slice(0, page * 50))
+              setTotal(list.length)
+            }
+          }).catch(() => {})
+        }).catch(() => {})
       })
       .finally(() => {
         setLoading(false)

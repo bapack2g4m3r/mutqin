@@ -8,6 +8,7 @@ const CACHE_META_KEY = 'mutqin_cache_meta'
 interface CacheMeta {
   lastDownload: string | null
   siswaCount: number
+  setoranCount: number
   dashboardCached: boolean
 }
 
@@ -27,8 +28,8 @@ function getQueue(): QueueItem[] {
 function getCacheMeta(): CacheMeta {
   try {
     const raw = localStorage.getItem(CACHE_META_KEY)
-    return raw ? JSON.parse(raw) : { lastDownload: null, siswaCount: 0, dashboardCached: false }
-  } catch { return { lastDownload: null, siswaCount: 0, dashboardCached: false } }
+    return raw ? JSON.parse(raw) : { lastDownload: null, siswaCount: 0, setoranCount: 0, dashboardCached: false }
+  } catch { return { lastDownload: null, siswaCount: 0, setoranCount: 0, dashboardCached: false } }
 }
 
 function saveCacheMeta(meta: CacheMeta) {
@@ -50,7 +51,7 @@ export function OfflineReadyManager() {
   const [isOnline, setIsOnline] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [meta, setMeta] = useState<CacheMeta>({ lastDownload: null, siswaCount: 0, dashboardCached: false })
+  const [meta, setMeta] = useState<CacheMeta>({ lastDownload: null, siswaCount: 0, setoranCount: 0, dashboardCached: false })
   const [queueCount, setQueueCount] = useState(0)
   const [downloadResult, setDownloadResult] = useState<'success' | 'error' | null>(null)
   const [syncResult, setSyncResult] = useState(0)
@@ -89,7 +90,7 @@ export function OfflineReadyManager() {
       const [dashRes, siswaRes, setoranRes] = await Promise.all([
         fetch('/api/guru/dashboard'),
         fetch('/api/siswa?limit=2000'),
-        fetch('/api/setoran?limit=2000'),
+        fetch('/api/setoran?limit=99999'),
         fetch('/guru/dashboard'),
         fetch('/guru/siswa'),
         fetch('/guru/siswa/detail'),
@@ -100,6 +101,7 @@ export function OfflineReadyManager() {
       ])
 
       let siswaCount = 0
+      let setoranCount = 0
       let dashboardCached = false
 
       if (dashRes.ok) {
@@ -122,13 +124,17 @@ export function OfflineReadyManager() {
       if (setoranRes.ok) {
         const setoranData = await setoranRes.json()
         if (setoranData && !setoranData.error) {
-          localStorage.setItem('mutqin_cached_setoran_list', JSON.stringify(setoranData.setorans || []))
+          const { set } = await import('idb-keyval')
+          const setorans = setoranData.setorans || []
+          await set('mutqin_cached_setoran_list', setorans)
+          setoranCount = setorans.length
         }
       }
 
       const newMeta: CacheMeta = {
         lastDownload: new Date().toISOString(),
         siswaCount,
+        setoranCount,
         dashboardCached,
       }
       saveCacheMeta(newMeta)
@@ -263,6 +269,12 @@ export function OfflineReadyManager() {
               label="Data Siswa"
               value={meta.siswaCount > 0 ? `${meta.siswaCount} siswa tersimpan` : 'Belum diunduh'}
               valueColor={meta.siswaCount > 0 ? '#059669' : '#94a3b8'}
+            />
+            <StatusRow
+              icon="📜"
+              label="Riwayat Setoran"
+              value={meta.setoranCount > 0 ? `${meta.setoranCount} setoran tersimpan` : 'Belum diunduh'}
+              valueColor={meta.setoranCount > 0 ? '#059669' : '#94a3b8'}
             />
             <StatusRow
               icon="📊"

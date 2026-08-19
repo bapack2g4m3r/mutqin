@@ -64,45 +64,48 @@ export default function DetailSiswaPage() {
 
   useEffect(() => {
     // 1. Instantly try to load cached detail
-    try {
-      const cachedDetail = localStorage.getItem(`mutqin_cached_siswa_detail_${id}`)
-      if (cachedDetail) {
-        setSiswa(JSON.parse(cachedDetail))
-        setLoading(false)
-      } else {
-        // Fallback from summary list
-        const cachedList = localStorage.getItem('mutqin_cached_siswa_list')
-        if (cachedList) {
-          const list = JSON.parse(cachedList)
-          const found = list.find((s: any) => s.id === id)
-          if (found) {
-            let fullSetorans = found.setorans || []
-            try {
-              const cachedSetorans = localStorage.getItem('mutqin_cached_setoran_list')
-              if (cachedSetorans) {
-                const allSetorans = JSON.parse(cachedSetorans)
-                const studentSetorans = allSetorans.filter((s: any) => s.siswaId === id || s.siswa.id === id)
-                if (studentSetorans.length > 0) {
-                  fullSetorans = studentSetorans
+    const loadCache = async () => {
+      try {
+        const cachedDetail = localStorage.getItem(`mutqin_cached_siswa_detail_${id}`)
+        if (cachedDetail) {
+          setSiswa(JSON.parse(cachedDetail))
+          setLoading(false)
+        } else {
+          // Fallback from summary list
+          const cachedList = localStorage.getItem('mutqin_cached_siswa_list')
+          if (cachedList) {
+            const list = JSON.parse(cachedList)
+            const found = list.find((s: any) => s.id === id)
+            if (found) {
+              let fullSetorans = found.setorans || []
+              try {
+                const { get } = await import('idb-keyval')
+                const allSetorans = await get('mutqin_cached_setoran_list') as any[] | undefined
+                if (allSetorans && Array.isArray(allSetorans)) {
+                  const studentSetorans = allSetorans.filter((s: any) => s.siswaId === id || s.siswa?.id === id)
+                  if (studentSetorans.length > 0) {
+                    fullSetorans = studentSetorans
+                  }
                 }
-              }
-            } catch {}
-
-            setSiswa({
-              id: found.id,
-              nis: found.nis,
-              nama: found.nama,
-              kelas: found.kelas,
-              progress: 0,
-              hasTasmi: false,
-              surahSelesai: [],
-              setorans: fullSetorans,
-            })
-            setLoading(false)
+              } catch {}
+  
+              setSiswa({
+                id: found.id,
+                nis: found.nis,
+                nama: found.nama,
+                kelas: found.kelas,
+                progress: 0,
+                hasTasmi: false,
+                surahSelesai: [],
+                setorans: fullSetorans,
+              })
+              setLoading(false)
+            }
           }
         }
-      }
-    } catch {}
+      } catch {}
+    }
+    loadCache()
 
     // 2. Fetch fresh details
     fetch(`/api/siswa/${id}`)
