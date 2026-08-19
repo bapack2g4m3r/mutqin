@@ -157,3 +157,9 @@ model ActivityLog {
   description String   // contoh: "Menginput setoran untuk Ahmad"
   createdAt   DateTime @default(now())
 }
+
+model SystemSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}

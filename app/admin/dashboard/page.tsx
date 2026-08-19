@@ -46,9 +46,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [tahunAjaran, setTahunAjaran] = useState('')
   const [semesterAktif, setSemesterAktif] = useState('')
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
+  const [toggling, setToggling] = useState(false)
 
   useEffect(() => {
     fetch('/api/dashboard').then(r => r.json()).then(setData).finally(() => setLoading(false))
+    fetch('/api/settings/maintenance').then(r => r.json()).then(d => setMaintenanceMode(d.maintenanceMode || false)).catch(() => {})
     fetch('/api/akademik').then(r => r.json()).then(d => {
       if (d.tahunAjaranList) {
         const aktif = d.tahunAjaranList.find((t: any) => t.isAktif)
@@ -58,15 +61,64 @@ export default function AdminDashboard() {
     }).catch(() => {})
   }, [])
 
+  const toggleMaintenance = async () => {
+    setToggling(true)
+    try {
+      const res = await fetch('/api/settings/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maintenanceMode: !maintenanceMode })
+      })
+      const result = await res.json()
+      if (result.success) {
+        setMaintenanceMode(result.maintenanceMode)
+      } else {
+        alert('Gagal mengubah mode maintenance')
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan')
+    } finally {
+      setToggling(false)
+    }
+  }
+
   const totalSetoran = Math.max(data?.predikatStats.reduce((a, p) => a + p._count.id, 0) || 0, 1)
 
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Dashboard</h1>
-        <p style={{ color: '#64748b', fontSize: '14px' }}>
-          Selamat datang di panel admin MUTQIN · {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Dashboard</h1>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
+            Selamat datang di panel admin MUTQIN · {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+
+        {/* Maintenance Mode Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>Mode Maintenance</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>Akses guru & ortu ditutup</div>
+          </div>
+          <button 
+            onClick={toggleMaintenance}
+            disabled={toggling}
+            style={{
+              width: '44px', height: '24px', borderRadius: '12px',
+              background: maintenanceMode ? '#dc2626' : '#cbd5e1',
+              position: 'relative', border: 'none', cursor: toggling ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{
+              width: '18px', height: '18px', borderRadius: '50%', background: 'white',
+              position: 'absolute', top: '3px',
+              left: maintenanceMode ? '23px' : '3px',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }} />
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}
