@@ -163,6 +163,7 @@ export default function InputSetoranPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const siswaId = searchParams.get('id')
+  const editId = searchParams.get('editId')
   const jenisFromUrl = (searchParams.get('jenis') || 'TAHFIDZ').toUpperCase() as Jenis
 
   const [jenis, setJenis] = useState<Jenis>(jenisFromUrl)
@@ -227,6 +228,46 @@ export default function InputSetoranPage() {
     return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline) }
   }, [siswaId])
 
+  useEffect(() => {
+    if (!editId) return
+    fetch(`/api/setoran/${editId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) return
+        setJenis(d.jenis)
+        if (d.tanggal) setTanggal(d.tanggal.split('T')[0])
+        setCatatan(d.catatan || '')
+        
+        if (d.jenis === 'TAHFIDZ') {
+          setSurah(d.surah || '')
+          setAyatMulai(d.ayatMulai || 1)
+          setAyatAkhir(d.ayatAkhir || 10)
+          setIsTasmi(d.isTasmi || false)
+          if (d.nilaiKomponen) {
+            try {
+              const parsed = JSON.parse(d.nilaiKomponen)
+              if (parsed.kelancaran) setKelancaran(parsed.kelancaran)
+              if (parsed.tajwid) setTajwid(parsed.tajwid)
+              if (parsed.makhorijulHuruf) setMakhorijTahfidz(parsed.makhorijulHuruf)
+            } catch {}
+          }
+        } else {
+          setBukuTahsin(d.bukuTahsin || 'Metode Ummi Jilid 1')
+          setHalamanTahsin(d.halamanTahsin || '')
+          if (d.nilaiKomponen) {
+            try {
+              const parsed = JSON.parse(d.nilaiKomponen)
+              if (parsed.makhorijulHuruf) setMakhorijTahsin(parsed.makhorijulHuruf)
+              if (parsed.sifatulHuruf) setSifatulHuruf(parsed.sifatulHuruf)
+              if (parsed.ahkamulMad) setAhkamulMad(parsed.ahkamulMad)
+              if (parsed.ahkamulWaqaf) setAhkamulWaqaf(parsed.ahkamulWaqaf)
+            } catch {}
+          }
+        }
+      })
+      .catch(() => {})
+  }, [editId])
+
   const nilaiTahfidz = calcNilaiTahfidz({ kelancaran, tajwid, makhorijulHuruf: makhorijTahfidz })
   const nilaiTahsin = calcNilaiTahsin({ makhorijulHuruf: makhorijTahsin, sifatulHuruf, ahkamulMad, ahkamulWaqaf })
   const nilaiAkhir = jenis === 'TAHFIDZ' ? nilaiTahfidz : nilaiTahsin
@@ -274,8 +315,8 @@ export default function InputSetoranPage() {
     setLoading(true)
     const body = buildBody()
 
-    if (!navigator.onLine) {
-      // Simpan ke antrian offline langsung
+    if (!navigator.onLine && !editId) {
+      // Simpan ke antrian offline langsung (hanya untuk setoran baru)
       saveToOfflineQueue(body)
       setIsOfflineSaved(true)
       setSuccess(true)
@@ -284,18 +325,22 @@ export default function InputSetoranPage() {
     }
 
     try {
-      const res = await fetch('/api/setoran', {
-        method: 'POST',
+      const res = await fetch(editId ? `/api/setoran/${editId}` : '/api/setoran', {
+        method: editId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error('Gagal')
       setSuccess(true)
     } catch {
-      // Gagal karena koneksi lemah — simpan ke antrian offline
-      saveToOfflineQueue(body)
-      setIsOfflineSaved(true)
-      setSuccess(true)
+      if (!editId) {
+        // Gagal karena koneksi lemah — simpan ke antrian offline (setoran baru)
+        saveToOfflineQueue(body)
+        setIsOfflineSaved(true)
+        setSuccess(true)
+      } else {
+        alert('Gagal menyimpan perubahan. Pastikan perangkat online.')
+      }
     } finally {
       setLoading(false)
     }
@@ -379,7 +424,7 @@ export default function InputSetoranPage() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>Input Setoran</h1>
+          <h1 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>{editId ? 'Edit Setoran' : 'Input Setoran'}</h1>
           {siswa && <div style={{ fontSize: '12px', color: '#64748b' }}>{siswa.nama} · Kelas {siswa.kelas}</div>}
         </div>
         {/* Offline indicator */}
@@ -524,14 +569,37 @@ export default function InputSetoranPage() {
         <button
           id="btn-simpan-setoran"
           className="btn btn-primary btn-lg"
-          style={{ width: '100%', marginBottom: '24px' }}
+          style={{ width: '100%', marginBottom: editId ? '12px' : '24px' }}
           onClick={handleSave}
           disabled={loading}
         >
           {loading ? (
             <><span className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }} /> Menyimpan...</>
-          ) : '✓ Terima Setoran'}
+          ) : editId ? '✓ Simpan Perubahan' : '✓ Terima Setoran'}
         </button>
+        
+        {editId && (
+          <button
+            className="btn btn-outline"
+            style={{ width: '100%', marginBottom: '24px', color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2' }}
+            onClick={async () => {
+              if (confirm('Yakin ingin menghapus setoran ini? Aksi ini tidak dapat dibatalkan.')) {
+                setLoading(true)
+                try {
+                  const res = await fetch(`/api/setoran/${editId}`, { method: 'DELETE' })
+                  if (!res.ok) throw new Error('Gagal')
+                  router.push(`/guru/siswa/detail?id=${siswaId}`)
+                } catch {
+                  alert('Gagal menghapus data')
+                  setLoading(false)
+                }
+              }
+            }}
+            disabled={loading}
+          >
+            Hapus Setoran
+          </button>
+        )}
       </div>
     </div>
   )

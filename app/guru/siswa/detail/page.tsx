@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import MobileNav from '@/components/layout/MobileNav'
 
 interface SiswaDetail {
@@ -26,6 +27,7 @@ interface SiswaDetail {
     catatan?: string
     isTasmi: boolean
     tanggal: string
+    guruId: string
     guru: { user: { name: string } }
   }>
 }
@@ -52,7 +54,7 @@ function formatDate(d: string) {
 }
 
 export default function DetailSiswaPage() {
-
+  const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
   const id = searchParams.get('id') as string
@@ -295,12 +297,33 @@ export default function DetailSiswaPage() {
                     <PredikatBadge predikat={s.predikat} />
                   </div>
                 </div>
-                {s.catatan && (
-                  <div style={{ fontSize: '12px', color: '#64748b', background: '#f8faff', borderRadius: '8px', padding: '8px 10px', fontStyle: 'italic' }}>
-                    💬 {s.catatan}
+                
+                {/* Optional Catatan & Meta */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '6px' }}>
+                  <div style={{ flex: 1, paddingRight: '12px' }}>
+                    {s.catatan && (
+                      <div style={{ fontSize: '12px', color: '#64748b', background: '#f8faff', borderRadius: '8px', padding: '8px 10px', fontStyle: 'italic', marginBottom: '6px' }}>
+                        💬 {s.catatan}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>Oleh: {s.guru.user.name}</div>
                   </div>
-                )}
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px' }}>Oleh: {s.guru.user.name}</div>
+                  
+                  {/* Edit Button */}
+                  {(session?.user as any)?.guruId === s.guruId && (
+                    <button 
+                      onClick={() => {
+                        router.push(`/guru/siswa/setoran?id=${siswa.id}&jenis=${s.jenis}&editId=${s.id}`)
+                      }}
+                      style={{ 
+                        padding: '6px 12px', background: '#e0e7ff', color: '#4338ca', 
+                        border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', flexShrink: 0
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                </div>
               </div>
             ))
           )}

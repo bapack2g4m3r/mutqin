@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { useSession } from 'next-auth/react'
 import MobileNav from '@/components/layout/MobileNav'
 
 interface Setoran {
@@ -16,6 +17,7 @@ interface Setoran {
   tanggal: string
   siswa: { id: string; nama: string; kelas: string }
   guru: { user: { name: string } }
+  guruId: string
 }
 
 function PredikatBadge({ predikat }: { predikat: string }) {
@@ -35,6 +37,7 @@ function formatDate(d: string) {
 
 export default function GuruRiwayatPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [setorans, setSetorans] = useState<Setoran[]>([])
   const [loading, setLoading] = useState(true)
   const [jenis, setJenis] = useState('')
@@ -159,7 +162,7 @@ export default function GuruRiwayatPage() {
                 }}>
                   {s.jenis === 'TAHFIDZ' ? '📖' : '🗣'}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
                   <div style={{ fontWeight: 600, fontSize: '14px', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {s.siswa.nama}
                   </div>
@@ -167,7 +170,7 @@ export default function GuruRiwayatPage() {
                     Kelas {s.siswa.kelas} · {s.surah || (s.jenis === 'TAHSIN' ? 'Tahsin' : '')} · {formatDate(s.tanggal)}
                   </div>
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                   <div style={{
                     fontSize: '20px', fontWeight: 800,
                     color: s.nilaiAkhir >= 90 ? '#059669' : s.nilaiAkhir >= 80 ? '#2563eb' : s.nilaiAkhir >= 70 ? '#d97706' : '#dc2626',
@@ -175,6 +178,20 @@ export default function GuruRiwayatPage() {
                     {Math.round(s.nilaiAkhir)}
                   </div>
                   <PredikatBadge predikat={s.predikat} />
+                  {(session?.user as any)?.guruId === s.guruId && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        router.push(`/guru/siswa/setoran?id=${s.siswa.id}&jenis=${s.jenis}&editId=${s.id}`)
+                      }}
+                      style={{ 
+                        marginTop: '8px', padding: '4px 8px', background: '#e0e7ff', color: '#4338ca', 
+                        border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' 
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
                 </div>
               </button>
             ))

@@ -26,11 +26,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await req.json()
-  const { nilaiKomponen, jenis, catatan, isTasmi } = body
+  const existing = await prisma.setoran.findUnique({ where: { id }, include: { siswa: true } })
+  if (!existing) return NextResponse.json({ error: 'Tidak ditemukan' }, { status: 404 })
 
-  let nilaiAkhir = body.nilaiAkhir
-  let predikat = body.predikat
+  const role = (session.user as any).role
+  const guruId = (session.user as any).guruId
+  if (role !== 'ADMIN' && existing.guruId !== guruId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const body = await req.json()
+  const { 
+    jenis, surah, ayatMulai, ayatAkhir, halMulai, halAkhir, isTasmi, 
+    bukuTahsin, halamanTahsin, nilaiKomponen, catatan, tanggal 
+  } = body
+
+  let nilaiAkhir = body.nilaiAkhir || existing.nilaiAkhir
+  let predikat = body.predikat || existing.predikat
 
   if (nilaiKomponen && jenis) {
     const { calcNilaiTahfidz, calcNilaiTahsin, getPredikat } = await import('@/lib/surah-data')
@@ -41,24 +53,48 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const setoran = await prisma.setoran.update({
     where: { id },
     data: {
+      surah: surah !== undefined ? surah : undefined,
+      ayatMulai: ayatMulai !== undefined ? ayatMulai : undefined,
+      ayatAkhir: ayatAkhir !== undefined ? ayatAkhir : undefined,
+      halMulai: halMulai !== undefined ? halMulai : undefined,
+      halAkhir: halAkhir !== undefined ? halAkhir : undefined,
+      isTasmi: isTasmi !== undefined ? isTasmi : undefined,
+      bukuTahsin: bukuTahsin !== undefined ? bukuTahsin : undefined,
+      halamanTahsin: halamanTahsin !== undefined ? halamanTahsin : undefined,
       nilaiKomponen: nilaiKomponen ? JSON.stringify(nilaiKomponen) : undefined,
       nilaiAkhir,
       predikat,
-      catatan,
-      isTasmi,
+      catatan: catatan !== undefined ? catatan : undefined,
+      tanggal: tanggal ? new Date(tanggal) : undefined,
     },
   })
+
+  await prisma.activityLog.create({
+    data: {
+      userId: (session.user as any).id,
+      action: 'UPDATE_SETORAN',
+      description: `Mengedit setoran ${jenis || existing.jenis} untuk siswa ${existing.siswa.nama}`
+    }
+  })
+
   return NextResponse.json(setoran)
 }
 
 // DELETE /api/setoran/[id]
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
-  if (!session || !session.user || (session.user as any).role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
+  const existing = await prisma.setoran.findUnique({ where: { id }, include: { siswa: true } })
+  if (!existing) return NextResponse.json({ error: 'Tidak ditemukan' }, { status: 404 })
+
+  const role = (session.user as any).role
+  const guruId = (session.user as any).guruId
+  if (role !== 'ADMIN' && existing.guruId !== guruId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   try {
     const setoran = await prisma.setoran.delete({
       where: { id },
