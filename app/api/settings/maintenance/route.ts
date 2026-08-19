@@ -5,8 +5,29 @@ import { authOptions } from '@/lib/auth'
 
 const prisma = new PrismaClient()
 
+// Fungsi untuk memastikan tabel SystemSetting ada tanpa perlu prisma db push
+async function ensureTableExists() {
+  try {
+    await prisma.$queryRaw`SELECT 1 FROM "SystemSetting" LIMIT 1`;
+  } catch (e) {
+    // Jika tabel tidak ada, buat tabel secara manual
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "SystemSetting" (
+        "id" TEXT NOT NULL,
+        "key" TEXT NOT NULL,
+        "value" TEXT NOT NULL,
+        CONSTRAINT "SystemSetting_pkey" PRIMARY KEY ("id")
+      );
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "SystemSetting_key_key" ON "SystemSetting"("key");
+    `);
+  }
+}
+
 export async function GET() {
   try {
+    await ensureTableExists();
     const setting = await prisma.systemSetting.findUnique({
       where: { key: 'MAINTENANCE_MODE' }
     })
@@ -29,6 +50,8 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const { maintenanceMode } = body
+
+    await ensureTableExists();
 
     const setting = await prisma.systemSetting.upsert({
       where: { key: 'MAINTENANCE_MODE' },
