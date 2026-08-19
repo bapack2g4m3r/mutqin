@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
     siswaId, jenis,
     surah, ayatMulai, ayatAkhir, halMulai, halAkhir, isTasmi,
     nilaiKomponen, catatan,
-    bukuTahsin, halamanTahsin
+    bukuTahsin, halamanTahsin,
+    tanggal
   } = body
 
   // Calculate nilai akhir
@@ -104,6 +105,7 @@ export async function POST(req: NextRequest) {
       nilaiAkhir,
       predikat: predikatData.kode,
       catatan: catatan || null,
+      tanggal: tanggal ? new Date(tanggal) : undefined,
     },
     include: {
       siswa: { select: { nama: true, kelas: true } },

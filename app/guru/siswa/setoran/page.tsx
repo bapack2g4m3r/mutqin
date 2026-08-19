@@ -190,6 +190,11 @@ export default function InputSetoranPage() {
   const [halamanTahsin, setHalamanTahsin] = useState('')
 
   const [catatan, setCatatan] = useState('')
+  const [tanggal, setTanggal] = useState<string>(() => {
+    const d = new Date()
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+    return d.toISOString().split('T')[0]
+  })
 
   useEffect(() => {
     if (!siswaId) return
@@ -234,6 +239,13 @@ export default function InputSetoranPage() {
 
   function buildBody() {
     const body: any = { siswaId, jenis, catatan: catatan || null }
+    if (tanggal) {
+      // Create date at noon local time to avoid timezone shift to previous day
+      const d = new Date(tanggal)
+      d.setHours(12, 0, 0, 0)
+      body.tanggal = d.toISOString()
+    }
+
     if (jenis === 'TAHFIDZ') {
       body.surah = surah
       body.ayatMulai = ayatMulai
@@ -385,6 +397,21 @@ export default function InputSetoranPage() {
         <div className="tabs" style={{ marginBottom: '16px' }}>
           <button id="tab-tahfidz" className={`tab ${jenis === 'TAHFIDZ' ? 'active' : ''}`} onClick={() => setJenis('TAHFIDZ')}>📖 Tahfidz</button>
           <button id="tab-tahsin" className={`tab ${jenis === 'TAHSIN' ? 'active' : ''}`} onClick={() => setJenis('TAHSIN')}>🗣 Tahsin</button>
+        </div>
+
+        {/* Tanggal Setoran */}
+        <div className="form-section" style={{ marginBottom: '12px' }}>
+          <div className="input-group">
+            <label className="input-label" htmlFor="input-tanggal">Tanggal Setoran</label>
+            <input 
+              id="input-tanggal"
+              type="date" 
+              className="input" 
+              value={tanggal}
+              onChange={e => setTanggal(e.target.value)}
+              max={new Date().toISOString().split('T')[0]} // prevent future date
+            />
+          </div>
         </div>
 
         {jenis === 'TAHFIDZ' && (
