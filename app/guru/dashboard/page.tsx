@@ -290,9 +290,16 @@ export default function GuruDashboardPage() {
                   {grup.siswa.length === 0 ? (
                     <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>Tidak ada siswa di kelas ini.</div>
                   ) : grup.siswa.map(s => (
-                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                    <div 
+                      key={s.id} 
+                      onClick={() => router.push(`/guru/siswa/setoran?id=${s.id}`)}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 8px', cursor: 'pointer', borderRadius: '10px', transition: 'background 0.2s', margin: '0 -8px' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      title={`Input setoran untuk ${s.nama}`}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="avatar-placeholder" style={{ width: '32px', height: '32px', fontSize: '11px' }}>
+                        <div className="avatar-placeholder" style={{ width: '32px', height: '32px', fontSize: '11px', flexShrink: 0 }}>
                           {getInitials(s.nama)}
                         </div>
                         <div>
@@ -300,12 +307,15 @@ export default function GuruDashboardPage() {
                           <div style={{ fontSize: '11px', color: '#94a3b8' }}>NIS: {s.nis}</div>
                         </div>
                       </div>
-                      <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {s.sudahSetorHariIni ? (
-                          <span style={{ fontSize: '11px', padding: '4px 8px', background: '#d1fae5', color: '#059669', borderRadius: '6px', fontWeight: 600 }}>Sudah Setor</span>
+                          <span style={{ fontSize: '11px', padding: '4px 8px', background: '#d1fae5', color: '#059669', borderRadius: '6px', fontWeight: 600, whiteSpace: 'nowrap' }}>Sudah Setor</span>
                         ) : (
-                          <span style={{ fontSize: '11px', padding: '4px 8px', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', fontWeight: 600 }}>Belum Setor</span>
+                          <span style={{ fontSize: '11px', padding: '4px 8px', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', fontWeight: 600, whiteSpace: 'nowrap' }}>Belum Setor</span>
                         )}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+                          <polyline points="9 18 15 12 9 6"/>
+                        </svg>
                       </div>
                     </div>
                   ))}
