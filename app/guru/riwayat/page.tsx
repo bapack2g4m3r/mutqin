@@ -44,6 +44,20 @@ export default function GuruRiwayatPage() {
   const [loadingMore, setLoadingMore] = useState(false)
 
   useEffect(() => {
+    // 1. Instantly load from cache
+    try {
+      const cached = localStorage.getItem('mutqin_cached_setoran_list')
+      if (cached) {
+        let list: Setoran[] = JSON.parse(cached)
+        if (jenis) list = list.filter((s: Setoran) => s.jenis === jenis)
+        if (page === 1) {
+          setSetorans(list.slice(0, 50))
+          setTotal(list.length)
+        }
+        setLoading(false)
+      }
+    } catch {}
+
     if (page === 1) setLoading(true)
     else setLoadingMore(true)
 
@@ -53,12 +67,28 @@ export default function GuruRiwayatPage() {
     fetch(`/api/setoran?${params}`)
       .then(r => r.json())
       .then(d => {
+        if (d.error || d.offline) return
         if (page === 1) {
           setSetorans(d.setorans || [])
         } else {
-          setSetorans(prev => [...prev, ...(d.setorans || [])])
+          setSetorans(prev => {
+            const newItems = (d.setorans || []).filter((ns: Setoran) => !prev.some(p => p.id === ns.id))
+            return [...prev, ...newItems]
+          })
         }
         setTotal(d.total || 0)
+      })
+      .catch(() => {
+        // Fallback offline filter from cache
+        try {
+          const cached = localStorage.getItem('mutqin_cached_setoran_list')
+          if (cached) {
+            let list: Setoran[] = JSON.parse(cached)
+            if (jenis) list = list.filter(s => s.jenis === jenis)
+            setSetorans(list.slice(0, page * 50))
+            setTotal(list.length)
+          }
+        } catch {}
       })
       .finally(() => {
         setLoading(false)

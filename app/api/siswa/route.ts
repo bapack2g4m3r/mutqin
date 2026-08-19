@@ -29,21 +29,7 @@ export async function GET(req: NextRequest) {
     ]
   }
 
-  const userRole = (session.user as any).role
-  if (userRole === 'GURU') {
-    const guruId = (session?.user as any)?.guruId
-    const guru = await prisma.guru.findUnique({ where: { id: guruId }, include: { halaqahs: true } })
-    if (guru && guru.halaqahs.length > 0) {
-      where.halaqahId = { in: guru.halaqahs.map(h => h.id) }
-    } else if (guru && guru.kelas && !kelas) {
-      try {
-        const arrKelas = JSON.parse(guru.kelas);
-        if (Array.isArray(arrKelas) && arrKelas.length > 0) {
-          where.kelas = { in: arrKelas }
-        }
-      } catch (e) {}
-    }
-  }
+  // No role filtering here so Guru can search all students
 
   try {
     const [siswa, total] = await Promise.all([

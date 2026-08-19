@@ -86,9 +86,10 @@ export function OfflineReadyManager() {
 
     try {
       // Fetch and cache dashboard data, students, and HTML shells for dynamic routes
-      const [dashRes, siswaRes] = await Promise.all([
+      const [dashRes, siswaRes, setoranRes] = await Promise.all([
         fetch('/api/guru/dashboard'),
         fetch('/api/siswa?limit=2000'),
+        fetch('/api/setoran?limit=2000'),
         fetch('/guru/dashboard'),
         fetch('/guru/siswa'),
         fetch('/guru/siswa/detail'),
@@ -115,6 +116,13 @@ export function OfflineReadyManager() {
           const list = siswaData.siswa || []
           localStorage.setItem('mutqin_cached_siswa_list', JSON.stringify(list))
           siswaCount = list.length
+        }
+      }
+
+      if (setoranRes.ok) {
+        const setoranData = await setoranRes.json()
+        if (setoranData && !setoranData.error) {
+          localStorage.setItem('mutqin_cached_setoran_list', JSON.stringify(setoranData.setorans || []))
         }
       }
 
