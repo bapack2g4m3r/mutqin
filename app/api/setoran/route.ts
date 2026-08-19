@@ -88,10 +88,17 @@ export async function POST(req: NextRequest) {
     resolvedGuruId = anyGuru?.id
   }
 
+  // Find active semester
+  const activeSemester = await prisma.semester.findFirst({
+    where: { isAktif: true },
+    select: { id: true }
+  })
+
   const setoran = await prisma.setoran.create({
     data: {
       siswaId,
       guruId: resolvedGuruId,
+      semesterId: activeSemester?.id || null,
       jenis,
       surah: surah || null,
       ayatMulai: ayatMulai || null,

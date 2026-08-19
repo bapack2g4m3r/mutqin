@@ -241,8 +241,31 @@ export default function GuruDashboardPage() {
               flex: 1,
               backdropFilter: 'blur(8px)',
             }}>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: 'white' }}>
-                {loading ? '—' : data?.setoranHariIni ?? 0}
+              <div style={{ fontSize: '24px', fontWeight: 800, color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{loading ? '—' : data?.setoranHariIni ?? 0}</span>
+                <button
+                  onClick={() => {
+                    if (navigator.onLine) {
+                      window.location.href = `/api/guru/export?date=${selectedDate}`
+                    } else {
+                      alert('Mode Offline. Hubungkan ke internet untuk mengunduh Excel.')
+                    }
+                  }}
+                  title="Download Data Setoran (Excel)"
+                  style={{
+                    background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px',
+                    width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', transition: 'all 0.2s', color: 'white'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginTop: '2px' }}>Setoran Tgl Ini</div>
             </div>

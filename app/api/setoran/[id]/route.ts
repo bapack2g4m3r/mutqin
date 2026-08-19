@@ -50,9 +50,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     predikat = getPredikat(nilaiAkhir).kode
   }
 
+  let finalSemesterId = existing.semesterId
+  if (!finalSemesterId) {
+    const activeSemester = await prisma.semester.findFirst({
+      where: { isAktif: true },
+      select: { id: true }
+    })
+    finalSemesterId = activeSemester?.id || null
+  }
+
   const setoran = await prisma.setoran.update({
     where: { id },
     data: {
+      semesterId: finalSemesterId,
       surah: surah !== undefined ? surah : undefined,
       ayatMulai: ayatMulai !== undefined ? ayatMulai : undefined,
       ayatAkhir: ayatAkhir !== undefined ? ayatAkhir : undefined,
