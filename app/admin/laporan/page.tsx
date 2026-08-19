@@ -138,9 +138,9 @@ export default function AdminLaporanPage() {
 
   return (
     <div style={{ padding: '32px', maxWidth: '1280px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Laporan Rekap</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Rekapitulasi Siswa</h1>
           <p style={{ color: '#64748b', fontSize: '14px' }}>
             {filtered.length === data.length ? `Rekap ${data.length} siswa` : `Menampilkan ${filtered.length} dari ${data.length} siswa`}
           </p>

@@ -152,11 +152,13 @@ export default function AdminSetoranPage() {
 
   return (
     <div style={{ padding: '32px', maxWidth: '1280px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Semua Setoran</h1>
-        <p style={{ color: '#64748b', fontSize: '14px' }}>
-          {filtered.length === setorans.length ? `${setorans.length} setoran` : `Menampilkan ${filtered.length} dari ${setorans.length} setoran`}
-        </p>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Riwayat Harian</h1>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
+            {filtered.length === setorans.length ? `${setorans.length} setoran` : `Menampilkan ${filtered.length} dari ${setorans.length} setoran`}
+          </p>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
