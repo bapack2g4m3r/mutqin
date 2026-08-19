@@ -31,6 +31,7 @@ interface DashboardData {
     siswa: { nama: string; kelas: string }
     guru: { user: { name: string } }
   }>
+  priorityLevel?: string
 }
 
 function PredikatBadge({ predikat }: { predikat: string }) {
@@ -283,8 +284,13 @@ export default function GuruDashboardPage() {
           ) : data?.siswaBinaanPerKelas && data.siswaBinaanPerKelas.length > 0 ? (
             data.siswaBinaanPerKelas.map((grup, idx) => (
               <div key={idx} style={{ background: 'white', borderRadius: '16px', padding: '16px', border: '1px solid #f1f5f9' }}>
-                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
-                  Kelas {grup.kelas}
+                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Kelas {grup.kelas}</span>
+                  {data.priorityLevel && grup.kelas.includes(data.priorityLevel) && (
+                    <span style={{ fontSize: '10px', padding: '4px 8px', background: '#dcfce3', color: '#166534', borderRadius: '12px', fontWeight: 700 }}>
+                      🔥 Jadwal Hari Ini
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {grup.siswa.length === 0 ? (

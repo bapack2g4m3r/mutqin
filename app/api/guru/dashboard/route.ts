@@ -35,8 +35,14 @@ export async function GET(req: NextRequest) {
     }
   })
 
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday
+  let priorityLevel = "";
+  if (dayOfWeek === 1) priorityLevel = "7";
+  else if (dayOfWeek === 2) priorityLevel = "8";
+  else if (dayOfWeek === 3) priorityLevel = "9";
+
   // Grouping siswa binaan by kelas
-  const siswaBinaanPerKelas = halaqahs.map(h => ({
+  let siswaBinaanPerKelas = halaqahs.map(h => ({
     kelas: h.kelas.nama,
     kelasId: h.kelasId,
     siswa: h.siswa.map(s => ({
@@ -46,6 +52,17 @@ export async function GET(req: NextRequest) {
       sudahSetorHariIni: s.setorans.length > 0
     }))
   }))
+
+  if (priorityLevel) {
+    siswaBinaanPerKelas.sort((a, b) => {
+      const aPriority = a.kelas.includes(priorityLevel) ? 1 : 0;
+      const bPriority = b.kelas.includes(priorityLevel) ? 1 : 0;
+      if (aPriority !== bPriority) return bPriority - aPriority;
+      return a.kelas.localeCompare(b.kelas);
+    });
+  } else {
+    siswaBinaanPerKelas.sort((a, b) => a.kelas.localeCompare(b.kelas));
+  }
 
   const allSiswaBinaan = halaqahs.flatMap(h => h.siswa)
   const totalSiswaBinaan = allSiswaBinaan.length
@@ -71,5 +88,6 @@ export async function GET(req: NextRequest) {
     siswaBelumSetor: belumSetorCount,
     siswaBinaanPerKelas,
     setoranTerbaru,
+    priorityLevel
   })
 }
