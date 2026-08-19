@@ -161,6 +161,7 @@ function SurahAutocomplete({ value, onChange }: { value: string; onChange: (nama
 
 export default function InputSetoranPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   let siswaId = searchParams.get('id') as string
   let jenisParam = searchParams.get('jenis') as Jenis | null
   let editId = searchParams.get('editId') as string | null
