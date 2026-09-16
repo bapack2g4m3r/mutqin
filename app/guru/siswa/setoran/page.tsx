@@ -200,14 +200,14 @@ export default function InputSetoranPage() {
   const [ayatAkhir, setAyatAkhir] = useState(10)
   const [isTasmi, setIsTasmi] = useState(false)
   const [kelancaran, setKelancaran] = useState(85)
-  const [tajwid, setTajwid] = useState(85)
-  const [makhorijTahfidz, setMakhorijTahfidz] = useState(85)
+  const [fasohah, setFasohah] = useState(85)
+  const [naghom, setNaghom] = useState(85)
 
   // Tahsin fields
-  const [makhorijTahsin, setMakhorijTahsin] = useState(85)
-  const [sifatulHuruf, setSifatulHuruf] = useState(85)
-  const [ahkamulMad, setAhkamulMad] = useState(85)
-  const [ahkamulWaqaf, setAhkamulWaqaf] = useState(85)
+  const [kelancaranBacaan, setKelancaranBacaan] = useState(85)
+  const [tajwidTahsin, setTajwidTahsin] = useState(85)
+  const [makhroj, setMakhroj] = useState(85)
+  const [adab, setAdab] = useState(85)
   const [bukuTahsin, setBukuTahsin] = useState('Ummi Jilid 1')
   const [halamanTahsin, setHalamanTahsin] = useState('')
 
@@ -268,8 +268,8 @@ export default function InputSetoranPage() {
             try {
               const parsed = JSON.parse(d.nilaiKomponen)
               if (parsed.kelancaran) setKelancaran(parsed.kelancaran)
-              if (parsed.tajwid) setTajwid(parsed.tajwid)
-              if (parsed.makhorijulHuruf) setMakhorijTahfidz(parsed.makhorijulHuruf)
+              if (parsed.fasohah || parsed.tajwid) setFasohah(parsed.fasohah || parsed.tajwid)
+              if (parsed.naghom || parsed.makhorijulHuruf) setNaghom(parsed.naghom || parsed.makhorijulHuruf)
             } catch {}
           }
         } else {
@@ -278,10 +278,10 @@ export default function InputSetoranPage() {
           if (d.nilaiKomponen) {
             try {
               const parsed = JSON.parse(d.nilaiKomponen)
-              if (parsed.makhorijulHuruf) setMakhorijTahsin(parsed.makhorijulHuruf)
-              if (parsed.sifatulHuruf) setSifatulHuruf(parsed.sifatulHuruf)
-              if (parsed.ahkamulMad) setAhkamulMad(parsed.ahkamulMad)
-              if (parsed.ahkamulWaqaf) setAhkamulWaqaf(parsed.ahkamulWaqaf)
+              if (parsed.kelancaranBacaan || parsed.makhorijulHuruf) setKelancaranBacaan(parsed.kelancaranBacaan || parsed.makhorijulHuruf)
+              if (parsed.tajwid || parsed.sifatulHuruf) setTajwidTahsin(parsed.tajwid || parsed.sifatulHuruf)
+              if (parsed.makhroj || parsed.ahkamulMad) setMakhroj(parsed.makhroj || parsed.ahkamulMad)
+              if (parsed.adab || parsed.ahkamulWaqaf) setAdab(parsed.adab || parsed.ahkamulWaqaf)
             } catch {}
           }
         }
@@ -289,8 +289,8 @@ export default function InputSetoranPage() {
       .catch(() => {})
   }, [editId])
 
-  const nilaiTahfidz = calcNilaiTahfidz({ kelancaran, tajwid, makhorijulHuruf: makhorijTahfidz })
-  const nilaiTahsin = calcNilaiTahsin({ makhorijulHuruf: makhorijTahsin, sifatulHuruf, ahkamulMad, ahkamulWaqaf })
+  const nilaiTahfidz = calcNilaiTahfidz({ kelancaran, fasohah, naghom })
+  const nilaiTahsin = calcNilaiTahsin({ kelancaranBacaan, tajwid: tajwidTahsin, makhroj, adab })
   const nilaiAkhir = jenis === 'TAHFIDZ' ? nilaiTahfidz : nilaiTahsin
   const predikat = getPredikat(nilaiAkhir)
 
@@ -313,11 +313,11 @@ export default function InputSetoranPage() {
       body.ayatMulai = ayatMulai
       body.ayatAkhir = ayatAkhir
       body.isTasmi = isTasmi
-      body.nilaiKomponen = { kelancaran, tajwid, makhorijulHuruf: makhorijTahfidz }
+      body.nilaiKomponen = { kelancaran, fasohah, naghom }
     } else {
       body.bukuTahsin = bukuTahsin
       body.halamanTahsin = halamanTahsin
-      body.nilaiKomponen = { makhorijulHuruf: makhorijTahsin, sifatulHuruf, ahkamulMad, ahkamulWaqaf }
+      body.nilaiKomponen = { kelancaranBacaan, tajwid: tajwidTahsin, makhroj, adab }
     }
     return body
   }
@@ -550,8 +550,8 @@ export default function InputSetoranPage() {
             <div className="form-section" style={{ marginBottom: '12px' }}>
               <div className="form-section-title">Penilaian Tahfidz</div>
               <NilaiInput label="Kelancaran" value={kelancaran} onChange={setKelancaran} weight="40%" />
-              <NilaiInput label="Tajwid" value={tajwid} onChange={setTajwid} weight="40%" />
-              <NilaiInput label="Makhorijul Huruf" value={makhorijTahfidz} onChange={setMakhorijTahfidz} weight="20%" />
+              <NilaiInput label="Fasohah" value={fasohah} onChange={setFasohah} weight="40%" />
+              <NilaiInput label="Naghom" value={naghom} onChange={setNaghom} weight="20%" />
             </div>
           </>
         )}
@@ -579,10 +579,10 @@ export default function InputSetoranPage() {
 
             <div className="form-section" style={{ marginBottom: '12px' }}>
               <div className="form-section-title">Penilaian Tahsin</div>
-              <NilaiInput label="Makhorijul Huruf" value={makhorijTahsin} onChange={setMakhorijTahsin} weight="25%" />
-              <NilaiInput label="Sifatul Huruf" value={sifatulHuruf} onChange={setSifatulHuruf} weight="25%" />
-              <NilaiInput label="Ahkamul Mad" value={ahkamulMad} onChange={setAhkamulMad} weight="25%" />
-              <NilaiInput label="Ahkamul Waqaf" value={ahkamulWaqaf} onChange={setAhkamulWaqaf} weight="25%" />
+              <NilaiInput label="Kelancaran Bacaan" value={kelancaranBacaan} onChange={setKelancaranBacaan} weight="25%" />
+              <NilaiInput label="Tajwid" value={tajwidTahsin} onChange={setTajwidTahsin} weight="25%" />
+              <NilaiInput label="Makhroj" value={makhroj} onChange={setMakhroj} weight="25%" />
+              <NilaiInput label="Adab" value={adab} onChange={setAdab} weight="25%" />
             </div>
           </>
         )}

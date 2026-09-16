@@ -70,6 +70,27 @@ export default function GuruDashboardPage() {
     return d.toISOString().split('T')[0]
   })
 
+  const [ptsSettings, setPtsSettings] = useState<{ enabled: boolean; dateLabel: string; tipeUjian?: string; judulUjian?: string }>({
+    enabled: true,
+    dateLabel: '21 - 23 September 2026',
+    tipeUjian: 'PTS',
+    judulUjian: 'Penilaian Tengah Semester (PTS)'
+  })
+
+  useEffect(() => {
+    fetch('/api/settings/pts')
+      .then(r => r.json())
+      .then(d => {
+        if (d) setPtsSettings({
+          enabled: d.enabled ?? true,
+          dateLabel: d.dateLabel || '21 - 23 September 2026',
+          tipeUjian: d.tipeUjian || 'PTS',
+          judulUjian: d.judulUjian || 'Penilaian Tengah Semester (PTS)'
+        })
+      })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     setIsOffline(!navigator.onLine)
     const onOnline = () => setIsOffline(false)
@@ -287,6 +308,65 @@ export default function GuruDashboardPage() {
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginTop: '2px' }}>Belum Setor</div>
             </div>
+          </div>
+        </div>
+
+        {/* BANNER UJIAN TENGAH SEMESTER (PTS) */}
+        <div 
+          onClick={() => router.push('/guru/ujian-pts')}
+          style={{
+            background: ptsSettings.enabled
+              ? 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)'
+              : '#f1f5f9',
+            borderRadius: '16px',
+            padding: '16px 18px',
+            marginBottom: '16px',
+            color: ptsSettings.enabled ? 'white' : '#475569',
+            cursor: 'pointer',
+            boxShadow: ptsSettings.enabled ? '0 4px 14px rgba(30, 58, 138, 0.25)' : 'none',
+            border: ptsSettings.enabled ? 'none' : '1px solid #cbd5e1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              background: ptsSettings.enabled ? 'rgba(255, 255, 255, 0.2)' : '#e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '22px'
+            }}>
+              {ptsSettings.enabled ? '📝' : '🔒'}
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '-0.2px' }}>
+                  {ptsSettings.judulUjian || 'Ujian Tengah Semester (PTS)'}
+                </span>
+                <span style={{
+                  fontSize: '10px',
+                  background: ptsSettings.enabled ? '#fef08a' : '#fee2e2',
+                  color: ptsSettings.enabled ? '#854d0e' : '#b91c1c',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '10px'
+                }}>
+                  {ptsSettings.enabled ? ptsSettings.dateLabel : 'Periode Ditutup'}
+                </span>
+              </div>
+              <div style={{ fontSize: '11px', color: ptsSettings.enabled ? '#bfdbfe' : '#64748b', marginTop: '2px' }}>
+                {ptsSettings.enabled ? 'Input nilai ujian santri halaqah untuk rapor' : 'Akses input nilai sedang ditutup oleh Admin'}
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: '18px', color: ptsSettings.enabled ? '#93c5fd' : '#94a3b8', fontWeight: 'bold' }}>
+            →
           </div>
         </div>
 

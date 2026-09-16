@@ -109,6 +109,7 @@ export function OfflineReadyManager() {
       // Step 2: Pre-cache all guru pages (send navigation fetch to force SW to cache HTML)
       await Promise.allSettled([
         fetch('/guru/dashboard'),
+        fetch('/guru/ujian-pts'),
         fetch('/guru/siswa'),
         fetch('/guru/siswa/detail'),
         fetch('/guru/siswa/setoran'),

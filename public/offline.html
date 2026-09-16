@@ -150,12 +150,12 @@
             <span class="slider-val" id="vl-kel" style="color:var(--blue2)">85</span>
           </div>
           <div class="slider-row">
-            <div class="slider-label">Tajwid <small>(40%)</small></div>
+            <div class="slider-label">Tajwid / Fasohah <small>(40%)</small></div>
             <input type="range" min="0" max="100" value="85" id="sl-taj" oninput="upVal()">
             <span class="slider-val" id="vl-taj" style="color:var(--blue2)">85</span>
           </div>
           <div class="slider-row" style="border:none">
-            <div class="slider-label">Makhorijul Huruf <small>(20%)</small></div>
+            <div class="slider-label">Naghom <small>(20%)</small></div>
             <input type="range" min="0" max="100" value="85" id="sl-mkt" oninput="upVal()">
             <span class="slider-val" id="vl-mkt" style="color:var(--blue2)">85</span>
           </div>
@@ -181,22 +181,22 @@
         <div class="card" style="padding:12px;background:#f8faff;border:none;box-shadow:none;margin-top:8px">
           <label style="margin-bottom:10px">Nilai Komponen</label>
           <div class="slider-row">
-            <div class="slider-label">Makhorijul Huruf <small>(25%)</small></div>
+            <div class="slider-label">Kelancaran Bacaan <small>(25%)</small></div>
             <input type="range" min="0" max="100" value="85" id="sl-mks" oninput="upVal()">
             <span class="slider-val" id="vl-mks" style="color:var(--green)">85</span>
           </div>
           <div class="slider-row">
-            <div class="slider-label">Sifatul Huruf <small>(25%)</small></div>
+            <div class="slider-label">Tajwid <small>(25%)</small></div>
             <input type="range" min="0" max="100" value="85" id="sl-sif" oninput="upVal()">
             <span class="slider-val" id="vl-sif" style="color:var(--green)">85</span>
           </div>
           <div class="slider-row">
-            <div class="slider-label">Ahkamul Mad <small>(25%)</small></div>
+            <div class="slider-label">Makhroj <small>(25%)</small></div>
             <input type="range" min="0" max="100" value="85" id="sl-mad" oninput="upVal()">
             <span class="slider-val" id="vl-mad" style="color:var(--green)">85</span>
           </div>
           <div class="slider-row" style="border:none">
-            <div class="slider-label">Ahkamul Waqaf <small>(25%)</small></div>
+            <div class="slider-label">Adab <small>(25%)</small></div>
             <input type="range" min="0" max="100" value="85" id="sl-wqf" oninput="upVal()">
             <span class="slider-val" id="vl-wqf" style="color:var(--green)">85</span>
           </div>
@@ -425,10 +425,10 @@ function saveSetoran(){
     body.ayatMulai=+document.getElementById('ayat-a').value
     body.ayatAkhir=+document.getElementById('ayat-b').value
     body.isTasmi=document.getElementById('tasmi').checked
-    body.nilaiKomponen={kelancaran:+document.getElementById('sl-kel').value,tajwid:+document.getElementById('sl-taj').value,makhorijulHuruf:+document.getElementById('sl-mkt').value}
+    body.nilaiKomponen={kelancaran:+document.getElementById('sl-kel').value,fasohah:+document.getElementById('sl-taj').value,naghom:+document.getElementById('sl-mkt').value}
   } else {
     body.bukuTahsin=buku; body.halamanTahsin=document.getElementById('hal-ts').value
-    body.nilaiKomponen={makhorijulHuruf:+document.getElementById('sl-mks').value,sifatulHuruf:+document.getElementById('sl-sif').value,ahkamulMad:+document.getElementById('sl-mad').value,ahkamulWaqaf:+document.getElementById('sl-wqf').value}
+    body.nilaiKomponen={kelancaranBacaan:+document.getElementById('sl-mks').value,tajwid:+document.getElementById('sl-sif').value,makhroj:+document.getElementById('sl-mad').value,adab:+document.getElementById('sl-wqf').value}
   }
   try{
     const q=getQ(); q.push({id:Date.now(),body,savedAt:new Date().toISOString()})

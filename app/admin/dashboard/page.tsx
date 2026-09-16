@@ -64,6 +64,16 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetch('/api/settings/maintenance').then(r => r.json()).then(d => setMaintenanceMode(d.maintenanceMode || false)).catch(() => {})
+    fetch('/api/settings/pts').then(r => r.json()).then(d => {
+      if (d) {
+        setPtsEnabled(d.enabled ?? true)
+        setPtsDateLabel(d.dateLabel || '21 - 23 September 2026')
+        setPtsBobotHarian(d.bobotHarian ?? 40)
+        setPtsBobotPts(d.bobotPts ?? 60)
+        if (d.tipeUjian) setPtsTipeUjian(d.tipeUjian)
+        if (d.judulUjian) setPtsJudulUjian(d.judulUjian)
+      }
+    }).catch(() => {})
     fetch('/api/akademik').then(r => r.json()).then(d => {
       if (d.tahunAjaranList) {
         const aktif = d.tahunAjaranList.find((t: any) => t.isAktif)
@@ -77,6 +87,49 @@ export default function AdminDashboard() {
       if (d.aktivSemester) setSemesterAktif(d.aktivSemester.nama)
     }).catch(() => {})
   }, [])
+
+  // PTS Settings State
+  const [ptsEnabled, setPtsEnabled] = useState(true)
+  const [ptsDateLabel, setPtsDateLabel] = useState('21 - 23 September 2026')
+  const [ptsBobotHarian, setPtsBobotHarian] = useState(40)
+  const [ptsBobotPts, setPtsBobotPts] = useState(60)
+  const [ptsTipeUjian, setPtsTipeUjian] = useState('PTS')
+  const [ptsJudulUjian, setPtsJudulUjian] = useState('Penilaian Tengah Semester (PTS)')
+  const [ptsSaving, setPtsSaving] = useState(false)
+  const [ptsModalOpen, setPtsModalOpen] = useState(false)
+
+  const handleSavePtsSettings = async () => {
+    if (ptsBobotHarian + ptsBobotPts !== 100) {
+      alert('Total persentase bobot Harian + Ujian harus berjumlah 100%!')
+      return
+    }
+    setPtsSaving(true)
+    try {
+      const res = await fetch('/api/settings/pts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enabled: ptsEnabled,
+          dateLabel: ptsDateLabel,
+          bobotHarian: ptsBobotHarian,
+          bobotPts: ptsBobotPts,
+          tipeUjian: ptsTipeUjian,
+          judulUjian: ptsJudulUjian
+        })
+      })
+      const d = await res.json()
+      if (d.success) {
+        alert('Pengaturan Ujian berhasil disimpan!')
+        setPtsModalOpen(false)
+      } else {
+        alert(d.error || 'Gagal menyimpan pengaturan')
+      }
+    } catch {
+      alert('Terjadi kesalahan')
+    } finally {
+      setPtsSaving(false)
+    }
+  }
 
   const toggleMaintenance = async () => {
     setToggling(true)
@@ -152,6 +205,51 @@ export default function AdminDashboard() {
               boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
             }} />
           </button>
+        </div>
+
+        {/* PTS Exam Settings Button */}
+        <div 
+          onClick={() => setPtsModalOpen(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            background: 'white',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            border: ptsEnabled ? '1px solid #93c5fd' : '1px solid #e2e8f0'
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a' }}>Ujian PTS</span>
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                padding: '2px 6px',
+                borderRadius: '6px',
+                background: ptsEnabled ? '#dcfce7' : '#fee2e2',
+                color: ptsEnabled ? '#15803d' : '#b91c1c'
+              }}>
+                {ptsEnabled ? 'AKTIF' : 'DITUTUP'}
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+              {ptsDateLabel}
+            </div>
+          </div>
+          <div style={{
+            background: '#eff6ff',
+            color: '#1d4ed8',
+            padding: '6px 10px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 700
+          }}>
+            ⚙️ Kelola
+          </div>
         </div>
         </div>
       </div>
@@ -358,6 +456,267 @@ export default function AdminDashboard() {
           </table>
         </div>
       </div>
+
+      {/* MODAL PENGATURAN UJIAN PTS */}
+      {ptsModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '20px',
+            width: '100%',
+            maxWidth: '520px',
+            padding: '28px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            position: 'relative'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#1e293b' }}>
+                  ⚙️ Pengaturan Ujian PTS
+                </h2>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>
+                  Kelola akses input nilai ujian tengah semester & bobot rapor
+                </p>
+              </div>
+              <button
+                onClick={() => setPtsModalOpen(false)}
+                style={{
+                  background: '#f1f5f9',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  color: '#64748b'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 1. TOGGLE ON / OFF */}
+            <div style={{
+              background: '#f8fafc',
+              borderRadius: '14px',
+              padding: '16px',
+              border: '1px solid #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px'
+            }}>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>
+                  Status Akses Input Nilai Ujian
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  {ptsEnabled ? 'Guru DAPAT menginput & mengedit nilai' : 'Akses DITUTUP (Guru hanya bisa melihat)'}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPtsEnabled(!ptsEnabled)}
+                style={{
+                  width: '50px',
+                  height: '28px',
+                  borderRadius: '14px',
+                  background: ptsEnabled ? '#10b981' : '#cbd5e1',
+                  position: 'relative',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  position: 'absolute',
+                  top: '3px',
+                  left: ptsEnabled ? '25px' : '3px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }} />
+              </button>
+            </div>
+
+            {/* PILIHAN JENIS UJIAN */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Jenis Ujian
+                </label>
+                <select
+                  className="input"
+                  value={ptsTipeUjian}
+                  onChange={e => {
+                    const val = e.target.value
+                    setPtsTipeUjian(val)
+                    if (val === 'PTS') setPtsJudulUjian('Penilaian Tengah Semester (PTS)')
+                    else if (val === 'PAS') setPtsJudulUjian('Penilaian Akhir Semester (PAS)')
+                    else if (val === 'PAT') setPtsJudulUjian('Penilaian Akhir Tahun (PAT)')
+                    else if (val === 'TASMI') setPtsJudulUjian("Ujian Tasmi' / Kenaikan Jilid")
+                  }}
+                  style={{ width: '100%', boxSizing: 'border-box', fontWeight: 700 }}
+                >
+                  <option value="PTS">PTS</option>
+                  <option value="PAS">PAS</option>
+                  <option value="PAT">PAT</option>
+                  <option value="TASMI">Tasmi&apos; / Jilid</option>
+                  <option value="LAINNYA">Lainnya</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Judul / Nama Ujian
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  value={ptsJudulUjian}
+                  onChange={e => setPtsJudulUjian(e.target.value)}
+                  placeholder="Contoh: Penilaian Tengah Semester (PTS)"
+                  style={{ width: '100%', boxSizing: 'border-box', fontWeight: 600 }}
+                />
+              </div>
+            </div>
+
+            {/* 2. TANGGAL PELAKSANAAN */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                Jadwal / Tanggal Pelaksanaan
+              </label>
+              <input
+                type="text"
+                className="input"
+                value={ptsDateLabel}
+                onChange={e => setPtsDateLabel(e.target.value)}
+                placeholder="Contoh: 21 - 23 September 2026"
+                style={{ width: '100%', boxSizing: 'border-box', fontWeight: 600 }}
+              />
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                Teks ini otomatis tampil di banner Dashboard Guru dan header ujian.
+              </div>
+            </div>
+
+            {/* 3. BOBOT RAPOR */}
+            <div style={{
+              background: '#f8fafc',
+              borderRadius: '14px',
+              padding: '16px',
+              border: '1px solid #e2e8f0',
+              marginBottom: '24px'
+            }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', marginBottom: '10px' }}>
+                ⚖️ Pembobotan Nilai Akhir Rapor (Total harus 100%)
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                    Bobot Harian (%)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    className="input"
+                    value={ptsBobotHarian}
+                    onChange={e => {
+                      const val = Number(e.target.value)
+                      setPtsBobotHarian(val)
+                      setPtsBobotPts(100 - val)
+                    }}
+                    style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', fontWeight: 800, fontSize: '16px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                    Bobot Ujian PTS (%)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    className="input"
+                    value={ptsBobotPts}
+                    onChange={e => {
+                      const val = Number(e.target.value)
+                      setPtsBobotPts(val)
+                      setPtsBobotHarian(100 - val)
+                    }}
+                    style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', fontWeight: 800, fontSize: '16px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '10px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: ptsBobotHarian + ptsBobotPts === 100 ? '#10b981' : '#dc2626'
+              }}>
+                <span>Total Bobot: {ptsBobotHarian + ptsBobotPts}%</span>
+                <span>{ptsBobotHarian + ptsBobotPts === 100 ? '✓ Valid (100%)' : '✕ Harus berjumlah 100%'}</span>
+              </div>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setPtsModalOpen(false)}
+                disabled={ptsSaving}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: 'white',
+                  color: '#475569',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePtsSettings}
+                disabled={ptsSaving}
+                style={{
+                  padding: '10px 22px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: '#1e3a8a',
+                  color: 'white',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {ptsSaving ? 'Menyimpan...' : 'Simpan Pengaturan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

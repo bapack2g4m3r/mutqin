@@ -949,27 +949,63 @@ export function getPredikat(nilai: number): { kode: string; label: string; grade
 }
 
 export function calcNilaiTahfidz(komponen: {
-  kelancaran: number
-  tajwid: number
-  makhorijulHuruf: number
+  kelancaran?: number
+  fasohah?: number
+  naghom?: number
+  tajwid?: number
+  makhorijulHuruf?: number
 }): number {
+  const kelancaran = komponen.kelancaran ?? 0
+  const fasohah = komponen.fasohah ?? komponen.tajwid ?? 0
+  const naghom = komponen.naghom ?? komponen.makhorijulHuruf ?? 0
   return Math.round(
-    komponen.kelancaran * 0.4 +
-    komponen.tajwid * 0.4 +
-    komponen.makhorijulHuruf * 0.2
+    kelancaran * 0.4 +
+    fasohah * 0.4 +
+    naghom * 0.2
   )
 }
 
 export function calcNilaiTahsin(komponen: {
-  makhorijulHuruf: number
-  sifatulHuruf: number
-  ahkamulMad: number
-  ahkamulWaqaf: number
+  kelancaranBacaan?: number
+  tajwid?: number
+  makhroj?: number
+  adab?: number
+  makhorijulHuruf?: number
+  sifatulHuruf?: number
+  ahkamulMad?: number
+  ahkamulWaqaf?: number
 }): number {
+  const kelancaranBacaan = komponen.kelancaranBacaan ?? komponen.makhorijulHuruf ?? 0
+  const tajwid = komponen.tajwid ?? komponen.sifatulHuruf ?? 0
+  const makhroj = komponen.makhroj ?? komponen.ahkamulMad ?? 0
+  const adab = komponen.adab ?? komponen.ahkamulWaqaf ?? 0
   return Math.round(
-    (komponen.makhorijulHuruf +
-     komponen.sifatulHuruf +
-     komponen.ahkamulMad +
-     komponen.ahkamulWaqaf) / 4
+    (kelancaranBacaan +
+     tajwid +
+     makhroj +
+     adab) / 4
   )
 }
+
+// ─── Pembobotan Rapor (Opsi B: Harian + PTS) ───────────────────────────────
+export const BOBOT_RAPOR = {
+  HARIAN: 0.4, // 40% Rata-rata Harian
+  PTS: 0.6,    // 60% Nilai Ujian Tengah Semester (PTS)
+}
+
+export function combineNilaiRapor(
+  avgHarian: number,
+  nilaiPts: number | null | undefined,
+  weights?: { harian: number; pts: number }
+): number {
+  if (nilaiPts === null || nilaiPts === undefined || nilaiPts === 0) {
+    return avgHarian
+  }
+  if (!avgHarian || avgHarian === 0) {
+    return Math.round(nilaiPts)
+  }
+  const wHarian = weights ? (weights.harian / 100) : BOBOT_RAPOR.HARIAN
+  const wPts = weights ? (weights.pts / 100) : BOBOT_RAPOR.PTS
+  return Math.round((avgHarian * wHarian) + (nilaiPts * wPts))
+}
+
