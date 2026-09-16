@@ -56,15 +56,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/dashboard?kelas=${kelasFilter}`)
+    fetch(`/api/dashboard?kelas=${kelasFilter}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(setData)
       .finally(() => setLoading(false))
   }, [kelasFilter])
 
   useEffect(() => {
-    fetch('/api/settings/maintenance').then(r => r.json()).then(d => setMaintenanceMode(d.maintenanceMode || false)).catch(() => {})
-    fetch('/api/settings/pts').then(r => r.json()).then(d => {
+    fetch('/api/settings/maintenance', { cache: 'no-store' }).then(r => r.json()).then(d => setMaintenanceMode(d.maintenanceMode || false)).catch(() => {})
+    fetch('/api/settings/pts', { cache: 'no-store' }).then(r => r.json()).then(d => {
       if (d) {
         setPtsEnabled(d.enabled ?? true)
         setPtsDateLabel(d.dateLabel || '21 - 23 September 2026')
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
         if (d.judulUjian) setPtsJudulUjian(d.judulUjian)
       }
     }).catch(() => {})
-    fetch('/api/akademik').then(r => r.json()).then(d => {
+    fetch('/api/akademik', { cache: 'no-store' }).then(r => r.json()).then(d => {
       if (d.tahunAjaranList) {
         const aktif = d.tahunAjaranList.find((t: any) => t.isAktif)
         if (aktif) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v16'
+const CACHE_NAME = 'mutqin-v18'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -66,6 +66,19 @@ self.addEventListener('fetch', event => {
     return
   }
   
+  // CRITICAL: Bypass SW completely for all Admin routes & Admin API endpoints
+  // Admin panel must always serve fresh live data directly from the server
+  if (
+    url.pathname.startsWith('/admin') ||
+    url.pathname.startsWith('/api/admin') ||
+    url.pathname.startsWith('/api/settings') ||
+    url.pathname.startsWith('/api/dashboard') ||
+    url.pathname.startsWith('/api/akademik') ||
+    url.pathname.startsWith('/api/rapor')
+  ) {
+    return
+  }
+
   // Bypass SW for file downloads to prevent caching binary blobs and timeouts
   if (url.pathname.startsWith('/api/guru/export')) {
     return
