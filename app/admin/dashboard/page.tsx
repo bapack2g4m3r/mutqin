@@ -364,17 +364,17 @@ export default function AdminDashboard() {
           overflow: 'hidden',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease'
         }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #2563eb, #60a5fa)' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #1e3a8a, #3b82f6)' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Total Santri
+                Total Siswa
               </div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', marginTop: '6px' }}>
                 {loading ? '—' : (data?.totalSiswa ?? 0)}
               </div>
-              <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginTop: '4px' }}>
-                Santri Terdaftar Aktif
+              <div style={{ fontSize: '11px', color: '#2563eb', fontWeight: 600, marginTop: '4px' }}>
+                Siswa Aktif Sekolah
               </div>
             </div>
             <div style={{
@@ -382,7 +382,7 @@ export default function AdminDashboard() {
               height: '46px',
               borderRadius: '12px',
               background: '#eff6ff',
-              color: '#2563eb',
+              color: '#1e3a8a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -395,7 +395,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Total Guru Tahfizh */}
+        {/* Total Guru Pembimbing */}
         <div style={{
           background: 'white',
           borderRadius: '18px',
@@ -410,13 +410,13 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Guru Tahfizh
+                Guru Pembimbing
               </div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', marginTop: '6px' }}>
                 {loading ? '—' : (data?.totalGuru ?? 0)}
               </div>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>
-                Pembina Halaqah
+              <div style={{ fontSize: '11px', color: '#d97706', fontWeight: 600, marginTop: '4px' }}>
+                Pengajar Tahfidz & Tahsin
               </div>
             </div>
             <div style={{
@@ -500,7 +500,7 @@ export default function AdminDashboard() {
                 {loading ? '—' : (data?.siswaBelumSetor ?? 0)}
               </div>
               <div style={{ fontSize: '11px', color: '#e11d48', fontWeight: 600, marginTop: '4px' }}>
-                Menunggu Input Guru
+                Menunggu Input Evaluasi
               </div>
             </div>
             <div style={{
@@ -522,13 +522,13 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* CAPAIAN SANTRI SECTION (3 KOLOM) */}
+      {/* CAPAIAN PEMBELAJARAN SISWA (3 KOLOM) */}
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-          Capaian Santri
+          Capaian Pembelajaran Siswa
         </h2>
         <span style={{ fontSize: '12px', color: '#64748b' }}>
-          Progress hafalan & tilawah semester aktif
+          Progres hafalan Tahfidz & bacaan Tahsin semester aktif
         </span>
       </div>
 
@@ -547,11 +547,11 @@ export default function AdminDashboard() {
             <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
                 width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff',
-                color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px'
+                color: '#1e3a8a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px'
               }}>
                 📖
               </span>
-              Capaian Tahfidz
+              Capaian Hafalan (Tahfidz)
             </div>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Tingkat Juz</span>
           </div>
@@ -562,9 +562,9 @@ export default function AdminDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
               {[
                 { label: '< 1 Juz', val: 0, color: '#94a3b8' },
-                { label: '1 Juz', val: 1, color: '#3b82f6' },
-                { label: '2 Juz', val: 2, color: '#8b5cf6' },
-                { label: '> 2 Juz', val: 3, color: '#10b981' },
+                { label: '1 Juz', val: 1, color: '#2563eb' },
+                { label: '2 Juz', val: 2, color: '#7c3aed' },
+                { label: '> 2 Juz', val: 3, color: '#059669' },
               ].map(item => {
                 const stat = data?.tahfidzStats?.find(s => s.capaianJuz === item.val)
                 const count = stat ? stat.count : 0
@@ -603,7 +603,7 @@ export default function AdminDashboard() {
               }}>
                 🗣️
               </span>
-              Capaian Tahsin (Jilid)
+              Capaian Tilawah (Tahsin)
             </div>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Tingkatan Buku</span>
           </div>
@@ -632,7 +632,7 @@ export default function AdminDashboard() {
                       padding: '2px 8px',
                       borderRadius: '8px'
                     }}>
-                      {item.count} Santri
+                      {item.count} Siswa
                     </span>
                   </div>
                 ))
@@ -645,39 +645,44 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* KPI SUDAH TASMI' (EMERALD LUXE CARD) */}
+        {/* KPI SUDAH TASMI' (GLOBAL INSANI ROYAL NAVY & GOLD) */}
         <div style={{
-          background: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%)',
+          background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%)',
           borderRadius: '18px',
           padding: '24px',
           color: 'white',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          boxShadow: '0 8px 24px rgba(4, 120, 87, 0.2)',
+          boxShadow: '0 8px 24px rgba(30, 58, 138, 0.22)',
           position: 'relative',
           overflow: 'hidden'
         }}>
-          {/* Subtle Background Glow */}
+          {/* Subtle Background Glow Accent */}
           <div style={{
-            position: 'absolute', top: '-20px', right: '-20px', width: '120px', height: '120px',
-            borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none'
+            position: 'absolute', top: '-25px', right: '-25px', width: '130px', height: '130px',
+            borderRadius: '50%', background: 'rgba(251, 191, 36, 0.12)', pointerEvents: 'none'
           }} />
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
-                background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '8px',
-                fontSize: '12px', fontWeight: 700
+                background: 'rgba(251, 191, 36, 0.25)',
+                color: '#fef3c7',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: 800,
+                border: '1px solid rgba(251, 191, 36, 0.4)'
               }}>
-                ⭐ KPI Ujian
+                ⭐ Ujian Tasmi&apos;
               </span>
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
-                Status Kelulusan
+                Program Unggulan
               </span>
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '10px' }}>
-              Santri Sudah Tasmi&apos;
+            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '12px' }}>
+              Siswa Lulus Tasmi&apos;
             </div>
           </div>
 
@@ -685,14 +690,14 @@ export default function AdminDashboard() {
             {loading ? (
               <div className="skeleton" style={{ width: '120px', height: '60px', borderRadius: '10px', background: 'rgba(255,255,255,0.2)' }} />
             ) : (
-              <div style={{ fontSize: '54px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.03em' }}>
+              <div style={{ fontSize: '54px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.03em', color: '#ffffff' }}>
                 {data?.totalSiswa ? Math.round(((data?.tasmiCount || 0) / data.totalSiswa) * 100) : 0}%
               </div>
             )}
           </div>
 
           <div style={{
-            background: 'rgba(255,255,255,0.15)',
+            background: 'rgba(255,255,255,0.14)',
             backdropFilter: 'blur(4px)',
             padding: '8px 14px',
             borderRadius: '12px',
@@ -702,13 +707,13 @@ export default function AdminDashboard() {
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <span>{data?.tasmiCount || 0} dari {data?.totalSiswa || 0} Santri</span>
-            <span style={{ opacity: 0.8 }}>Tuntas Diuji</span>
+            <span>{data?.tasmiCount || 0} dari {data?.totalSiswa || 0} Siswa</span>
+            <span style={{ color: '#fde68a' }}>Target Selesai</span>
           </div>
         </div>
       </div>
 
-      {/* DISTRIBUSI PREDIKAT & INFO SEKOLAH (2 KOLOM) */}
+      {/* DISTRIBUSI PREDIKAT & PROFIL GLOBAL INSANI SCHOOL (2 KOLOM) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 340px',
@@ -725,7 +730,7 @@ export default function AdminDashboard() {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
-              📊 Distribusi Nilai & Predikat
+              📊 Distribusi Nilai Evaluasi Siswa
             </div>
             <span style={{ fontSize: '11px', color: '#64748b' }}>Berdasarkan seluruh setoran</span>
           </div>
@@ -757,45 +762,50 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Profil Lembaga SMP Global Insani (Deep Navy Card) */}
+        {/* Profil SMP Global Insani School (Modern EdTech Navy Card) */}
         <div style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #172554 100%)',
           borderRadius: '18px',
           padding: '24px',
           color: 'white',
           boxShadow: '0 8px 24px rgba(15, 23, 42, 0.15)',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          border: '1px solid rgba(255,255,255,0.06)'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <span style={{
-                background: 'rgba(255,255,255,0.12)',
-                padding: '3px 10px',
+                background: 'rgba(59, 130, 246, 0.18)',
+                color: '#93c5fd',
+                padding: '4px 10px',
                 borderRadius: '8px',
                 fontSize: '11px',
                 fontWeight: 700,
-                color: '#93c5fd'
+                border: '1px solid rgba(59, 130, 246, 0.3)'
               }}>
-                MUTQIN v1.0
+                SMP REGULER
               </span>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#34d399', fontWeight: 700 }}>
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }} />
+                Online
+              </span>
             </div>
 
             <div style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>
-              SMP Global Insani
+              SMP Global Insani School
             </div>
             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '18px' }}>
-              Pusat Manajemen Mutaba&apos;ah Tahfizh
+              Program Khusus Tahfidz &amp; Tahsin Al-Qur&apos;an
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
                 { label: 'Tahun Ajaran', value: tahunAjaran || '—' },
                 { label: 'Semester Aktif', value: semesterAktif || '—' },
-                { label: 'Target Utama', value: 'Juz 30 (37 Surah)' },
-                { label: 'Status Sistem', value: maintenanceMode ? 'Maintenance' : 'Operasional Normal' },
+                { label: 'Target Kurikulum', value: 'Juz 30 (37 Surah)' },
+                { label: 'Status Sistem', value: maintenanceMode ? 'Mode Maintenance' : 'Operasional Normal' },
               ].map(item => (
                 <div key={item.label} style={{
                   display: 'flex',
@@ -817,7 +827,7 @@ export default function AdminDashboard() {
             color: 'rgba(255,255,255,0.5)',
             textAlign: 'center'
           }}>
-            Tajurhalang, Bogor · Terintegrasi Realtime
+            Tajurhalang, Bogor · MUTQIN v1.0
           </div>
         </div>
       </div>
@@ -842,7 +852,7 @@ export default function AdminDashboard() {
               Aktivitas Setoran Terbaru
             </div>
             <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-              Riwayat setoran santri yang baru saja diinput oleh guru
+              Riwayat penilaian harian siswa yang baru saja diinput oleh guru
             </div>
           </div>
           <span style={{
@@ -861,14 +871,14 @@ export default function AdminDashboard() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Santri</th>
+                <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Siswa</th>
                 <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Kelas</th>
                 <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Program</th>
                 <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Materi</th>
                 <th style={{ padding: '12px 14px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Nilai</th>
                 <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Predikat</th>
-                <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Guru Pembina</th>
-                <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Waktu</th>
+                <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Guru Pembimbing</th>
+                <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Waktu Input</th>
               </tr>
             </thead>
             <tbody>
@@ -896,7 +906,7 @@ export default function AdminDashboard() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{
                           width: '32px', height: '32px', borderRadius: '10px',
-                          background: '#eff6ff', color: '#1d4ed8',
+                          background: '#eff6ff', color: '#1e3a8a',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: '11px', fontWeight: 800, flexShrink: 0
                         }}>
@@ -914,8 +924,8 @@ export default function AdminDashboard() {
                     <td style={{ padding: '12px 14px' }}>
                       <span style={{
                         padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                        background: s.jenis === 'TAHFIDZ' ? '#eff6ff' : '#fef3c7',
-                        color: s.jenis === 'TAHFIDZ' ? '#1d4ed8' : '#b45309',
+                        background: s.jenis === 'TAHFIDZ' ? '#eff6ff' : '#fffbeb',
+                        color: s.jenis === 'TAHFIDZ' ? '#1e3a8a' : '#b45309',
                       }}>
                         {s.jenis === 'TAHFIDZ' ? '📖 Tahfidz' : '🗣️ Tahsin'}
                       </span>
