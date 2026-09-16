@@ -155,139 +155,416 @@ export default function AdminDashboard() {
   const totalSetoran = Math.max(data?.predikatStats.reduce((a, p) => a + p._count.id, 0) || 0, 1)
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1200px' }}>
-      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div style={{ padding: '32px', maxWidth: '1360px', margin: '0 auto' }}>
+      {/* HEADER & ACTION TOOLBAR */}
+      <div style={{
+        marginBottom: '32px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '20px'
+      }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Dashboard</h1>
-          <p style={{ color: '#64748b', fontSize: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{
+              fontSize: '30px',
+              fontWeight: 800,
+              color: '#0f172a',
+              letterSpacing: '-0.03em',
+              margin: 0
+            }}>
+              Dashboard
+            </h1>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '3px 10px',
+              borderRadius: '20px',
+              background: '#f1f5f9',
+              color: '#475569',
+              fontSize: '11px',
+              fontWeight: 700,
+              border: '1px solid #e2e8f0'
+            }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }} />
+              Live Monitor
+            </span>
+          </div>
+          <p style={{ color: '#64748b', fontSize: '13px', marginTop: '6px', margin: '6px 0 0 0' }}>
             Selamat datang di panel admin MUTQIN · {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          {/* Class Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-            <span style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>Filter Kelas:</span>
+        {/* UNIFIED ACTION TOOLBAR */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          flexWrap: 'wrap'
+        }}>
+          {/* Class Filter Pill */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'white',
+            padding: '8px 14px',
+            borderRadius: '14px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Kelas:</span>
             <select
-              className="input"
-              style={{ width: '120px', padding: '4px 8px', minHeight: '32px' }}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#0f172a',
+                outline: 'none',
+                cursor: 'pointer',
+                paddingRight: '4px'
+              }}
               value={kelasFilter}
               onChange={e => setKelasFilter(e.target.value)}
             >
-              <option value="">Semua</option>
+              <option value="">Semua Tingkat</option>
               <option value="7">Kelas 7</option>
               <option value="8">Kelas 8</option>
               <option value="9">Kelas 9</option>
             </select>
           </div>
 
-        {/* Maintenance Mode Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>Mode Maintenance</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Akses guru & ortu ditutup</div>
-          </div>
-          <button 
-            onClick={toggleMaintenance}
-            disabled={toggling}
-            style={{
-              width: '44px', height: '24px', borderRadius: '12px',
-              background: maintenanceMode ? '#dc2626' : '#cbd5e1',
-              position: 'relative', border: 'none', cursor: toggling ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <div style={{
-              width: '18px', height: '18px', borderRadius: '50%', background: 'white',
-              position: 'absolute', top: '3px',
-              left: maintenanceMode ? '23px' : '3px',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }} />
-          </button>
-        </div>
-
-        {/* PTS Exam Settings Button */}
-        <div 
-          onClick={() => setPtsModalOpen(true)}
-          style={{
+          {/* Maintenance Mode Pill */}
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
             background: 'white',
-            padding: '12px 16px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-            cursor: 'pointer',
-            border: ptsEnabled ? '1px solid #93c5fd' : '1px solid #e2e8f0'
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a' }}>Ujian PTS</span>
-              <span style={{
-                fontSize: '10px',
-                fontWeight: 700,
-                padding: '2px 6px',
-                borderRadius: '6px',
-                background: ptsEnabled ? '#dcfce7' : '#fee2e2',
-                color: ptsEnabled ? '#15803d' : '#b91c1c'
-              }}>
-                {ptsEnabled ? 'AKTIF' : 'DITUTUP'}
+            padding: '8px 14px',
+            borderRadius: '14px',
+            border: maintenanceMode ? '1px solid #fca5a5' : '1px solid #e2e8f0',
+            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+            backgroundClip: 'padding-box'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: maintenanceMode ? '#dc2626' : '#334155', lineHeight: 1.2 }}>
+                Maintenance
+              </span>
+              <span style={{ fontSize: '10px', color: '#94a3b8' }}>
+                {maintenanceMode ? 'Akses ditutup' : 'Akses aktif'}
               </span>
             </div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-              {ptsDateLabel}
+            <button
+              onClick={toggleMaintenance}
+              disabled={toggling}
+              title={maintenanceMode ? 'Matikan Mode Maintenance' : 'Aktifkan Mode Maintenance'}
+              style={{
+                width: '40px',
+                height: '22px',
+                borderRadius: '11px',
+                background: maintenanceMode ? '#ef4444' : '#cbd5e1',
+                position: 'relative',
+                border: 'none',
+                cursor: toggling ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                flexShrink: 0
+              }}
+            >
+              <div style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                background: 'white',
+                position: 'absolute',
+                top: '3px',
+                left: maintenanceMode ? '21px' : '3px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.25)'
+              }} />
+            </button>
+          </div>
+
+          {/* PTS Exam Settings Interactive Card */}
+          <div
+            onClick={() => setPtsModalOpen(true)}
+            role="button"
+            tabIndex={0}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'white',
+              padding: '7px 14px',
+              borderRadius: '14px',
+              border: ptsEnabled ? '1px solid #93c5fd' : '1px solid #e2e8f0',
+              boxShadow: ptsEnabled ? '0 2px 8px rgba(37, 99, 235, 0.08)' : '0 1px 3px rgba(15, 23, 42, 0.04)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e3a8a' }}>
+                  {ptsTipeUjian || 'Ujian PTS'}
+                </span>
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 800,
+                  padding: '2px 6px',
+                  borderRadius: '6px',
+                  background: ptsEnabled ? '#dcfce7' : '#fee2e2',
+                  color: ptsEnabled ? '#15803d' : '#b91c1c',
+                  letterSpacing: '0.04em'
+                }}>
+                  {ptsEnabled ? 'AKTIF' : 'DITUTUP'}
+                </span>
+              </div>
+              <div style={{ fontSize: '10px', color: '#64748b', marginTop: '1px' }}>
+                {ptsDateLabel}
+              </div>
+            </div>
+            <div style={{
+              background: '#eff6ff',
+              color: '#1d4ed8',
+              padding: '5px 10px',
+              borderRadius: '8px',
+              fontSize: '11px',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              ⚙️ Kelola
             </div>
           </div>
-          <div style={{
-            background: '#eff6ff',
-            color: '#1d4ed8',
-            padding: '6px 10px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            fontWeight: 700
-          }}>
-            ⚙️ Kelola
-          </div>
-        </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }} className="stagger-children">
-        <StatCard value={loading ? '—' : data?.totalSiswa ?? 0} label="Total Siswa" color="#2563eb"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
-        />
-        <StatCard value={loading ? '—' : data?.totalGuru ?? 0} label="Total Guru Tahfizh" color="#d97706"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
-        />
-        <StatCard value={loading ? '—' : data?.setoranHariIni ?? 0} label="Setoran Hari Ini" color="#059669"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>}
-        />
-        <StatCard value={loading ? '—' : data?.siswaBelumSetor ?? 0} label="Belum Setor Hari Ini" color="#dc2626"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
-        />
+      {/* KPI METRIC CARDS */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: '20px',
+        marginBottom: '32px'
+      }}>
+        {/* Total Siswa */}
+        <div style={{
+          background: 'white',
+          borderRadius: '18px',
+          padding: '20px 22px',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+        }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #2563eb, #60a5fa)' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Total Santri
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', marginTop: '6px' }}>
+                {loading ? '—' : (data?.totalSiswa ?? 0)}
+              </div>
+              <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginTop: '4px' }}>
+                Santri Terdaftar Aktif
+              </div>
+            </div>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: '#eff6ff',
+              color: '#2563eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Total Guru Tahfizh */}
+        <div style={{
+          background: 'white',
+          borderRadius: '18px',
+          padding: '20px 22px',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+        }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #d97706, #fbbf24)' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Guru Tahfizh
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', marginTop: '6px' }}>
+                {loading ? '—' : (data?.totalGuru ?? 0)}
+              </div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>
+                Pembina Halaqah
+              </div>
+            </div>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: '#fffbeb',
+              color: '#d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Setoran Hari Ini */}
+        <div style={{
+          background: 'white',
+          borderRadius: '18px',
+          padding: '20px 22px',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+        }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #059669, #34d399)' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Setoran Hari Ini
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#059669', letterSpacing: '-0.03em', marginTop: '6px' }}>
+                {loading ? '—' : (data?.setoranHariIni ?? 0)}
+              </div>
+              <div style={{ fontSize: '11px', color: '#059669', fontWeight: 600, marginTop: '4px' }}>
+                ✓ Aktivitas Tercatat
+              </div>
+            </div>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: '#ecfdf5',
+              color: '#059669',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Belum Setor Hari Ini */}
+        <div style={{
+          background: 'white',
+          borderRadius: '18px',
+          padding: '20px 22px',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+        }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #e11d48, #fb7185)' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Belum Setoran
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#e11d48', letterSpacing: '-0.03em', marginTop: '6px' }}>
+                {loading ? '—' : (data?.siswaBelumSetor ?? 0)}
+              </div>
+              <div style={{ fontSize: '11px', color: '#e11d48', fontWeight: 600, marginTop: '4px' }}>
+                Menunggu Input Guru
+              </div>
+            </div>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: '#fff1f2',
+              color: '#e11d48',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Capaian Siswa Section */}
-      <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1e293b', marginBottom: '16px' }}>Capaian Siswa</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
-        
-        {/* Capaian Tahfiz */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>📖</span> Capaian Tahfiz
+      {/* CAPAIAN SANTRI SECTION (3 KOLOM) */}
+      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+          Capaian Santri
+        </h2>
+        <span style={{ fontSize: '12px', color: '#64748b' }}>
+          Progress hafalan & tilawah semester aktif
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        {/* Capaian Tahfidz */}
+        <div style={{
+          background: 'white',
+          borderRadius: '18px',
+          padding: '24px',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff',
+                color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px'
+              }}>
+                📖
+              </span>
+              Capaian Tahfidz
+            </div>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Tingkat Juz</span>
           </div>
+
           {loading ? (
-            <div className="skeleton" style={{ flex: 1, borderRadius: '8px' }} />
+            <div className="skeleton" style={{ flex: 1, height: '140px', borderRadius: '12px' }} />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
               {[
                 { label: '< 1 Juz', val: 0, color: '#94a3b8' },
                 { label: '1 Juz', val: 1, color: '#3b82f6' },
                 { label: '2 Juz', val: 2, color: '#8b5cf6' },
-                { label: '> 2 Juz', val: 3, color: '#059669' },
+                { label: '> 2 Juz', val: 3, color: '#10b981' },
               ].map(item => {
                 const stat = data?.tahfidzStats?.find(s => s.capaianJuz === item.val)
                 const count = stat ? stat.count : 0
@@ -295,11 +572,11 @@ export default function AdminDashboard() {
                 return (
                   <div key={item.val}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>{item.label}</span>
-                      <span style={{ fontSize: '13px', color: '#64748b' }}>{count} ({pct}%)</span>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>{item.label}</span>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>{count} <span style={{ fontWeight: 400 }}>({pct}%)</span></span>
                     </div>
-                    <div className="progress-wrap">
-                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: '9999px', background: item.color, transition: 'width 0.8s ease' }} />
+                    <div style={{ height: '8px', width: '100%', background: '#f1f5f9', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: '99px', background: item.color, transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }} />
                     </div>
                   </div>
                 )
@@ -308,57 +585,154 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Capaian Tahsin */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>🗣</span> Capaian Tahsin (Jilid)
+        {/* Capaian Tahsin (Jilid) */}
+        <div style={{
+          background: 'white',
+          borderRadius: '18px',
+          padding: '24px',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                width: '32px', height: '32px', borderRadius: '8px', background: '#fffbeb',
+                color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px'
+              }}>
+                🗣️
+              </span>
+              Capaian Tahsin (Jilid)
+            </div>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Tingkatan Buku</span>
           </div>
+
           {loading ? (
-            <div className="skeleton" style={{ flex: 1, borderRadius: '8px' }} />
+            <div className="skeleton" style={{ flex: 1, height: '140px', borderRadius: '12px' }} />
           ) : (
-            <div style={{ flex: 1, overflowY: 'auto', maxHeight: '220px', paddingRight: '4px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', maxHeight: '200px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {data?.tahsinStats && data.tahsinStats.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {data.tahsinStats.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{item.buku}</span>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px' }}>{item.count} Siswa</span>
-                    </div>
-                  ))}
-                </div>
+                data.tahsinStats.map((item, idx) => (
+                  <div key={idx} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 12px',
+                    background: '#f8fafc',
+                    borderRadius: '10px',
+                    border: '1px solid #f1f5f9'
+                  }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>{item.buku}</span>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      color: '#1e3a8a',
+                      background: '#dbeafe',
+                      padding: '2px 8px',
+                      borderRadius: '8px'
+                    }}>
+                      {item.count} Santri
+                    </span>
+                  </div>
+                ))
               ) : (
-                <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px' }}>Belum ada data</div>
+                <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                  Belum ada data setoran tahsin
+                </div>
               )}
             </div>
           )}
         </div>
 
-        {/* KPI Tasmi */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>
-          <div style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px', opacity: 0.9 }}>KPI Sudah Tasmi&apos;</div>
-          {loading ? (
-            <div className="skeleton" style={{ width: '100px', height: '64px', borderRadius: '8px', background: 'rgba(255,255,255,0.2)' }} />
-          ) : (
-            <>
-              <div style={{ fontSize: '56px', fontWeight: 800, lineHeight: 1.1, textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+        {/* KPI SUDAH TASMI' (EMERALD LUXE CARD) */}
+        <div style={{
+          background: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%)',
+          borderRadius: '18px',
+          padding: '24px',
+          color: 'white',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          boxShadow: '0 8px 24px rgba(4, 120, 87, 0.2)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Subtle Background Glow */}
+          <div style={{
+            position: 'absolute', top: '-20px', right: '-20px', width: '120px', height: '120px',
+            borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none'
+          }} />
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '8px',
+                fontSize: '12px', fontWeight: 700
+              }}>
+                ⭐ KPI Ujian
+              </span>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
+                Status Kelulusan
+              </span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '10px' }}>
+              Santri Sudah Tasmi&apos;
+            </div>
+          </div>
+
+          <div style={{ margin: '16px 0' }}>
+            {loading ? (
+              <div className="skeleton" style={{ width: '120px', height: '60px', borderRadius: '10px', background: 'rgba(255,255,255,0.2)' }} />
+            ) : (
+              <div style={{ fontSize: '54px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.03em' }}>
                 {data?.totalSiswa ? Math.round(((data?.tasmiCount || 0) / data.totalSiswa) * 100) : 0}%
               </div>
-              <div style={{ fontSize: '15px', marginTop: '8px', background: 'rgba(255,255,255,0.2)', padding: '4px 16px', borderRadius: '99px', fontWeight: 600 }}>
-                {data?.tasmiCount || 0} dari {data?.totalSiswa || 0} Siswa
-              </div>
-            </>
-          )}
-        </div>
+            )}
+          </div>
 
+          <div style={{
+            background: 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(4px)',
+            padding: '8px 14px',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <span>{data?.tasmiCount || 0} dari {data?.totalSiswa || 0} Santri</span>
+            <span style={{ opacity: 0.8 }}>Tuntas Diuji</span>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', marginBottom: '24px' }}>
-        {/* Distribusi Predikat */}
-        <div className="card">
-          <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '20px' }}>Distribusi Predikat</div>
+      {/* DISTRIBUSI PREDIKAT & INFO SEKOLAH (2 KOLOM) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 340px',
+        gap: '20px',
+        marginBottom: '32px'
+      }}>
+        {/* Distribusi Predikat Card */}
+        <div style={{
+          background: 'white',
+          borderRadius: '18px',
+          padding: '24px',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
+              📊 Distribusi Nilai & Predikat
+            </div>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Berdasarkan seluruh setoran</span>
+          </div>
+
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: '36px', borderRadius: '8px' }} />)}
+              {[1, 2, 3, 4].map(i => <div key={i} className="skeleton" style={{ height: '36px', borderRadius: '8px' }} />)}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -370,11 +744,11 @@ export default function AdminDashboard() {
                 return (
                   <div key={p}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: info.color }}>{info.label}</span>
-                      <span style={{ fontSize: '13px', color: '#64748b' }}>{count} ({pct}%)</span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: info.color }}>{info.label}</span>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>{count} <span style={{ fontWeight: 400 }}>({pct}%)</span></span>
                     </div>
-                    <div className="progress-wrap">
-                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: '9999px', background: info.color, transition: 'width 0.8s ease' }} />
+                    <div style={{ height: '8px', width: '100%', background: '#f1f5f9', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: '99px', background: info.color, transition: 'width 0.8s ease' }} />
                     </div>
                   </div>
                 )
@@ -383,72 +757,185 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* School Info */}
-        <div className="card" style={{ background: 'linear-gradient(135deg, #1e3a8a, #2563eb)', color: 'white' }}>
-          <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '20px' }}>SMP Global Insani</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {[
-              { label: 'Total Siswa', value: `${data?.totalSiswa ?? 0} siswa` },
-              { label: 'Total Guru Tahfizh', value: `${data?.totalGuru ?? 0} guru` },
-              { label: 'Tahun Ajaran', value: tahunAjaran || '—' },
-              { label: 'Semester Aktif', value: semesterAktif || '—' },
-              { label: 'Target Hafalan', value: 'Juz 30 (37 Surah)' },
-              { label: 'Sistem', value: 'MUTQIN v1.0' },
-            ].map(item => (
-              <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>{item.label}</span>
-                <span style={{ fontSize: '13px', fontWeight: 600 }}>{item.value}</span>
-              </div>
-            ))}
+        {/* Profil Lembaga SMP Global Insani (Deep Navy Card) */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%)',
+          borderRadius: '18px',
+          padding: '24px',
+          color: 'white',
+          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <span style={{
+                background: 'rgba(255,255,255,0.12)',
+                padding: '3px 10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#93c5fd'
+              }}>
+                MUTQIN v1.0
+              </span>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+            </div>
+
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>
+              SMP Global Insani
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '18px' }}>
+              Pusat Manajemen Mutaba&apos;ah Tahfizh
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { label: 'Tahun Ajaran', value: tahunAjaran || '—' },
+                { label: 'Semester Aktif', value: semesterAktif || '—' },
+                { label: 'Target Utama', value: 'Juz 30 (37 Surah)' },
+                { label: 'Status Sistem', value: maintenanceMode ? 'Maintenance' : 'Operasional Normal' },
+              ].map(item => (
+                <div key={item.label} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  paddingBottom: '8px',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  fontSize: '12px'
+                }}>
+                  <span style={{ color: 'rgba(255,255,255,0.65)' }}>{item.label}</span>
+                  <span style={{ fontWeight: 700, color: 'white' }}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{
+            marginTop: '16px',
+            fontSize: '11px',
+            color: 'rgba(255,255,255,0.5)',
+            textAlign: 'center'
+          }}>
+            Tajurhalang, Bogor · Terintegrasi Realtime
           </div>
         </div>
       </div>
 
-      {/* Recent Setoran Table */}
-      <div className="card">
-        <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '20px' }}>Setoran Terbaru</div>
-        <div className="table-wrap">
-          <table>
+      {/* RECENT SETORAN TABLE */}
+      <div style={{
+        background: 'white',
+        borderRadius: '18px',
+        border: '1px solid #f1f5f9',
+        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          padding: '20px 24px',
+          borderBottom: '1px solid #f1f5f9',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '16px', color: '#0f172a' }}>
+              Aktivitas Setoran Terbaru
+            </div>
+            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+              Riwayat setoran santri yang baru saja diinput oleh guru
+            </div>
+          </div>
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 700,
+            background: '#f1f5f9',
+            color: '#475569',
+            padding: '4px 10px',
+            borderRadius: '10px'
+          }}>
+            10 Catatan Terakhir
+          </span>
+        </div>
+
+        <div className="table-wrap" style={{ margin: 0, border: 'none' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>
-                <th>Siswa</th><th>Kelas</th><th>Jenis</th><th>Materi</th>
-                <th>Nilai</th><th>Predikat</th><th>Guru</th><th>Tanggal</th>
+              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Santri</th>
+                <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Kelas</th>
+                <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Program</th>
+                <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Materi</th>
+                <th style={{ padding: '12px 14px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Nilai</th>
+                <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Predikat</th>
+                <th style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Guru Pembina</th>
+                <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Waktu</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>{Array.from({ length: 8 }).map((_, j) => (
-                    <td key={j}><div className="skeleton" style={{ height: '14px', borderRadius: '4px' }} /></td>
-                  ))}</tr>
+                  <tr key={i}>
+                    {Array.from({ length: 8 }).map((_, j) => (
+                      <td key={j} style={{ padding: '14px 16px' }}>
+                        <div className="skeleton" style={{ height: '16px', borderRadius: '6px' }} />
+                      </td>
+                    ))}
+                  </tr>
                 ))
               ) : (
-                data?.setoranTerbaru.map(s => (
-                  <tr key={s.id}>
-                    <td style={{ fontWeight: 600 }}>{s.siswa.nama}</td>
-                    <td>{s.siswa.kelas}</td>
-                    <td>
+                data?.setoranTerbaru.map((s, idx) => (
+                  <tr
+                    key={s.id}
+                    style={{
+                      borderBottom: '1px solid #f1f5f9',
+                      background: idx % 2 === 0 ? 'white' : '#fafafa',
+                      transition: 'background 0.15s ease'
+                    }}
+                  >
+                    <td style={{ padding: '12px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{
+                          width: '32px', height: '32px', borderRadius: '10px',
+                          background: '#eff6ff', color: '#1d4ed8',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '11px', fontWeight: 800, flexShrink: 0
+                        }}>
+                          {s.siswa.nama.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{s.siswa.nama}</div>
+                          <div style={{ fontSize: '10px', color: '#94a3b8' }}>NIS: {s.siswa.nis || '-'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 14px', fontSize: '12px', fontWeight: 600, color: '#334155' }}>
+                      Kelas {s.siswa.kelas}
+                    </td>
+                    <td style={{ padding: '12px 14px' }}>
                       <span style={{
-                        padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
-                        background: s.jenis === 'TAHFIDZ' ? '#dbeafe' : '#fef3c7',
+                        padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
+                        background: s.jenis === 'TAHFIDZ' ? '#eff6ff' : '#fef3c7',
                         color: s.jenis === 'TAHFIDZ' ? '#1d4ed8' : '#b45309',
                       }}>
-                        {s.jenis === 'TAHFIDZ' ? '📖 Tahfidz' : '🗣 Tahsin'}
+                        {s.jenis === 'TAHFIDZ' ? '📖 Tahfidz' : '🗣️ Tahsin'}
                       </span>
                     </td>
-                    <td style={{ color: '#64748b', fontSize: '13px' }}>
+                    <td style={{ padding: '12px 14px', color: '#475569', fontSize: '12px', fontWeight: 600 }}>
                       {s.jenis === 'TAHFIDZ' ? (s.surah || '—') : (s.bukuTahsin || '—')}
                     </td>
-                    <td style={{ fontWeight: 700, color: s.nilaiAkhir >= 90 ? '#059669' : s.nilaiAkhir >= 80 ? '#2563eb' : s.nilaiAkhir >= 70 ? '#d97706' : '#dc2626' }}>
+                    <td style={{
+                      padding: '12px 14px', textAlign: 'center', fontWeight: 800, fontSize: '14px',
+                      color: s.nilaiAkhir >= 90 ? '#059669' : s.nilaiAkhir >= 80 ? '#2563eb' : s.nilaiAkhir >= 70 ? '#d97706' : '#dc2626'
+                    }}>
                       {Math.round(s.nilaiAkhir)}
                     </td>
-                    <td>
+                    <td style={{ padding: '12px 14px' }}>
                       <span className={`badge ${s.predikat === 'MUMTAZ' ? 'badge-mumtaz' : s.predikat === 'JAYYID_JIDDAN' ? 'badge-jayyidj' : s.predikat === 'JAYYID' ? 'badge-jayyid' : 'badge-ghair'}`}>
                         {s.predikat === 'MUMTAZ' ? 'Mumtaz' : s.predikat === 'JAYYID_JIDDAN' ? 'Jayyid Jiddan' : s.predikat === 'JAYYID' ? 'Jayyid' : 'Ghair Maqbul'}
                       </span>
                     </td>
-                    <td style={{ color: '#64748b', fontSize: '12px' }}>{s.guru.user.name}</td>
-                    <td style={{ color: '#64748b', fontSize: '12px' }}>{formatDate(s.tanggal)}</td>
+                    <td style={{ padding: '12px 14px', color: '#64748b', fontSize: '12px', fontWeight: 600 }}>{s.guru.user.name}</td>
+                    <td style={{ padding: '12px 20px', color: '#64748b', fontSize: '12px' }}>{formatDate(s.tanggal)}</td>
                   </tr>
                 ))
               )}
