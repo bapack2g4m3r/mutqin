@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mutqin-v18'
+const CACHE_NAME = 'mutqin-v19'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -15,6 +15,13 @@ const STATIC_ASSETS = [
   '/icon-512.png',
   '/logo.png',
 ]
+
+// Message listener (e.g. from PWAUpdateManager)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
 
 // Install — cache core static assets
 self.addEventListener('install', event => {
@@ -39,12 +46,18 @@ self.addEventListener('install', event => {
   )
 })
 
-// Activate — remove old caches
+// Activate — remove old caches & notify clients
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim()).then(() => {
+      return self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'SW_UPDATED', version: CACHE_NAME })
+        })
+      })
+    })
   )
 })
 
@@ -71,7 +84,7 @@ self.addEventListener('fetch', event => {
   if (
     url.pathname.startsWith('/admin') ||
     url.pathname.startsWith('/api/admin') ||
-    url.pathname.startsWith('/api/settings') ||
+    (url.pathname.startsWith('/api/settings') && url.pathname !== '/api/settings/pts') ||
     url.pathname.startsWith('/api/dashboard') ||
     url.pathname.startsWith('/api/akademik') ||
     url.pathname.startsWith('/api/rapor')

@@ -4,6 +4,7 @@ import NextAuthProvider from '@/components/providers/NextAuthProvider'
 import { PingTracker } from '@/components/PingTracker'
 import { IdleTimer } from '@/components/IdleTimer'
 import { OfflineSyncManager } from '@/components/OfflineSyncManager'
+import { PWAUpdateManager } from '@/components/PWAUpdateManager'
 
 export const metadata: Metadata = {
   title: 'MUTQIN — Sistem Administrasi Tahfidz & Tahsin | SMP Global Insani',
@@ -35,6 +36,7 @@ export default function RootLayout({
           <PingTracker />
           <IdleTimer />
           <OfflineSyncManager />
+          <PWAUpdateManager />
           {children}
         </NextAuthProvider>
       </body>

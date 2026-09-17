@@ -3,17 +3,20 @@
 import { useEffect, useState, useCallback } from 'react'
 
 const OFFLINE_QUEUE_KEY = 'mutqin_offline_queue'
+const OFFLINE_PTS_QUEUE_KEY = 'mutqin_offline_pts_queue'
 const CACHE_META_KEY = 'mutqin_cache_meta'
+const CACHE_PTS_KEY = 'mutqin_cached_ujian_pts'
 
 interface CacheMeta {
   lastDownload: string | null
   siswaCount: number
   setoranCount: number
+  ptsCached: boolean
   dashboardCached: boolean
 }
 
 interface QueueItem {
-  id: number
+  id: number | string
   body: any
   savedAt: string
 }
@@ -25,11 +28,18 @@ function getQueue(): QueueItem[] {
   } catch { return [] }
 }
 
+function getPtsQueue(): QueueItem[] {
+  try {
+    const raw = localStorage.getItem(OFFLINE_PTS_QUEUE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
 function getCacheMeta(): CacheMeta {
   try {
     const raw = localStorage.getItem(CACHE_META_KEY)
-    return raw ? JSON.parse(raw) : { lastDownload: null, siswaCount: 0, setoranCount: 0, dashboardCached: false }
-  } catch { return { lastDownload: null, siswaCount: 0, setoranCount: 0, dashboardCached: false } }
+    return raw ? JSON.parse(raw) : { lastDownload: null, siswaCount: 0, setoranCount: 0, ptsCached: false, dashboardCached: false }
+  } catch { return { lastDownload: null, siswaCount: 0, setoranCount: 0, ptsCached: false, dashboardCached: false } }
 }
 
 function saveCacheMeta(meta: CacheMeta) {
@@ -51,16 +61,27 @@ export function OfflineReadyManager() {
   const [isOnline, setIsOnline] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [meta, setMeta] = useState<CacheMeta>({ lastDownload: null, siswaCount: 0, setoranCount: 0, dashboardCached: false })
+  const [meta, setMeta] = useState<CacheMeta>({ lastDownload: null, siswaCount: 0, setoranCount: 0, ptsCached: false, dashboardCached: false })
   const [queueCount, setQueueCount] = useState(0)
   const [downloadResult, setDownloadResult] = useState<'success' | 'error' | null>(null)
-  const [syncResult, setSyncResult] = useState(0)
+  const [syncResultMsg, setSyncResultMsg] = useState<string | null>(null)
   const [showPanel, setShowPanel] = useState(false)
   const [silentSyncing, setSilentSyncing] = useState(false)
+  const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const [updateCheckStatus, setUpdateCheckStatus] = useState<string | null>(null)
 
   const refresh = useCallback(() => {
-    setMeta(getCacheMeta())
-    setQueueCount(getQueue().length)
+    const currentMeta = getCacheMeta()
+    // Cek apakah pts cache ada di localStorage
+    const hasPtsCache = !!localStorage.getItem(CACHE_PTS_KEY)
+    if (hasPtsCache !== currentMeta.ptsCached) {
+      currentMeta.ptsCached = hasPtsCache
+      saveCacheMeta(currentMeta)
+    }
+    setMeta(currentMeta)
+
+    const totalQueue = getQueue().length + getPtsQueue().length
+    setQueueCount(totalQueue)
   }, [])
 
   // Auto-sync in background once per session when app opens
@@ -99,7 +120,6 @@ export function OfflineReadyManager() {
       // Step 1: Pre-cache session for offline auth
       const sessionRes = await fetch('/api/auth/session')
       if (sessionRes.ok) {
-        // Store in localStorage as backup
         const sessionData = await sessionRes.json()
         if (sessionData && sessionData.user) {
           try { localStorage.setItem('mutqin_cached_session', JSON.stringify(sessionData)) } catch {}
@@ -117,15 +137,18 @@ export function OfflineReadyManager() {
         fetch('/guru/profil'),
       ])
 
-      // Step 3: Fetch data
-      const [dashRes, siswaRes, setoranRes] = await Promise.all([
+      // Step 3: Fetch all essential data for guru offline operation
+      const [dashRes, siswaRes, setoranRes, ptsRes, ptsSettingsRes] = await Promise.all([
         fetch('/api/guru/dashboard'),
         fetch('/api/siswa?limit=2000'),
         fetch('/api/setoran?limit=99999'),
+        fetch('/api/guru/ujian-pts'),
+        fetch('/api/settings/pts'),
       ])
 
       let siswaCount = 0
       let setoranCount = 0
+      let ptsCached = false
       let dashboardCached = false
 
       if (dashRes.ok) {
@@ -155,10 +178,26 @@ export function OfflineReadyManager() {
         }
       }
 
+      if (ptsRes.ok) {
+        const ptsData = await ptsRes.json()
+        if (ptsData && !ptsData.error) {
+          localStorage.setItem(CACHE_PTS_KEY, JSON.stringify(ptsData))
+          ptsCached = true
+        }
+      }
+
+      if (ptsSettingsRes.ok) {
+        const ptsSettingsData = await ptsSettingsRes.json()
+        if (ptsSettingsData) {
+          try { localStorage.setItem('mutqin_cached_pts_settings', JSON.stringify(ptsSettingsData)) } catch {}
+        }
+      }
+
       const newMeta: CacheMeta = {
         lastDownload: new Date().toISOString(),
         siswaCount,
         setoranCount,
+        ptsCached,
         dashboardCached,
       }
       saveCacheMeta(newMeta)
@@ -185,14 +224,16 @@ export function OfflineReadyManager() {
       }
 
       // Step 2: Fetch data silently
-      const [dashRes, siswaRes, setoranRes] = await Promise.all([
+      const [dashRes, siswaRes, setoranRes, ptsRes] = await Promise.all([
         fetch('/api/guru/dashboard'),
         fetch('/api/siswa?limit=2000'),
         fetch('/api/setoran?limit=99999'),
+        fetch('/api/guru/ujian-pts'),
       ])
 
       let siswaCount = meta.siswaCount
       let setoranCount = meta.setoranCount
+      let ptsCached = meta.ptsCached
       let dashboardCached = meta.dashboardCached
 
       if (dashRes.ok) {
@@ -222,10 +263,19 @@ export function OfflineReadyManager() {
         }
       }
 
+      if (ptsRes.ok) {
+        const ptsData = await ptsRes.json()
+        if (ptsData && !ptsData.error) {
+          localStorage.setItem(CACHE_PTS_KEY, JSON.stringify(ptsData))
+          ptsCached = true
+        }
+      }
+
       const newMeta: CacheMeta = {
         lastDownload: new Date().toISOString(),
         siswaCount,
         setoranCount,
+        ptsCached,
         dashboardCached,
       }
       saveCacheMeta(newMeta)
@@ -239,35 +289,65 @@ export function OfflineReadyManager() {
 
   async function handleSyncNow() {
     const queue = getQueue()
-    if (queue.length === 0 || !isOnline || syncing) return
+    const ptsQueue = getPtsQueue()
+    const totalQueue = queue.length + ptsQueue.length
+    if (totalQueue === 0 || !isOnline || syncing) return
     setSyncing(true)
 
     try {
-      const results = await Promise.allSettled(
-        queue.map(item =>
-          fetch('/api/setoran', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.body),
-          })
+      let sentSetoran = 0
+      let sentPts = 0
+
+      // 1. Flush regular setoran
+      if (queue.length > 0) {
+        const results = await Promise.allSettled(
+          queue.map(item =>
+            fetch('/api/setoran', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(item.body),
+            })
+          )
         )
-      )
-
-      const failed = queue.filter((_, i) => {
-        const r = results[i]
-        return r.status === 'rejected' || (r as PromiseFulfilledResult<Response>).value?.ok === false
-      })
-
-      if (failed.length > 0) {
-        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(failed))
-      } else {
-        localStorage.removeItem(OFFLINE_QUEUE_KEY)
+        const failed = queue.filter((_, i) => results[i].status === 'rejected' || (results[i] as PromiseFulfilledResult<Response>).value?.ok === false)
+        if (failed.length > 0) {
+          localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(failed))
+        } else {
+          localStorage.removeItem(OFFLINE_QUEUE_KEY)
+        }
+        sentSetoran = queue.length - failed.length
       }
 
-      const sent = queue.length - failed.length
-      setSyncResult(sent)
+      // 2. Flush PTS exam scores
+      if (ptsQueue.length > 0) {
+        const ptsResults = await Promise.allSettled(
+          ptsQueue.map(item =>
+            fetch('/api/guru/ujian-pts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(item.body),
+            })
+          )
+        )
+        const failedPts = ptsQueue.filter((_, i) => ptsResults[i].status === 'rejected' || (ptsResults[i] as PromiseFulfilledResult<Response>).value?.ok === false)
+        if (failedPts.length > 0) {
+          localStorage.setItem(OFFLINE_PTS_QUEUE_KEY, JSON.stringify(failedPts))
+        } else {
+          localStorage.removeItem(OFFLINE_PTS_QUEUE_KEY)
+        }
+        sentPts = ptsQueue.length - failedPts.length
+      }
+
+      const totalSent = sentSetoran + sentPts
+      if (totalSent > 0) {
+        const parts = []
+        if (sentSetoran > 0) parts.push(`${sentSetoran} setoran`)
+        if (sentPts > 0) parts.push(`${sentPts} ujian PTS`)
+        setSyncResultMsg(`✅ ${parts.join(' & ')} berhasil dikirim!`)
+      }
       refresh()
-      setTimeout(() => setSyncResult(0), 4000)
+      window.dispatchEvent(new Event('storage'))
+      setTimeout(() => setSyncResultMsg(null), 4000)
     } catch {
       // silent
     } finally {
@@ -275,7 +355,48 @@ export function OfflineReadyManager() {
     }
   }
 
-  const hasCachedData = meta.siswaCount > 0 || meta.dashboardCached
+  function handleCheckAppUpdate() {
+    if (!isOnline) {
+      setUpdateCheckStatus('Hubungkan internet untuk mengecek pembaruan.')
+      setTimeout(() => setUpdateCheckStatus(null), 3500)
+      return
+    }
+
+    setCheckingUpdate(true)
+    setUpdateCheckStatus(null)
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('mutqin:check-update', {
+          detail: {
+            onResult: (hasUpdate: boolean) => {
+              setCheckingUpdate(false)
+              if (hasUpdate) {
+                setUpdateCheckStatus('✨ Pembaruan tersedia! Silakan klik Perbarui.')
+              } else {
+                setUpdateCheckStatus('✅ Aplikasi sudah versi terbaru.')
+              }
+              setTimeout(() => setUpdateCheckStatus(null), 4000)
+            },
+          },
+        })
+      )
+
+      // Fallback timer jika worker tidak merespons
+      setTimeout(() => {
+        setCheckingUpdate(prev => {
+          if (prev) {
+            setUpdateCheckStatus('✅ Aplikasi sudah versi terbaru.')
+            setTimeout(() => setUpdateCheckStatus(null), 3500)
+            return false
+          }
+          return prev
+        })
+      }, 1500)
+    }
+  }
+
+  const hasCachedData = meta.siswaCount > 0 || meta.dashboardCached || meta.ptsCached
   const isReady = hasCachedData
 
   return (
@@ -349,7 +470,7 @@ export function OfflineReadyManager() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
             <StatusRow
               icon="📱"
-              label="Koneksi"
+              label="Koneksi Internet"
               value={isOnline ? 'Online' : 'Offline'}
               valueColor={isOnline ? '#059669' : '#dc2626'}
             />
@@ -366,6 +487,12 @@ export function OfflineReadyManager() {
               valueColor={meta.setoranCount > 0 ? '#059669' : '#94a3b8'}
             />
             <StatusRow
+              icon="📝"
+              label="Data Ujian PTS"
+              value={meta.ptsCached ? 'Tersimpan (Siap Offline)' : 'Belum diunduh'}
+              valueColor={meta.ptsCached ? '#059669' : '#94a3b8'}
+            />
+            <StatusRow
               icon="📊"
               label="Dashboard"
               value={meta.dashboardCached ? 'Tersimpan' : 'Belum diunduh'}
@@ -373,8 +500,8 @@ export function OfflineReadyManager() {
             />
             <StatusRow
               icon="⏳"
-              label="Antrian Setoran"
-              value={queueCount > 0 ? `${queueCount} setoran menunggu` : 'Tidak ada antrian'}
+              label="Antrian Data Offline"
+              value={queueCount > 0 ? `${queueCount} data menunggu kirim` : 'Tidak ada antrian'}
               valueColor={queueCount > 0 ? '#d97706' : '#059669'}
             />
             {meta.lastDownload && (
@@ -394,7 +521,7 @@ export function OfflineReadyManager() {
               padding: '10px 14px', fontSize: '13px', fontWeight: 600,
               marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px',
             }}>
-              ✅ Data berhasil diunduh! Aplikasi siap digunakan offline.
+              ✅ Data santri & ujian berhasil diunduh! Siap digunakan offline.
             </div>
           )}
           {downloadResult === 'error' && (
@@ -406,18 +533,29 @@ export function OfflineReadyManager() {
               ❌ Gagal mengunduh. Periksa koneksi internet.
             </div>
           )}
-          {syncResult > 0 && (
+          {syncResultMsg && (
             <div style={{
               background: '#d1fae5', color: '#065f46', borderRadius: '10px',
               padding: '10px 14px', fontSize: '13px', fontWeight: 600,
               marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px',
             }}>
-              ✅ {syncResult} setoran offline berhasil dikirim!
+              {syncResultMsg}
+            </div>
+          )}
+          {updateCheckStatus && (
+            <div style={{
+              background: updateCheckStatus.includes('tersedia') ? '#fef3c7' : '#eff6ff',
+              color: updateCheckStatus.includes('tersedia') ? '#92400e' : '#1e3a8a',
+              borderRadius: '10px',
+              padding: '10px 14px', fontSize: '13px', fontWeight: 600,
+              marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px',
+            }}>
+              {updateCheckStatus}
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '10px' }}>
+          {/* Action Buttons: Sync Data */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
             <button
               id="btn-unduh-data-offline"
               onClick={handleDownload}
@@ -482,16 +620,56 @@ export function OfflineReadyManager() {
                       <polyline points="23 4 23 10 17 10"/>
                       <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                     </svg>
-                    Kirim ({queueCount})
+                    Kirim Antrian ({queueCount})
                   </>
                 )}
               </button>
             )}
           </div>
 
+          {/* Pembaruan Aplikasi PWA Checker */}
+          <div style={{
+            paddingTop: '12px',
+            borderTop: '1px solid #f1f5f9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                Versi Aplikasi MUTQIN
+              </div>
+              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                Periksa fitur baru jika tampilan belum update
+              </div>
+            </div>
+            <button
+              id="btn-cek-update-pwa"
+              onClick={handleCheckAppUpdate}
+              disabled={checkingUpdate || !isOnline}
+              style={{
+                background: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                color: '#334155',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: checkingUpdate || !isOnline ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {checkingUpdate ? '⏳ Mengecek...' : '🔄 Cek Update'}
+            </button>
+          </div>
+
           {!isOnline && (
             <p style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center', marginTop: '10px', marginBottom: 0 }}>
-              📵 Tidak ada internet · Setoran tetap bisa diinput dan akan terkirim otomatis
+              📵 Tidak ada internet · Setoran & nilai ujian tetap bisa diinput dan tersimpan aman di HP
             </p>
           )}
         </div>

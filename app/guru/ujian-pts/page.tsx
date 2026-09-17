@@ -1,9 +1,63 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import MobileNav from '@/components/layout/MobileNav'
 import { getPredikat } from '@/lib/surah-data'
+
+const OFFLINE_PTS_QUEUE_KEY = 'mutqin_offline_pts_queue'
+const CACHE_PTS_KEY = 'mutqin_cached_ujian_pts'
+
+interface PtsQueueItem {
+  id: string
+  body: {
+    siswaId: string
+    jenis?: string
+    nilai: number
+    isTasmi?: boolean
+    materiUjian?: string | null
+  }
+  savedAt: string
+}
+
+function getOfflinePtsQueue(): PtsQueueItem[] {
+  try {
+    const raw = localStorage.getItem(OFFLINE_PTS_QUEUE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveToOfflinePtsQueue(body: any) {
+  try {
+    const queue = getOfflinePtsQueue()
+    const existingIndex = queue.findIndex(q => q.body.siswaId === body.siswaId)
+    const item: PtsQueueItem = {
+      id: 'pts-' + body.siswaId + '-' + Date.now(),
+      body,
+      savedAt: new Date().toISOString()
+    }
+    if (existingIndex >= 0) {
+      queue[existingIndex] = item
+    } else {
+      queue.push(item)
+    }
+    localStorage.setItem(OFFLINE_PTS_QUEUE_KEY, JSON.stringify(queue))
+    window.dispatchEvent(new Event('storage'))
+  } catch (e) {
+    console.error('Failed to save to offline queue', e)
+  }
+}
+
+function removeFromOfflinePtsQueue(siswaId: string) {
+  try {
+    const queue = getOfflinePtsQueue()
+    const filtered = queue.filter(q => q.body.siswaId !== siswaId)
+    localStorage.setItem(OFFLINE_PTS_QUEUE_KEY, JSON.stringify(filtered))
+    window.dispatchEvent(new Event('storage'))
+  } catch {}
+}
 
 interface SiswaPtsItem {
   id: string
@@ -56,37 +110,79 @@ export default function GuruUjianPtsPage() {
   const [savedSuccessIds, setSavedSuccessIds] = useState<Record<string, boolean>>({})
   const [editingIds, setEditingIds] = useState<Record<string, boolean>>({})
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({})
+  const [offlineQueuedIds, setOfflineQueuedIds] = useState<Record<string, boolean>>({})
 
   // Input refs for auto-focus next student on Enter
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
+  const refreshOfflineQueue = useCallback(() => {
+    const queue = getOfflinePtsQueue()
+    const map: Record<string, boolean> = {}
+    queue.forEach(q => {
+      map[q.body.siswaId] = true
+    })
+    setOfflineQueuedIds(map)
+  }, [])
+
   const fetchData = async () => {
+    // 1. INSTANT LOCAL CACHE: Load immediately so page renders with 0ms delay even offline
     try {
-      setLoading(true)
-      const res = await fetch('/api/guru/ujian-pts', { cache: 'no-store' })
+      const cachedRaw = localStorage.getItem(CACHE_PTS_KEY)
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw)
+        if (cached && cached.kelasGroups) {
+          setKelasGroups(cached.kelasGroups || [])
+          setActiveSemester(cached.activeSemester || null)
+          if (cached.ptsSettings) setPtsSettings(cached.ptsSettings)
+
+          const initialScores: Record<string, string> = {}
+          const initialTasmis: Record<string, boolean> = {}
+          cached.kelasGroups?.forEach((g: KelasGroup) => {
+            g.siswa.forEach(s => {
+              if (s.pts) {
+                initialScores[s.id] = String(s.pts.nilaiAkhir ?? '')
+                initialTasmis[s.id] = !!s.pts.isTasmi
+              }
+            })
+          })
+          setScores(prev => ({ ...initialScores, ...prev }))
+          setTasmis(prev => ({ ...initialTasmis, ...prev }))
+          setLoading(false)
+        }
+      }
+    } catch {}
+
+    // 2. NETWORK FETCH: Update fresh data from server
+    try {
+      const res = await fetch('/api/guru/ujian-pts')
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      setKelasGroups(data.kelasGroups || [])
-      setActiveSemester(data.activeSemester || null)
-      if (data.ptsSettings) {
-        setPtsSettings(data.ptsSettings)
-      }
+      if (data && data.kelasGroups) {
+        setKelasGroups(data.kelasGroups || [])
+        setActiveSemester(data.activeSemester || null)
+        if (data.ptsSettings) {
+          setPtsSettings(data.ptsSettings)
+        }
+        try {
+          localStorage.setItem(CACHE_PTS_KEY, JSON.stringify(data))
+        } catch {}
 
-      // Populate scores & tasmis from existing data
-      const initialScores: Record<string, string> = {}
-      const initialTasmis: Record<string, boolean> = {}
-      data.kelasGroups?.forEach((g: KelasGroup) => {
-        g.siswa.forEach(s => {
-          if (s.pts) {
-            initialScores[s.id] = String(s.pts.nilaiAkhir ?? '')
-            initialTasmis[s.id] = !!s.pts.isTasmi
-          }
+        // Populate scores & tasmis from existing data
+        const initialScores: Record<string, string> = {}
+        const initialTasmis: Record<string, boolean> = {}
+        data.kelasGroups?.forEach((g: KelasGroup) => {
+          g.siswa.forEach(s => {
+            if (s.pts) {
+              initialScores[s.id] = String(s.pts.nilaiAkhir ?? '')
+              initialTasmis[s.id] = !!s.pts.isTasmi
+            }
+          })
         })
-      })
-      setScores(prev => ({ ...initialScores, ...prev }))
-      setTasmis(prev => ({ ...initialTasmis, ...prev }))
+        setScores(prev => ({ ...initialScores, ...prev }))
+        setTasmis(prev => ({ ...initialTasmis, ...prev }))
+      }
     } catch (err) {
-      console.error(err)
+      console.warn('Network fetch PTS failed, using offline cache if available:', err)
     } finally {
       setLoading(false)
     }
@@ -94,7 +190,21 @@ export default function GuruUjianPtsPage() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+    refreshOfflineQueue()
+
+    const handleStorage = () => refreshOfflineQueue()
+    const handleOnline = () => {
+      refreshOfflineQueue()
+      fetchData()
+    }
+
+    window.addEventListener('storage', handleStorage)
+    window.addEventListener('online', handleOnline)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('online', handleOnline)
+    }
+  }, [refreshOfflineQueue])
 
   // Flatten all students
   const allSiswa = useMemo(() => {
@@ -184,17 +294,56 @@ export default function GuruUjianPtsPage() {
       }, 50)
     }
 
-    // 3. BACKGROUND SYNC: Send to database without blocking the UI
+    // 3. BACKGROUND SYNC: Send to database or queue locally if offline
     setSavingIds(prev => ({ ...prev, [siswa.id]: true }))
-    try {
-      const payload = {
-        siswaId: siswa.id,
-        jenis: siswa.pts?.jenis || 'TAHFIDZ',
-        nilai: numScore,
-        isTasmi: isTasmiChecked,
-        materiUjian: isTasmiChecked ? 'Tasmi' : null
-      }
+    const payload = {
+      siswaId: siswa.id,
+      jenis: siswa.pts?.jenis || 'TAHFIDZ',
+      nilai: numScore,
+      isTasmi: isTasmiChecked,
+      materiUjian: isTasmiChecked ? 'Tasmi' : null
+    }
 
+    // Persist optimistic update to local cache
+    try {
+      const cachedRaw = localStorage.getItem(CACHE_PTS_KEY)
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw)
+        cached.kelasGroups = prevKelasGroups.map(group => {
+          if (group.kelasId !== siswa.kelasId) return group
+          return {
+            ...group,
+            siswa: group.siswa.map(item => {
+              if (item.id !== siswa.id) return item
+              return {
+                ...item,
+                hasPts: true,
+                pts: {
+                  id: item.pts?.id || 'temp-' + item.id,
+                  jenis: item.pts?.jenis || 'TAHFIDZ',
+                  isTasmi: isTasmiChecked,
+                  nilaiAkhir: numScore,
+                  predikat: predikatInfo.label,
+                  catatan: item.pts?.catatan || null,
+                  tanggal: new Date().toISOString()
+                }
+              }
+            })
+          }
+        })
+        localStorage.setItem(CACHE_PTS_KEY, JSON.stringify(cached))
+      }
+    } catch {}
+
+    // If currently offline, queue immediately without throwing error
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      saveToOfflinePtsQueue(payload)
+      refreshOfflineQueue()
+      setSavingIds(prev => ({ ...prev, [siswa.id]: false }))
+      return
+    }
+
+    try {
       const res = await fetch('/api/guru/ujian-pts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -202,12 +351,15 @@ export default function GuruUjianPtsPage() {
       })
 
       if (!res.ok) {
-        const d = await res.json()
+        const d = await res.json().catch(() => ({}))
         throw new Error(d.error || 'Gagal menyimpan ke server')
       }
 
       const resData = await res.json()
       if (resData.pts) {
+        removeFromOfflinePtsQueue(siswa.id)
+        refreshOfflineQueue()
+
         // Sync real DB id silently
         setKelasGroups(prev => prev.map(group => {
           if (group.kelasId !== siswa.kelasId) return group
@@ -227,9 +379,10 @@ export default function GuruUjianPtsPage() {
         }))
       }
     } catch (err: any) {
-      // Revert optimistic update on failure
-      setKelasGroups(prevKelasGroups)
-      alert(`Gagal menyimpan untuk ${siswa.nama}: ${err.message || 'Cek koneksi internet'}`)
+      // Network error or connection dropped: DO NOT revert UI, queue offline instead!
+      console.warn('Network save failed, saving to offline queue:', err)
+      saveToOfflinePtsQueue(payload)
+      refreshOfflineQueue()
     } finally {
       setSavingIds(prev => ({ ...prev, [siswa.id]: false }))
     }
@@ -267,17 +420,45 @@ export default function GuruUjianPtsPage() {
     setTasmis(prev => ({ ...prev, [siswa.id]: false }))
     setEditingIds(prev => ({ ...prev, [siswa.id]: false }))
 
+    // Remove from offline queue if exists
+    removeFromOfflinePtsQueue(siswa.id)
+    refreshOfflineQueue()
+
+    // Persist deletion to local cache
+    try {
+      const cachedRaw = localStorage.getItem(CACHE_PTS_KEY)
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw)
+        cached.kelasGroups = prevKelasGroups.map(group => {
+          if (group.kelasId !== siswa.kelasId) return group
+          return {
+            ...group,
+            siswa: group.siswa.map(item => {
+              if (item.id !== siswa.id) return item
+              return { ...item, hasPts: false, pts: null }
+            })
+          }
+        })
+        localStorage.setItem(CACHE_PTS_KEY, JSON.stringify(cached))
+      }
+    } catch {}
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setDeletingIds(prev => ({ ...prev, [siswa.id]: false }))
+      return
+    }
+
     try {
       const res = await fetch(`/api/guru/ujian-pts?id=${siswa.pts?.id || ''}&siswaId=${siswa.id}`, {
         method: 'DELETE'
       })
       if (!res.ok) {
-        const d = await res.json()
+        const d = await res.json().catch(() => ({}))
         throw new Error(d.error || 'Gagal menghapus nilai')
       }
     } catch (err: any) {
-      setKelasGroups(prevKelasGroups)
-      alert(`Gagal menghapus nilai ${siswa.nama}: ${err.message}`)
+      // If network fails on delete, warn user
+      console.warn(`Gagal menghapus di server: ${err.message}`)
     } finally {
       setDeletingIds(prev => ({ ...prev, [siswa.id]: false }))
     }
@@ -552,6 +733,22 @@ export default function GuruUjianPtsPage() {
                                 borderRadius: '6px'
                               }}>
                                 ⭐ Tasmi&apos;
+                              </span>
+                            )}
+                            {offlineQueuedIds[s.id] && (
+                              <span style={{
+                                background: '#fef3c7',
+                                color: '#b45309',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                border: '1px dashed #f59e0b',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
+                              }}>
+                                ⏳ Menunggu Sync
                               </span>
                             )}
                           </>
