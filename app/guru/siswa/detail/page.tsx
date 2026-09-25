@@ -237,7 +237,7 @@ export default function DetailSiswaPage() {
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
           <button
             id="btn-input-tahfidz"
             onClick={() => {
@@ -275,6 +275,39 @@ export default function DetailSiswaPage() {
             <span>Tahsin</span>
           </button>
         </div>
+
+        {/* Tombol Cetak Rapor Santri (A4) */}
+        <div style={{ marginBottom: '24px' }}>
+          <a
+            id="btn-cetak-rapor"
+            href={`/guru/siswa/${resolvedId}/rapor`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '14px',
+              background: '#eff6ff',
+              color: '#1e3a8a',
+              border: '1.5px solid #bfdbfe',
+              fontWeight: 700,
+              fontSize: '13px',
+              textDecoration: 'none',
+              boxShadow: '0 2px 6px rgba(30, 58, 138, 0.08)',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            <span>Cetak Rapor Santri (A4)</span>
+          </a>
+        </div>
+
 
         {/* Riwayat */}
         <div className="section-header">

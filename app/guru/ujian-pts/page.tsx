@@ -646,7 +646,68 @@ export default function GuruUjianPtsPage() {
           flex-shrink: 0;
         }
 
+        .pts-icon-btn {
+          width: 36px;
+          height: 36px;
+          min-width: 36px;
+          border-radius: 10px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          text-decoration: none;
+          padding: 0;
+          box-sizing: border-box;
+          border: 1.5px solid transparent;
+        }
+        .pts-icon-btn:hover:not(:disabled) {
+          transform: translateY(-1.5px);
+          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+        .pts-icon-btn:active:not(:disabled) {
+          transform: scale(0.94);
+        }
+        .pts-icon-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.55;
+        }
+
+        .pts-icon-btn-rapor {
+          background: #f0fdf4;
+          color: #16a34a;
+          border-color: #bbf7d0;
+        }
+        .pts-icon-btn-rapor:hover {
+          background: #dcfce7;
+          color: #15803d;
+          border-color: #86efac;
+        }
+
+        .pts-icon-btn-edit {
+          background: #eff6ff;
+          color: #2563eb;
+          border-color: #bfdbfe;
+        }
+        .pts-icon-btn-edit:hover:not(:disabled) {
+          background: #dbeafe;
+          color: #1d4ed8;
+          border-color: #93c5fd;
+        }
+
+        .pts-icon-btn-delete {
+          background: #fef2f2;
+          color: #dc2626;
+          border-color: #fecaca;
+        }
+        .pts-icon-btn-delete:hover:not(:disabled) {
+          background: #fee2e2;
+          color: #b91c1c;
+          border-color: #fca5a5;
+        }
+
         .pts-edit-form {
+
           display: flex;
           align-items: center;
           gap: 8px;
@@ -1401,6 +1462,23 @@ export default function GuruUjianPtsPage() {
                       <div className="pts-view-actions">
                         {isSiswaExamDone(s) ? (
                           <>
+                            {/* TOMBOL CETAK RAPOR (ICON) */}
+                            <a
+                              href={`/guru/siswa/${s.id}/rapor`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="pts-icon-btn pts-icon-btn-rapor"
+                              title="Cetak Rapor Santri (A4)"
+                              aria-label="Cetak Rapor"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 6 2 18 2 18 9"/>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                <rect x="6" y="14" width="12" height="8"/>
+                              </svg>
+                            </a>
+
+                            {/* TOMBOL EDIT NILAI (ICON) */}
                             <button
                               onClick={() => {
                                 if (!ptsSettings.enabled) return
@@ -1411,45 +1489,31 @@ export default function GuruUjianPtsPage() {
                                 }, 50)
                               }}
                               disabled={!ptsSettings.enabled}
-                              style={{
-                                background: ptsSettings.enabled ? '#eff6ff' : '#f1f5f9',
-                                color: ptsSettings.enabled ? '#1e3a8a' : '#94a3b8',
-                                border: ptsSettings.enabled ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
-                                padding: '7px 14px',
-                                borderRadius: '10px',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                cursor: ptsSettings.enabled ? 'pointer' : 'not-allowed',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                transition: 'all 0.15s ease'
-                              }}
+                              className="pts-icon-btn pts-icon-btn-edit"
+                              title="Edit Nilai Ujian"
+                              aria-label="Edit Nilai"
                             >
-                              ✏️ Edit Nilai
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                              </svg>
                             </button>
 
-                            {/* TOMBOL HAPUS NILAI */}
+                            {/* TOMBOL HAPUS NILAI (ICON) */}
                             <button
                               onClick={() => handleDeleteRow(s)}
                               disabled={!ptsSettings.enabled || !!deletingIds[s.id]}
-                              title="Hapus nilai ujian siswa ini"
-                              style={{
-                                background: '#fef2f2',
-                                color: '#dc2626',
-                                border: '1px solid #fecaca',
-                                padding: '7px 10px',
-                                borderRadius: '10px',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                cursor: (!ptsSettings.enabled || !!deletingIds[s.id]) ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.15s ease'
-                              }}
+                              className="pts-icon-btn pts-icon-btn-delete"
+                              title="Hapus Nilai Ujian"
+                              aria-label="Hapus Nilai"
                             >
-                              {deletingIds[s.id] ? '⏳' : '🗑️'}
+                              {deletingIds[s.id] ? (
+                                <span style={{ fontSize: '11px' }}>⏳</span>
+                              ) : (
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6"/>
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                              )}
                             </button>
                           </>
                         ) : (
@@ -1468,19 +1532,23 @@ export default function GuruUjianPtsPage() {
                               background: ptsSettings.enabled ? '#1e3a8a' : '#f1f5f9',
                               color: ptsSettings.enabled ? 'white' : '#94a3b8',
                               border: 'none',
-                              padding: '7px 14px',
+                              padding: '7px 12px',
                               borderRadius: '10px',
                               fontSize: '12px',
                               fontWeight: 700,
                               cursor: ptsSettings.enabled ? 'pointer' : 'not-allowed',
-                              display: 'flex',
+                              display: 'inline-flex',
                               alignItems: 'center',
                               gap: '5px',
                               transition: 'all 0.15s ease',
-                              boxShadow: ptsSettings.enabled ? '0 2px 6px rgba(30, 58, 138, 0.2)' : 'none'
+                              boxShadow: ptsSettings.enabled ? '0 2px 6px rgba(30, 58, 138, 0.2)' : 'none',
+                              whiteSpace: 'nowrap'
                             }}
                           >
-                            <span>➕</span>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="12" y1="5" x2="12" y2="19"/>
+                              <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
                             <span>Input Nilai</span>
                           </button>
                         )}

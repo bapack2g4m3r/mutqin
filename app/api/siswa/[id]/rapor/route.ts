@@ -24,6 +24,36 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!siswa) return NextResponse.json({ error: 'Siswa not found' }, { status: 404 })
 
+  const role = (session.user as any)?.role
+  const guruId = (session.user as any)?.guruId
+  const ortuId = (session.user as any)?.ortuId
+
+  // Validasi Hak Akses:
+  // - ADMIN: Akses penuh semua siswa
+  // - GURU: Hanya siswa bimbingan di halaqahnya sendiri
+  // - ORTU: Hanya anak kandungnya sendiri
+  if (role === 'GURU') {
+    if (!guruId) {
+      return NextResponse.json({ error: 'Data profil guru tidak valid' }, { status: 403 })
+    }
+    const isBimbingan = siswa.halaqah?.guruId === guruId
+    if (!isBimbingan) {
+      return NextResponse.json({ 
+        error: 'Akses ditolak: Anda hanya dapat mencetak rapor siswa bimbingan halaqah sendiri.' 
+      }, { status: 403 })
+    }
+  } else if (role === 'ORTU') {
+    const isAnakSendiri = siswa.ortuId === ortuId || (session.user as any)?.siswaId === siswa.id
+    if (!isAnakSendiri) {
+      return NextResponse.json({ 
+        error: 'Akses ditolak: Anda hanya dapat mengakses rapor anak sendiri.' 
+      }, { status: 403 })
+    }
+  } else if (role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+  }
+
+
   let activeSemesterName = 'Ganjil'
   if (semesterId) {
     const sem = await prisma.semester.findUnique({ where: { id: semesterId } })
