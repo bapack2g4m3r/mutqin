@@ -181,27 +181,48 @@ export default function RaporMassalPage() {
       <>
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            body, html { background: white !important; margin: 0; padding: 0; }
+            body, html {
+              background: white !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
             .no-print { display: none !important; }
             aside, .sidebar { display: none !important; }
-            main { margin: 0 !important; padding: 0 !important; width: 100% !important; min-height: auto !important; background: white !important; flex: none !important; display: block !important; }
+            main {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              min-height: auto !important;
+              background: white !important;
+              flex: none !important;
+              display: block !important;
+            }
             div[style*="display: flex"] { display: block !important; background: white !important; min-height: auto !important; }
             
             .rapor-page {
               width: 100% !important;
               max-width: 100% !important;
+              min-height: auto !important;
+              height: auto !important;
               margin: 0 !important;
               padding: 0 !important;
               box-shadow: none !important;
               border: none !important;
               page-break-after: always !important;
               break-after: page !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
             .rapor-page:last-child {
               page-break-after: avoid !important;
               break-after: avoid !important;
             }
-            @page { size: A4 portrait; margin: 15mm; }
+            @page {
+              size: A4 portrait;
+              margin: 12mm 15mm 12mm 15mm;
+            }
           }
 
           .print-nav-bar {
@@ -220,20 +241,22 @@ export default function RaporMassalPage() {
 
           .rapor-page {
             background: white;
-            max-width: 210mm;
+            width: 210mm;
+            max-width: 100%;
             min-height: 297mm;
             margin: 30px auto;
-            padding: 15mm;
+            padding: 14mm 15mm;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             color: black;
             font-family: 'Times New Roman', Times, serif;
+            box-sizing: border-box;
           }
 
           /* KOP SURAT */
           .kop-surat {
             border-bottom: 4px solid black;
             padding-bottom: 4px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
           }
           .kop-surat-inner {
             display: flex;
@@ -296,38 +319,57 @@ export default function RaporMassalPage() {
             text-align: center;
             font-weight: bold;
             font-size: 13px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             line-height: 1.3;
           }
 
           /* INFO SISWA */
           .info-siswa {
-            display: flex;
-            justify-content: space-between;
+            width: 100%;
+            border-collapse: collapse;
             font-size: 11px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-family: 'Times New Roman', Times, serif;
-          }
-          .info-siswa table {
-            width: 48%;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
           .info-siswa td {
-            padding: 1px 0;
+            padding: 2px 0;
             vertical-align: top;
           }
-          .info-siswa td:first-child {
-            width: 90px;
+          .info-siswa .label-left {
+            width: 95px;
+            white-space: nowrap;
           }
-          .info-siswa td:nth-child(2) {
-            width: 10px;
+          .info-siswa .colon {
+            width: 12px;
+            text-align: center;
+          }
+          .info-siswa .val-left {
+            padding-right: 15px;
+          }
+          .info-siswa .val-nama {
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+          .info-siswa .label-right {
+            width: 95px;
+            white-space: nowrap;
+            padding-left: 10px;
+          }
+          .info-siswa .val-right {
+            width: 120px;
           }
 
           /* TABEL NILAI */
           .table-rapor {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             font-size: 11px;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
           .table-rapor th, .table-rapor td {
             border: 1px solid black;
@@ -360,9 +402,11 @@ export default function RaporMassalPage() {
             padding: 4px 8px;
             width: max-content;
             font-size: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-family: Arial, sans-serif;
             line-height: 1.1;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
           .keterangan-box table {
             border-collapse: collapse;
@@ -377,6 +421,8 @@ export default function RaporMassalPage() {
             display: flex;
             justify-content: flex-end;
             font-size: 11px;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
           .ttd-box {
             text-align: left;
@@ -384,7 +430,7 @@ export default function RaporMassalPage() {
           }
           .ttd-box .nama-ttd {
             font-weight: bold;
-            margin-top: 50px;
+            margin-top: 45px;
             display: inline-block;
           }
         `}} />
@@ -403,8 +449,11 @@ export default function RaporMassalPage() {
               Kembali ke Pemilihan
             </button>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '15px', color: '#1e293b' }}>Pratinjau Cetak Rapor Massal</div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Total {raporData.length} Rapor Siap Dicetak (1 Siswa = 1 Lembar A4)</div>
+              <div style={{ fontWeight: 700, fontSize: '15px', color: '#1e293b', display: 'flex', alignItems: 'center' }}>
+                Pratinjau Cetak Rapor Massal
+                <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '2px 8px', borderRadius: '4px', fontWeight: 600, marginLeft: '8px' }}>Format Kertas A4</span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Total {raporData.length} Rapor Siap Dicetak (Tiap Siswa Pas 1 Lembar A4)</div>
             </div>
           </div>
 
@@ -417,7 +466,7 @@ export default function RaporMassalPage() {
               <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
               <rect x="6" y="14" width="12" height="8"/>
             </svg>
-            Cetak Semua Rapor ({raporData.length} Lembar)
+            Cetak Semua Rapor (A4 · {raporData.length} Lembar)
           </button>
         </div>
 
@@ -450,29 +499,41 @@ export default function RaporMassalPage() {
 
               {/* JUDUL */}
               <div className="judul-rapor">
-                <div>HASIL PENILAIAN TAHSIN TAHFIZH AL QURAN</div>
-                <div>TENGAH SEMESTER {semesterName}</div>
+                <div>RAPOR TAHSIN TAHFIZH AL QURAN</div>
+                <div>TENGAH SEMESTER {(semesterName || 'GANJIL').toUpperCase()}</div>
                 <div>SMP GLOBAL INSANI SCHOOL</div>
                 <div>TAHUN PELAJARAN {siswa.kelasRef?.tahunAjaran?.nama || '-'}</div>
               </div>
 
               {/* INFO SISWA */}
-              <div className="info-siswa">
-                <table>
-                  <tbody>
-                    <tr><td>Alamat</td><td>:</td><td>Jl. Cendrawasih No.4</td></tr>
-                    <tr><td>N a m a</td><td>:</td><td style={{ textTransform: 'uppercase' }}>{siswa.nama}</td></tr>
-                    <tr><td>Nomor Induk</td><td>:</td><td>{siswa.nis}</td></tr>
-                  </tbody>
-                </table>
-                <table>
-                  <tbody>
-                    <tr><td>Kelas</td><td>:</td><td>{siswa.kelasRef?.nama || siswa.kelas || '-'}</td></tr>
-                    <tr><td>Semester</td><td>:</td><td style={{ textTransform: 'capitalize' }}>{semesterName ? semesterName.toLowerCase() : 'Ganjil'}</td></tr>
-                    <tr><td>Tahun Pelajaran</td><td>:</td><td>{siswa.kelasRef?.tahunAjaran?.nama || '-'}</td></tr>
-                  </tbody>
-                </table>
-              </div>
+              <table className="info-siswa">
+                <tbody>
+                  <tr>
+                    <td className="label-left">Nama Siswa</td>
+                    <td className="colon">:</td>
+                    <td className="val-left val-nama">{siswa.nama}</td>
+                    <td className="label-right">Kelas</td>
+                    <td className="colon">:</td>
+                    <td className="val-right">{siswa.kelasRef?.nama || siswa.kelas || '-'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label-left">Nomor Induk</td>
+                    <td className="colon">:</td>
+                    <td className="val-left">{siswa.nis}</td>
+                    <td className="label-right">Semester</td>
+                    <td className="colon">:</td>
+                    <td className="val-right" style={{ textTransform: 'capitalize' }}>{semesterName ? semesterName.toLowerCase() : 'Ganjil'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label-left">Mata Pelajaran</td>
+                    <td className="colon">:</td>
+                    <td className="val-left">Tahsin &amp; Tahfizh</td>
+                    <td className="label-right">Tahun Pelajaran</td>
+                    <td className="colon">:</td>
+                    <td className="val-right">{siswa.kelasRef?.tahunAjaran?.nama || '-'}</td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* TABEL NILAI */}
               <table className="table-rapor">

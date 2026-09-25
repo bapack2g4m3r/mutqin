@@ -50,24 +50,54 @@ export async function GET(req: NextRequest) {
 
   const kelasGroups = halaqahs.map(h => {
     const siswaList = h.siswa.map(s => {
-      // Cari setoran ujian sesuai tipe aktif
-      const ptsSetoran = s.setorans.find(st => {
+      // Cari setoran ujian sesuai tipe aktif untuk Tahfidz & Tahsin
+      const ptsTahfidz = s.setorans.find(st => {
         try {
           const comp = JSON.parse(st.nilaiKomponen)
-          return comp.isUjian === true && (comp.tipeUjian === ptsType || (!comp.tipeUjian && ptsType === 'PTS'))
+          return st.jenis === 'TAHFIDZ' && comp.isUjian === true && (comp.tipeUjian === ptsType || (!comp.tipeUjian && ptsType === 'PTS'))
         } catch {
           return false
         }
       })
 
-      let parsedKomponen = null
-      let materiUjian = null
-      if (ptsSetoran) {
+      const ptsTahsin = s.setorans.find(st => {
         try {
-          parsedKomponen = JSON.parse(ptsSetoran.nilaiKomponen)
+          const comp = JSON.parse(st.nilaiKomponen)
+          return st.jenis === 'TAHSIN' && comp.isUjian === true && (comp.tipeUjian === ptsType || (!comp.tipeUjian && ptsType === 'PTS'))
+        } catch {
+          return false
+        }
+      })
+
+      const formatPts = (st: any) => {
+        if (!st) return null
+        let parsedKomponen = null
+        let materiUjian = null
+        try {
+          parsedKomponen = JSON.parse(st.nilaiKomponen)
           materiUjian = parsedKomponen.materiUjian || null
         } catch {}
+
+        return {
+          id: st.id,
+          jenis: st.jenis,
+          surah: st.surah,
+          ayatMulai: st.ayatMulai,
+          ayatAkhir: st.ayatAkhir,
+          isTasmi: st.isTasmi,
+          bukuTahsin: st.bukuTahsin,
+          halamanTahsin: st.halamanTahsin,
+          nilaiAkhir: st.nilaiAkhir,
+          predikat: st.predikat,
+          catatan: st.catatan,
+          tanggal: st.tanggal,
+          materiUjian: materiUjian,
+          komponen: parsedKomponen
+        }
       }
+
+      const formattedTahfidz = formatPts(ptsTahfidz)
+      const formattedTahsin = formatPts(ptsTahsin)
 
       return {
         id: s.id,
@@ -75,23 +105,12 @@ export async function GET(req: NextRequest) {
         nis: s.nis,
         kelas: h.kelas.nama,
         kelasId: h.kelasId,
-        hasPts: !!ptsSetoran,
-        pts: ptsSetoran ? {
-          id: ptsSetoran.id,
-          jenis: ptsSetoran.jenis,
-          surah: ptsSetoran.surah,
-          ayatMulai: ptsSetoran.ayatMulai,
-          ayatAkhir: ptsSetoran.ayatAkhir,
-          isTasmi: ptsSetoran.isTasmi,
-          bukuTahsin: ptsSetoran.bukuTahsin,
-          halamanTahsin: ptsSetoran.halamanTahsin,
-          nilaiAkhir: ptsSetoran.nilaiAkhir,
-          predikat: ptsSetoran.predikat,
-          catatan: ptsSetoran.catatan,
-          tanggal: ptsSetoran.tanggal,
-          materiUjian: materiUjian,
-          komponen: parsedKomponen
-        } : null
+        hasPts: !!(ptsTahfidz || ptsTahsin),
+        hasPtsTahfidz: !!ptsTahfidz,
+        hasPtsTahsin: !!ptsTahsin,
+        pts: formattedTahfidz || formattedTahsin, // backward compatibility
+        ptsTahfidz: formattedTahfidz,
+        ptsTahsin: formattedTahsin
       }
     })
 
@@ -100,6 +119,8 @@ export async function GET(req: NextRequest) {
       kelasNama: h.kelas.nama,
       totalSiswa: siswaList.length,
       sudahUjianCount: siswaList.filter(s => s.hasPts).length,
+      sudahUjianTahfidzCount: siswaList.filter(s => s.hasPtsTahfidz).length,
+      sudahUjianTahsinCount: siswaList.filter(s => s.hasPtsTahsin).length,
       siswa: siswaList
     }
   })
@@ -134,8 +155,10 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const {
     siswaId,
-    jenis = 'TAHFIDZ',
+    jenis,
     nilai,
+    nilaiTahfidz,
+    nilaiTahsin,
     surah,
     ayatMulai,
     ayatAkhir,
@@ -187,25 +210,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Siswa ini bukan anggota binaan halaqah Anda' }, { status: 403 })
   }
 
-  // Hitung nilai akhir & predikat
-  let nilaiAkhir = 0
-  if (nilai !== undefined && nilai !== null && nilai !== '') {
-    nilaiAkhir = Math.max(0, Math.min(100, Math.round(Number(nilai))))
-  } else if (jenis === 'TAHFIDZ') {
-    nilaiAkhir = calcNilaiTahfidz(nilaiKomponen || {})
-  } else {
-    nilaiAkhir = calcNilaiTahsin(nilaiKomponen || {})
-  }
-  const predikatData = getPredikat(nilaiAkhir)
-
-  const enrichedKomponen = {
-    ...(typeof nilaiKomponen === 'object' && nilaiKomponen ? nilaiKomponen : {}),
-    isUjian: true,
-    tipeUjian: ptsType,
-    nilai: nilaiAkhir,
-    isTasmi: isTasmi === true,
-    materiUjian: materiUjian || null
-  }
+  const d = tanggal ? new Date(tanggal) : new Date()
+  d.setHours(12, 0, 0, 0)
 
   // Cari setoran ujian yang ada
   const existingSetorans = await prisma.setoran.findMany({
@@ -216,78 +222,115 @@ export async function POST(req: NextRequest) {
     select: { id: true, nilaiKomponen: true, catatan: true, jenis: true }
   })
 
-  const existingPts = existingSetorans.find(st => {
-    try {
-      const comp = JSON.parse(st.nilaiKomponen)
-      return comp.isUjian === true && (comp.tipeUjian === ptsType || (!comp.tipeUjian && ptsType === 'PTS')) && st.jenis === jenis
-    } catch {
-      return false
+  // Helper untuk menyimpan satu item nilai (TAHFIDZ atau TAHSIN)
+  async function saveSetoranItem(targetJenis: 'TAHFIDZ' | 'TAHSIN', targetNilai: any, targetTasmi?: boolean) {
+    let nilaiAkhir = Math.max(0, Math.min(100, Math.round(Number(targetNilai))))
+    const predikatData = getPredikat(nilaiAkhir)
+
+    const enrichedKomponen = {
+      ...(typeof nilaiKomponen === 'object' && nilaiKomponen ? nilaiKomponen : {}),
+      isUjian: true,
+      tipeUjian: ptsType,
+      nilai: nilaiAkhir,
+      isTasmi: targetJenis === 'TAHFIDZ' ? (targetTasmi === true) : false,
+      materiUjian: targetJenis === 'TAHFIDZ' && targetTasmi ? (materiUjian || 'Tasmi') : (materiUjian || null)
     }
-  })
 
-  const d = tanggal ? new Date(tanggal) : new Date()
-  d.setHours(12, 0, 0, 0)
-
-  let result
-  if (existingPts) {
-    result = await prisma.setoran.update({
-      where: { id: existingPts.id },
-      data: {
-        surah: jenis === 'TAHFIDZ' ? surah : null,
-        ayatMulai: jenis === 'TAHFIDZ' ? ayatMulai : null,
-        ayatAkhir: jenis === 'TAHFIDZ' ? ayatAkhir : null,
-        isTasmi: isTasmi === true,
-        bukuTahsin: jenis === 'TAHSIN' ? bukuTahsin : null,
-        halamanTahsin: jenis === 'TAHSIN' ? halamanTahsin : null,
-        nilaiKomponen: JSON.stringify(enrichedKomponen),
-        nilaiAkhir,
-        predikat: predikatData.kode,
-        catatan: catatan !== undefined ? catatan : existingPts.catatan
+    const existing = existingSetorans.find(st => {
+      try {
+        const comp = JSON.parse(st.nilaiKomponen)
+        return comp.isUjian === true && (comp.tipeUjian === ptsType || (!comp.tipeUjian && ptsType === 'PTS')) && st.jenis === targetJenis
+      } catch {
+        return false
       }
     })
-  } else {
-    result = await prisma.setoran.create({
-      data: {
-        siswaId,
-        guruId,
-        semesterId: activeSemester?.id,
-        jenis,
-        tanggal: d,
-        surah: jenis === 'TAHFIDZ' ? surah : null,
-        ayatMulai: jenis === 'TAHFIDZ' ? ayatMulai : null,
-        ayatAkhir: jenis === 'TAHFIDZ' ? ayatAkhir : null,
-        isTasmi: isTasmi === true,
-        bukuTahsin: jenis === 'TAHSIN' ? bukuTahsin : null,
-        halamanTahsin: jenis === 'TAHSIN' ? halamanTahsin : null,
-        nilaiKomponen: JSON.stringify(enrichedKomponen),
-        nilaiAkhir,
-        predikat: predikatData.kode,
-        catatan: catatan || null
-      }
-    })
+
+    let res
+    if (existing) {
+      res = await prisma.setoran.update({
+        where: { id: existing.id },
+        data: {
+          surah: targetJenis === 'TAHFIDZ' ? surah : null,
+          ayatMulai: targetJenis === 'TAHFIDZ' ? ayatMulai : null,
+          ayatAkhir: targetJenis === 'TAHFIDZ' ? ayatAkhir : null,
+          isTasmi: targetJenis === 'TAHFIDZ' ? (targetTasmi === true) : false,
+          bukuTahsin: targetJenis === 'TAHSIN' ? bukuTahsin : null,
+          halamanTahsin: targetJenis === 'TAHSIN' ? halamanTahsin : null,
+          nilaiKomponen: JSON.stringify(enrichedKomponen),
+          nilaiAkhir,
+          predikat: predikatData.kode,
+          catatan: catatan !== undefined ? catatan : existing.catatan
+        }
+      })
+    } else {
+      res = await prisma.setoran.create({
+        data: {
+          siswaId,
+          guruId,
+          semesterId: activeSemester?.id,
+          jenis: targetJenis,
+          tanggal: d,
+          surah: targetJenis === 'TAHFIDZ' ? surah : null,
+          ayatMulai: targetJenis === 'TAHFIDZ' ? ayatMulai : null,
+          ayatAkhir: targetJenis === 'TAHFIDZ' ? ayatAkhir : null,
+          isTasmi: targetJenis === 'TAHFIDZ' ? (targetTasmi === true) : false,
+          bukuTahsin: targetJenis === 'TAHSIN' ? bukuTahsin : null,
+          halamanTahsin: targetJenis === 'TAHSIN' ? halamanTahsin : null,
+          nilaiKomponen: JSON.stringify(enrichedKomponen),
+          nilaiAkhir,
+          predikat: predikatData.kode,
+          catatan: catatan || null
+        }
+      })
+    }
+
+    return {
+      id: res.id,
+      jenis: res.jenis,
+      isTasmi: res.isTasmi,
+      nilaiAkhir: res.nilaiAkhir,
+      predikat: predikatData.label,
+      catatan: res.catatan,
+      tanggal: res.tanggal
+    }
   }
+
+  let savedTahfidz: any = null
+  let savedTahsin: any = null
+
+  if (nilaiTahfidz !== undefined && nilaiTahfidz !== null && nilaiTahfidz !== '') {
+    savedTahfidz = await saveSetoranItem('TAHFIDZ', nilaiTahfidz, isTasmi)
+  }
+  if (nilaiTahsin !== undefined && nilaiTahsin !== null && nilaiTahsin !== '') {
+    savedTahsin = await saveSetoranItem('TAHSIN', nilaiTahsin, false)
+  }
+
+  // Fallback jika format lama { jenis, nilai, isTasmi } yang dikirim
+  if (!savedTahfidz && !savedTahsin && nilai !== undefined && nilai !== null && nilai !== '') {
+    const targetJenis = (jenis || 'TAHFIDZ').toUpperCase() === 'TAHSIN' ? 'TAHSIN' : 'TAHFIDZ'
+    if (targetJenis === 'TAHSIN') {
+      savedTahsin = await saveSetoranItem('TAHSIN', nilai, false)
+    } else {
+      savedTahfidz = await saveSetoranItem('TAHFIDZ', nilai, isTasmi)
+    }
+  }
+
+  const primaryResult = savedTahfidz || savedTahsin
 
   // Catat activity log asinkron tanpa menahan respons HTTP
   prisma.activityLog.create({
     data: {
       userId: (session.user as any).id,
-      action: existingPts ? 'UPDATE_NILAI_UJIAN' : 'INPUT_NILAI_UJIAN',
-      description: `Menginput nilai Ujian ${ptsType} (${jenis}) untuk ${halaqahSiswa.siswa[0]?.nama || siswaId}: ${nilaiAkhir} (${predikatData.label})`
+      action: 'INPUT_NILAI_UJIAN',
+      description: `Menginput nilai Ujian ${ptsType} untuk ${halaqahSiswa.siswa[0]?.nama || siswaId}`
     }
   }).catch(() => {})
 
   return NextResponse.json({
     success: true,
-    pts: {
-      id: result.id,
-      jenis: result.jenis,
-      isTasmi: result.isTasmi,
-      nilaiAkhir: result.nilaiAkhir,
-      predikat: predikatData.label,
-      catatan: result.catatan,
-      tanggal: result.tanggal
-    },
-    predikat: predikatData
+    pts: primaryResult,
+    ptsTahfidz: savedTahfidz,
+    ptsTahsin: savedTahsin
   })
 }
 
@@ -305,6 +348,7 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const setoranId = searchParams.get('id')
   const siswaId = searchParams.get('siswaId')
+  const targetJenis = searchParams.get('jenis')?.toUpperCase() // 'TAHFIDZ' | 'TAHSIN'
 
   if (!setoranId && !siswaId) {
     return NextResponse.json({ error: 'ID Setoran atau Siswa ID wajib diisi' }, { status: 400 })
@@ -332,13 +376,15 @@ export async function DELETE(req: NextRequest) {
         siswaId,
         ...(activeSemester ? { semesterId: activeSemester.id } : {})
       },
-      select: { id: true, nilaiKomponen: true }
+      select: { id: true, nilaiKomponen: true, jenis: true }
     })
 
     const found = setorans.find(s => {
       try {
         const c = JSON.parse(s.nilaiKomponen)
-        return c.isUjian === true && (c.tipeUjian === ptsType || (!c.tipeUjian && ptsType === 'PTS'))
+        const matchType = c.isUjian === true && (c.tipeUjian === ptsType || (!c.tipeUjian && ptsType === 'PTS'))
+        const matchJenis = targetJenis ? s.jenis === targetJenis : true
+        return matchType && matchJenis
       } catch {
         return false
       }
@@ -369,7 +415,7 @@ export async function DELETE(req: NextRequest) {
     data: {
       userId: (session.user as any).id,
       action: 'DELETE_NILAI_UJIAN',
-      description: `Menghapus nilai ujian untuk siswa ${existing.siswa.nama}`
+      description: `Menghapus nilai ujian (${existing.jenis}) untuk siswa ${existing.siswa.nama}`
     }
   }).catch(() => {})
 
