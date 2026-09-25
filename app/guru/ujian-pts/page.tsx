@@ -112,6 +112,9 @@ function getInitials(nama: string) {
   return nama.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()
 }
 
+// Feature flag: set ke true jika sudah siap mengaktifkan input nilai ujian Tahsin di masa mendatang
+const SHOW_TAHSIN_INPUT = false
+
 export default function GuruUjianPtsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -263,8 +266,11 @@ export default function GuruUjianPtsPage() {
     return list
   }, [kelasGroups])
 
+  // Helper to determine if student has completed exam based on active feature flag
+  const isSiswaExamDone = (s: SiswaPtsItem) => SHOW_TAHSIN_INPUT ? s.hasPts : !!s.ptsTahfidz
+
   const totalAllSiswa = allSiswa.length
-  const totalSudahUjian = allSiswa.filter(s => s.hasPts).length
+  const totalSudahUjian = allSiswa.filter(isSiswaExamDone).length
   const totalBelumUjian = totalAllSiswa - totalSudahUjian
   const persenSelesai = totalAllSiswa > 0 ? Math.round((totalSudahUjian / totalAllSiswa) * 100) : 0
 
@@ -273,10 +279,10 @@ export default function GuruUjianPtsPage() {
     return selectedKelas === 'SEMUA' ? allSiswa : allSiswa.filter(s => s.kelasId === selectedKelas)
   }, [allSiswa, selectedKelas])
 
-  const countBelumUjian = useMemo(() => baseSiswa.filter(s => !s.hasPts).length, [baseSiswa])
+  const countBelumUjian = useMemo(() => baseSiswa.filter(s => !isSiswaExamDone(s)).length, [baseSiswa])
   const countBelumTahsin = useMemo(() => baseSiswa.filter(s => !s.ptsTahsin).length, [baseSiswa])
   const countBelumTahfidz = useMemo(() => baseSiswa.filter(s => !s.ptsTahfidz).length, [baseSiswa])
-  const countSudahAdaNilai = useMemo(() => baseSiswa.filter(s => s.hasPts).length, [baseSiswa])
+  const countSudahAdaNilai = useMemo(() => baseSiswa.filter(isSiswaExamDone).length, [baseSiswa])
 
   // Filtered students by class, search, and status
   const filteredSiswa = useMemo(() => {
@@ -286,13 +292,13 @@ export default function GuruUjianPtsPage() {
 
       let matchStatus = true
       if (statusFilter === 'BELUM') {
-        matchStatus = !s.hasPts
+        matchStatus = !isSiswaExamDone(s)
       } else if (statusFilter === 'BELUM_TAHSIN') {
-        matchStatus = !s.ptsTahsin
+        matchStatus = SHOW_TAHSIN_INPUT && !s.ptsTahsin
       } else if (statusFilter === 'BELUM_TAHFIDZ') {
         matchStatus = !s.ptsTahfidz
       } else if (statusFilter === 'SUDAH') {
-        matchStatus = s.hasPts
+        matchStatus = isSiswaExamDone(s)
       }
 
       return matchKelas && matchSearch && matchStatus
@@ -307,10 +313,10 @@ export default function GuruUjianPtsPage() {
     const rawTs = scoresTahsin[siswa.id]
 
     const hasTfInput = rawTf !== undefined && rawTf.trim() !== ''
-    const hasTsInput = rawTs !== undefined && rawTs.trim() !== ''
+    const hasTsInput = SHOW_TAHSIN_INPUT && rawTs !== undefined && rawTs.trim() !== ''
 
     if (!hasTfInput && !hasTsInput) {
-      alert(`Mohon masukkan angka nilai Tahfidz atau Tahsin untuk ${siswa.nama}`)
+      alert(`Mohon masukkan angka nilai untuk ${siswa.nama}`)
       return
     }
 
@@ -324,7 +330,7 @@ export default function GuruUjianPtsPage() {
     }
 
     let numTs: number | null = null
-    if (hasTsInput) {
+    if (SHOW_TAHSIN_INPUT && hasTsInput) {
       numTs = Number(rawTs)
       if (isNaN(numTs) || numTs < 0 || numTs > 100) {
         alert('Nilai Tahsin harus berupa angka antara 0 sampai 100')
@@ -352,7 +358,7 @@ export default function GuruUjianPtsPage() {
           tanggal: new Date().toISOString()
         } : item.ptsTahfidz
 
-        const updatedTahsin = numTs !== null ? {
+        const updatedTahsin = (SHOW_TAHSIN_INPUT && numTs !== null) ? {
           id: item.ptsTahsin?.id || 'temp-ts-' + item.id,
           jenis: 'TAHSIN',
           nilaiAkhir: numTs,
@@ -363,7 +369,7 @@ export default function GuruUjianPtsPage() {
 
         return {
           ...item,
-          hasPts: !!(updatedTahfidz || updatedTahsin),
+          hasPts: SHOW_TAHSIN_INPUT ? !!(updatedTahfidz || updatedTahsin) : !!updatedTahfidz,
           hasPtsTahfidz: !!updatedTahfidz,
           hasPtsTahsin: !!updatedTahsin,
           ptsTahfidz: updatedTahfidz,
@@ -373,7 +379,7 @@ export default function GuruUjianPtsPage() {
       })
       return {
         ...group,
-        sudahUjianCount: updatedSiswaList.filter(s => s.hasPts).length,
+        sudahUjianCount: updatedSiswaList.filter(s => SHOW_TAHSIN_INPUT ? s.hasPts : !!s.ptsTahfidz).length,
         siswa: updatedSiswaList
       }
     }))
@@ -388,7 +394,7 @@ export default function GuruUjianPtsPage() {
     }, 2500)
 
     // 2. AUTO-FOCUS NEXT STUDENT: Automatically open and focus next student's input if not in edit mode
-    if (!siswa.hasPts && currentIndex !== undefined && currentIndex + 1 < filteredSiswa.length) {
+    if (!isSiswaExamDone(siswa) && currentIndex !== undefined && currentIndex + 1 < filteredSiswa.length) {
       const nextSiswa = filteredSiswa[currentIndex + 1]
       setTimeout(() => {
         setEditingIds(prev => ({ ...prev, [nextSiswa.id]: true }))
@@ -405,7 +411,7 @@ export default function GuruUjianPtsPage() {
       siswaId: siswa.id,
       nilaiTahfidz: numTf !== null ? numTf : undefined,
       isTasmi: isTasmiChecked,
-      nilaiTahsin: numTs !== null ? numTs : undefined
+      nilaiTahsin: (SHOW_TAHSIN_INPUT && numTs !== null) ? numTs : undefined
     }
 
     // Persist optimistic update to local cache
@@ -428,7 +434,7 @@ export default function GuruUjianPtsPage() {
                 catatan: item.ptsTahfidz?.catatan || null,
                 tanggal: new Date().toISOString()
               } : item.ptsTahfidz
-              const uTs = numTs !== null ? {
+              const uTs = (SHOW_TAHSIN_INPUT && numTs !== null) ? {
                 id: item.ptsTahsin?.id || 'temp-ts-' + item.id,
                 jenis: 'TAHSIN',
                 nilaiAkhir: numTs,
@@ -438,7 +444,7 @@ export default function GuruUjianPtsPage() {
               } : item.ptsTahsin
               return {
                 ...item,
-                hasPts: !!(uTf || uTs),
+                hasPts: SHOW_TAHSIN_INPUT ? !!(uTf || uTs) : !!uTf,
                 hasPtsTahfidz: !!uTf,
                 hasPtsTahsin: !!uTs,
                 ptsTahfidz: uTf,
@@ -529,7 +535,7 @@ export default function GuruUjianPtsPage() {
       })
       return {
         ...group,
-        sudahUjianCount: updatedSiswaList.filter(s => s.hasPts).length,
+        sudahUjianCount: updatedSiswaList.filter(isSiswaExamDone).length,
         siswa: updatedSiswaList
       }
     }))
@@ -1045,7 +1051,7 @@ export default function GuruUjianPtsPage() {
               </span>
             </button>
 
-            {countBelumTahsin > 0 && countBelumTahsin !== countBelumUjian && (
+            {SHOW_TAHSIN_INPUT && countBelumTahsin > 0 && countBelumTahsin !== countBelumUjian && (
               <button
                 onClick={() => setStatusFilter('BELUM_TAHSIN')}
                 style={{
@@ -1258,7 +1264,7 @@ export default function GuruUjianPtsPage() {
                   key={s.id}
                   className={`pts-card ${isInputOpen ? 'pts-card-open' : ''}`}
                   style={{
-                    border: s.hasPts ? '1px solid #bbf7d0' : '1px solid #e2e8f0'
+                    border: isSiswaExamDone(s) ? '1px solid #bbf7d0' : '1px solid #e2e8f0'
                   }}
                 >
                   {/* Left Info */}
@@ -1267,8 +1273,8 @@ export default function GuruUjianPtsPage() {
                       width: '42px',
                       height: '42px',
                       borderRadius: '12px',
-                      background: s.hasPts ? '#dcfce7' : '#f1f5f9',
-                      color: s.hasPts ? '#166534' : '#475569',
+                      background: isSiswaExamDone(s) ? '#dcfce7' : '#f1f5f9',
+                      color: isSiswaExamDone(s) ? '#166534' : '#475569',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1290,7 +1296,7 @@ export default function GuruUjianPtsPage() {
 
                       {/* Status Badges */}
                       <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                        {s.hasPts ? (
+                        {isSiswaExamDone(s) ? (
                           <>
                             {s.ptsTahfidz ? (
                               <span style={{
@@ -1301,9 +1307,9 @@ export default function GuruUjianPtsPage() {
                                 padding: '2px 8px',
                                 borderRadius: '6px'
                               }}>
-                                ✓ Tahfidz: {s.ptsTahfidz.nilaiAkhir} ({s.ptsTahfidz.predikat})
+                                ✓ {SHOW_TAHSIN_INPUT ? 'Tahfidz: ' : 'Nilai: '}{s.ptsTahfidz.nilaiAkhir} ({s.ptsTahfidz.predikat})
                               </span>
-                            ) : (
+                            ) : SHOW_TAHSIN_INPUT ? (
                               <span style={{
                                 background: '#fef3c7',
                                 color: '#b45309',
@@ -1314,7 +1320,7 @@ export default function GuruUjianPtsPage() {
                               }}>
                                 Tahfidz: Belum
                               </span>
-                            )}
+                            ) : null}
 
                             {s.ptsTahfidz?.isTasmi && (
                               <span style={{
@@ -1329,28 +1335,30 @@ export default function GuruUjianPtsPage() {
                               </span>
                             )}
 
-                            {s.ptsTahsin ? (
-                              <span style={{
-                                background: '#dcfce7',
-                                color: '#15803d',
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                padding: '2px 8px',
-                                borderRadius: '6px'
-                              }}>
-                                ✓ Tahsin: {s.ptsTahsin.nilaiAkhir} ({s.ptsTahsin.predikat})
-                              </span>
-                            ) : (
-                              <span style={{
-                                background: '#fef3c7',
-                                color: '#b45309',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                                padding: '2px 8px',
-                                borderRadius: '6px'
-                              }}>
-                                Tahsin: Belum
-                              </span>
+                            {SHOW_TAHSIN_INPUT && (
+                              s.ptsTahsin ? (
+                                <span style={{
+                                  background: '#dcfce7',
+                                  color: '#15803d',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  padding: '2px 8px',
+                                  borderRadius: '6px'
+                                }}>
+                                  ✓ Tahsin: {s.ptsTahsin.nilaiAkhir} ({s.ptsTahsin.predikat})
+                                </span>
+                              ) : (
+                                <span style={{
+                                  background: '#fef3c7',
+                                  color: '#b45309',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  padding: '2px 8px',
+                                  borderRadius: '6px'
+                                }}>
+                                  Tahsin: Belum
+                                </span>
+                              )
                             )}
 
                             {offlineQueuedIds[s.id] && (
@@ -1391,7 +1399,7 @@ export default function GuruUjianPtsPage() {
                     {!isInputOpen ? (
                       /* VIEW MODE: Tampilan rapi, aman dari salah senggol, ada tombol Edit/Hapus jika ada nilai, atau Input Nilai jika belum */
                       <div className="pts-view-actions">
-                        {s.hasPts ? (
+                        {isSiswaExamDone(s) ? (
                           <>
                             <button
                               onClick={() => {
@@ -1483,18 +1491,20 @@ export default function GuruUjianPtsPage() {
                         <div className="pts-inputs-group">
                           {/* INPUT TAHFIDZ */}
                           <div className="pts-input-box-tahfidz">
-                            <span style={{
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              color: '#1e3a8a',
-                              letterSpacing: '0.4px',
-                              background: '#dbeafe',
-                              padding: '2px 5px',
-                              borderRadius: '4px',
-                              flexShrink: 0
-                            }}>
-                              TAHFIDZ
-                            </span>
+                            {SHOW_TAHSIN_INPUT && (
+                              <span style={{
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                color: '#1e3a8a',
+                                letterSpacing: '0.4px',
+                                background: '#dbeafe',
+                                padding: '2px 5px',
+                                borderRadius: '4px',
+                                flexShrink: 0
+                              }}>
+                                TAHFIDZ
+                              </span>
+                            )}
                             <label style={{
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -1535,9 +1545,9 @@ export default function GuruUjianPtsPage() {
                                 }
                               }}
                               style={{
-                                width: '50px',
+                                width: SHOW_TAHSIN_INPUT ? '50px' : '65px',
                                 minWidth: '40px',
-                                padding: '5px 2px',
+                                padding: '5px 4px',
                                 borderRadius: '8px',
                                 border: '1.5px solid #cbd5e1',
                                 textAlign: 'center',
@@ -1552,50 +1562,52 @@ export default function GuruUjianPtsPage() {
                           </div>
 
                           {/* INPUT TAHSIN */}
-                          <div className="pts-input-box-tahsin">
-                            <span style={{
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              color: '#047857',
-                              letterSpacing: '0.4px',
-                              background: '#d1fae5',
-                              padding: '2px 5px',
-                              borderRadius: '4px',
-                              flexShrink: 0
-                            }}>
-                              TAHSIN
-                            </span>
-                            <input
-                              ref={el => { inputRefsTahsin.current[s.id] = el }}
-                              type="number"
-                              min={0}
-                              max={100}
-                              disabled={!ptsSettings.enabled}
-                              placeholder="Nilai"
-                              value={scoresTahsin[s.id] ?? ''}
-                              onChange={e => setScoresTahsin(prev => ({ ...prev, [s.id]: e.target.value }))}
-                              onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault()
-                                  handleSaveRow(s, idx)
-                                }
-                              }}
-                              style={{
-                                width: '50px',
-                                minWidth: '40px',
-                                padding: '5px 2px',
-                                borderRadius: '8px',
-                                border: '1.5px solid #cbd5e1',
-                                textAlign: 'center',
+                          {SHOW_TAHSIN_INPUT && (
+                            <div className="pts-input-box-tahsin">
+                              <span style={{
+                                fontSize: '10px',
                                 fontWeight: 800,
-                                fontSize: '13px',
-                                outline: 'none',
-                                background: !ptsSettings.enabled ? '#f1f5f9' : 'white',
-                                color: '#0f172a',
-                                boxSizing: 'border-box'
-                              }}
-                            />
-                          </div>
+                                color: '#047857',
+                                letterSpacing: '0.4px',
+                                background: '#d1fae5',
+                                padding: '2px 5px',
+                                borderRadius: '4px',
+                                flexShrink: 0
+                              }}>
+                                TAHSIN
+                              </span>
+                              <input
+                                ref={el => { inputRefsTahsin.current[s.id] = el }}
+                                type="number"
+                                min={0}
+                                max={100}
+                                disabled={!ptsSettings.enabled}
+                                placeholder="Nilai"
+                                value={scoresTahsin[s.id] ?? ''}
+                                onChange={e => setScoresTahsin(prev => ({ ...prev, [s.id]: e.target.value }))}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    handleSaveRow(s, idx)
+                                  }
+                                }}
+                                style={{
+                                  width: '50px',
+                                  minWidth: '40px',
+                                  padding: '5px 2px',
+                                  borderRadius: '8px',
+                                  border: '1.5px solid #cbd5e1',
+                                  textAlign: 'center',
+                                  fontWeight: 800,
+                                  fontSize: '13px',
+                                  outline: 'none',
+                                  background: !ptsSettings.enabled ? '#f1f5f9' : 'white',
+                                  color: '#0f172a',
+                                  boxSizing: 'border-box'
+                                }}
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {/* TOMBOL AKSI */}
@@ -1655,10 +1667,10 @@ export default function GuruUjianPtsPage() {
                             }}
                           >
                             <span className="pts-btn-text-desktop">
-                              {isSaved ? '✓ OK' : isSaving ? '...' : (s.hasPts ? 'Update' : 'Simpan')}
+                              {isSaved ? '✓ OK' : isSaving ? '...' : (isSiswaExamDone(s) ? 'Update' : 'Simpan')}
                             </span>
                             <span className="pts-btn-text-mobile">
-                              {isSaved ? '✓ Tersimpan' : isSaving ? 'Menyimpan...' : (s.hasPts ? 'Update Nilai' : 'Simpan Nilai')}
+                              {isSaved ? '✓ Tersimpan' : isSaving ? 'Menyimpan...' : (isSiswaExamDone(s) ? 'Update Nilai' : 'Simpan Nilai')}
                             </span>
                           </button>
                         </div>
